@@ -1,0 +1,3388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CropClient Water Tools - Email Teaser</title>
+    <style>
+        :root {
+            --left-width: 60%;
+            --right-width: 40%;
+            --top-height: 50%;
+            --bottom-height: 50%;
+            --header-padding: 8px 20px;
+            --header-h1: 1.6em;
+            --section-h3: 1.1em;
+            --base-font: 0.95em;
+            --small-font: 0.85em;
+            --grid-gap: 15px;
+            --section-padding: 20px;
+        }
+        
+        tr.selected {
+            background-color: #e3f2fd !important;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            padding: 10px;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border-bottom: 2px solid #e0e0e0;
+            overflow: hidden;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+        }
+        header {
+            background: linear-gradient(135deg, #2e7d32 0%, #4caf50 100%);
+            color: white;
+            padding: var(--header-padding);
+            text-align: center;
+            flex-shrink: 0;
+        }
+        header h1 {
+            font-size: var(--header-h1);
+            margin-bottom: 3px;
+        }
+        header p {
+            font-size: var(--base-font);
+            opacity: 0.9;
+        }
+        .main-content {
+            padding: 10px;
+            flex: 1;
+            display: grid;
+            grid-template-rows: var(--top-height) var(--bottom-height);
+            gap: 10px;
+            overflow: hidden;
+        }
+        .grid-container {
+            display: grid;
+            grid-template-columns: var(--left-width) var(--right-width);
+            gap: var(--grid-gap);
+            padding: 10px;
+            height: 100%;
+            overflow: hidden;
+        }
+        .grid-section {
+            background: #fafafa;
+            padding: var(--section-padding);
+            border-radius: 8px;
+            border: 2px solid #e0e0e0;
+            overflow: auto;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+        .grid-section h3, .grid-section h2 {
+            color: #2e7d32;
+            margin-bottom: 8px;
+            font-size: var(--section-h3);
+            flex-shrink: 0;
+        }
+        .data-grid {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            overflow: auto;
+            flex: 1;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th {
+            background: #2e7d32;
+            color: white;
+            padding: 10px 8px;
+            text-align: left;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            font-size: var(--small-font);
+            white-space: nowrap;
+        }
+        td {
+            padding: 8px;
+            border-bottom: 1px solid #eee;
+            font-size: var(--small-font);
+        }
+        tr:hover {
+            background: #f5f5f5;
+            cursor: pointer;
+        }
+        tr.selected {
+            background: #C8E6C9;
+        }
+        .details-section {
+            background: white;
+            padding: 8px 10px;
+            border-radius: 8px;
+            border: 2px solid #e0e0e0;
+            overflow-y: auto;
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+        .details-section h3 {
+            color: #2e7d32;
+            margin-bottom: 3px;
+            font-size: var(--section-h3);
+        }
+
+        /* Form content area - scrollable */
+        .details-section > div:first-child {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0 4px 0 0;
+        }
+
+        /* CRUD Footer Component - Always visible at bottom */
+        .crud-footer {
+            flex-shrink: 0;
+            padding-top: 4px;
+            border-top: 1px solid #e0e0e0;
+            background: white;
+            margin-top: 2px;
+        }
+
+        .field-group {
+            margin-bottom: 2px;
+            display: flex;
+            flex-direction: column; /* Labels on TOP */
+            gap: 2px;
+        }
+        .field-group label {
+            font-weight: 600;
+            color: #555;
+            font-size: var(--small-font);
+        }
+        .field-group input {
+            padding: 4px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: var(--base-font);
+        }
+        .field-group input:focus {
+            outline: none;
+            border-color: #4caf50;
+        }
+        
+        /* CRUD Button Styles */
+        .crud-buttons {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+        }
+        .crud-btn {
+            flex: 1;
+            min-width: 70px;
+            padding: 10px 6px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: var(--small-font);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .crud-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        .crud-btn:active {
+            transform: translateY(0);
+        }
+        .crud-btn.create {
+            background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
+            color: white;
+        }
+        .crud-btn.reset {
+            background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+            color: white;
+        }
+        .crud-btn.meter {
+            background: linear-gradient(135deg, #9c27b0 0%, #7b1fa2 100%);
+            color: white;
+        }
+        .crud-btn.update {
+            background: linear-gradient(135deg, #4caf50 0%, #388e3c 100%);
+            color: white;
+        }
+        
+        .record-count {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2e7d32;
+        }
+        .info-icon {
+            cursor: help;
+            color: #666;
+        }
+
+        .send-button {
+            background: linear-gradient(135deg, #2e7d32 0%, #4caf50 100%);
+            color: white;
+            padding: 8px 16px;
+            font-size: var(--small-font);
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: transform 0.2s;
+            white-space: nowrap;
+        }
+        .send-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(46, 125, 50, 0.3);
+        }
+
+        /* Tools table */
+        .tools-grid {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            overflow: auto;
+            max-height: none;
+            flex: 1;
+            margin-bottom: 8px;
+        }
+
+        /* Big recommendation box */
+        .rec-box {
+            background: linear-gradient(135deg, #4CAF50 0%, #2E7D32 100%);
+            color: white;
+            padding: 3px 3px;
+            border-radius: 6px;
+            text-align: center;
+            margin: 2px auto 2px auto;
+            box-shadow: 0 2px 6px rgba(76, 175, 80, 0.3);
+            width: 45%;
+        }
+        .rec-box .rec-label {
+            font-size: 0.65em;
+            opacity: 0.9;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 1px;
+        }
+        .rec-box .rec-value {
+            font-size: 18px;
+            font-weight: bold;
+            line-height: 1;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.2);
+        }
+
+        /* Chat log */
+        .chat-log {
+            background: #f5f5f5;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            padding: 8px;
+            flex: 1;
+            min-height: 80px;
+            overflow-y: auto;
+            margin-bottom: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 1.1em;
+        }
+
+        /* ========================================
+           DESKTOP SCALING (1367px+) - AGGRESSIVE S4 field sizing
+           ======================================== */
+        @media screen and (min-width: 1367px) {
+            .field-group {
+                margin-bottom: 10px;
+                gap: 6px; /* Smaller gap for stacked labels */
+            }
+            .field-group input {
+                padding: 12px;
+                font-size: 1.3em;
+                max-width: 150px; /* Narrower to prevent button overflow */
+            }
+            .field-group label {
+                font-size: 1.1em;
+            }
+            .field-grid-row {
+                gap: 12px !important;
+                margin-bottom: 6px !important;
+                justify-items: center; /* Center the constrained inputs */
+            }
+            .rec-box {
+                width: 60%;
+                padding: 12px 8px;
+                margin: 10px auto 12px;
+            }
+            .rec-box .rec-label {
+                font-size: 0.85em;
+                margin-bottom: 5px;
+            }
+            .rec-box .rec-value {
+                font-size: 42px;
+            }
+            .details-section h3 {
+                margin-bottom: 12px;
+                font-size: 1.2em;
+            }
+            .crud-footer {
+                padding-top: 8px;
+                margin-top: 6px;
+            }
+        }
+
+        /* ========================================
+           LAPTOP RESPONSIVE (1024px - 1366px)
+           ======================================== */
+        @media screen and (max-width: 1366px) {
+            :root {
+                --left-width: 58%;
+                --right-width: 42%;
+                --header-padding: 6px 15px;
+                --header-h1: 1.4em;
+                --section-h3: 1em;
+                --base-font: 0.9em;
+                --small-font: 0.8em;
+                --grid-gap: 10px;
+                --section-padding: 15px;
+            }
+            
+            body {
+                padding: 8px;
+            }
+            
+            .main-content {
+                padding: 8px;
+                gap: 8px;
+            }
+            
+            .grid-container {
+                padding: 8px;
+            }
+            
+            th {
+                padding: 8px 6px;
+            }
+            
+            td {
+                padding: 6px;
+            }
+            
+            .tools-grid {
+                max-height: 165px;
+            }
+            
+            .rec-box {
+                padding: 10px 6px;
+            }
+            .rec-box .rec-value {
+                font-size: 32px;
+            }
+            
+            .crud-btn {
+                padding: 8px 4px;
+                min-width: 60px;
+            }
+        }
+
+        /* ========================================
+           TABLET/iPAD RESPONSIVE (768px - 1024px)
+           ======================================== */
+        @media screen and (max-width: 1024px) {
+            :root {
+                --left-width: 55%;
+                --right-width: 45%;
+                --top-height: 45%;
+                --bottom-height: 55%;
+                --header-padding: 5px 12px;
+                --header-h1: 1.2em;
+                --section-h3: 0.95em;
+                --base-font: 0.85em;
+                --small-font: 0.75em;
+                --grid-gap: 8px;
+                --section-padding: 12px;
+            }
+            
+            body {
+                padding: 5px;
+            }
+            
+            .main-content {
+                padding: 5px;
+                gap: 5px;
+            }
+            
+            .grid-container {
+                padding: 5px;
+                gap: 8px;
+            }
+            
+            header p {
+                display: none; /* Hide subtitle on tablet */
+            }
+            
+            th {
+                padding: 6px 4px;
+                font-size: 0.7em;
+            }
+            
+            td {
+                padding: 5px 4px;
+                font-size: 0.75em;
+            }
+            
+            .tools-grid {
+                max-height: 150px;
+            }
+            
+            .rec-box {
+                width: 60%;
+                padding: 8px 5px;
+            }
+            .rec-box .rec-label {
+                font-size: 0.65em;
+            }
+            .rec-box .rec-value {
+                font-size: 28px;
+            }
+            
+            .chat-log {
+                font-size: 0.95em;
+                min-height: 60px;
+            }
+            
+            .crud-btn {
+                padding: 8px 3px;
+                min-width: 55px;
+                font-size: 0.7em;
+            }
+            
+            .field-group input {
+                padding: 5px;
+            }
+        }
+
+        /* ========================================
+           SMALL TABLET/PORTRAIT (under 768px)
+           ======================================== */
+        @media screen and (max-width: 768px) {
+            :root {
+                --top-height: 40%;
+                --bottom-height: 60%;
+            }
+            
+            .grid-container {
+                grid-template-columns: 1fr;
+                grid-template-rows: 1fr 1fr;
+                overflow-y: auto;
+            }
+            
+            .rec-box {
+                width: 40%;
+            }
+            .rec-box .rec-value {
+                font-size: 24px;
+            }
+            
+            .crud-btn {
+                min-width: 50px;
+                padding: 6px 2px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🌾 CropClient MCP Water Tools</h1>
+            <p>Natural Language Field Water Reporting</p>
+        </header>
+
+        <div class="main-content">
+            <div class="grid-container">
+                <div id="Section-S1" class="grid-section">
+                    <h2>🔐 Crop Manage API Audit</h2>
+                    
+                    <!-- Credentials and Token on one row -->
+                    <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 10px;">
+                        <label style="font-weight: 600; color: #333; width: 90px; font-size: var(--small-font);">Credentials</label>
+                        <input 
+                            type="text" 
+                            id="credentialsInput" 
+                            style="flex: 1; padding: 5px; font-size: var(--small-font); border: 2px solid #ddd; border-radius: 6px;"
+                            placeholder="username/password"
+                            readonly
+                            value="stevep@sspnet.com"
+                        >
+                        <label style="font-weight: 600; color: #333; width: 60px; font-size: var(--small-font); text-align: right;">Token</label>
+                        <input 
+                            type="text" 
+                            id="tokenDisplay" 
+                            style="flex: 2; padding: 5px; font-size: var(--small-font); border: 2px solid #ddd; border-radius: 6px; background: #f5f5f5;"
+                            readonly
+                            placeholder="Token will appear here..."
+                        >
+                    </div>
+                    
+                    <hr style="border: none; border-top: 2px solid #e0e0e0; margin: 6px 0;">
+                    
+                    <!-- Script Section -->
+                    <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 3px;">
+                        <select 
+                            id="scriptDropdown" 
+                            style="width: 200px; padding: 5px; font-size: var(--small-font); border: 2px solid #ddd; border-radius: 6px;"
+                            onchange="selectScript()"
+                        >
+                            <option value="">Choose an Agent</option>
+                            <optgroup label="CropManage API">
+                                <option value="token">🔐 Get Token</option>
+                                <option value="ranches">🏠 Get Ranches</option>
+                                <option value="plantings">🌱 Get Plantings</option>
+                                <option value="irrigation_details">💧 Get Irrigation Details</option>
+                                <option value="post_irrigation">📤 Post Irrigation</option>
+                                <option value="update_record">🔄 Update Record</option>
+                            </optgroup>
+                        </select>
+                        <textarea 
+                            id="scriptUrl" 
+                            rows="1"
+                            style="flex: 1; padding: 5px; font-size: var(--small-font); border: 2px solid #ddd; border-radius: 6px; background: #f5f5f5; resize: vertical; font-family: monospace;"
+                            placeholder="API endpoint URL will appear here..."
+                            readonly
+                        ></textarea>
+                        <button class="send-button" onclick="runScript()">Send</button>
+                    </div>
+                    
+                    <!-- Script Description -->
+                    <div id="scriptDescription" style="padding: 8px; background: #f5f5f5; border-radius: 4px; margin-bottom: 3px; font-size: var(--small-font); color: #666; min-height: 40px;">
+                        <div style="color: #999; font-style: italic;">Select a script to see description...</div>
+                    </div>
+                    
+                    <!-- Three Grids Side-by-Side -->
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 2fr; gap: 8px; margin-bottom: 10px; height: 100px; min-height: 100px; max-height: 100px; flex-shrink: 0;">
+                        <!-- Ranches Grid -->
+                        <div style="border: 1px solid #ddd; border-radius: 6px; overflow: hidden; display: flex; flex-direction: column;">
+                            <div id="ranchesGrid" style="flex: 1; overflow: auto; padding: 4px;">
+                                <div style="color: #999; text-align: center; padding: 20px; font-size: var(--small-font);">No data</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Plantings Grid -->
+                        <div style="border: 1px solid #ddd; border-radius: 6px; overflow: hidden; display: flex; flex-direction: column;">
+                            <div id="plantingsGrid" style="flex: 1; overflow: auto; padding: 4px;">
+                                <div style="color: #999; text-align: center; padding: 20px; font-size: var(--small-font);">No data</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Recommendations Grid -->
+                        <div style="border: 1px solid #ddd; border-radius: 6px; overflow: hidden; display: flex; flex-direction: column;">
+                            <div id="recommendationsGrid" style="flex: 1; overflow: auto; padding: 4px;">
+                                <div style="color: #999; text-align: center; padding: 20px; font-size: var(--small-font);">No data</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Fourth Grid: Irrigation Details -->
+                    <div style="border: 1px solid #ddd; border-radius: 6px; overflow: hidden; display: flex; flex-direction: column; height: 150px; min-height: 150px; max-height: 150px; flex-shrink: 0; margin-bottom: 10px;">
+                        <div style="background: #f5f5f5; padding: 4px 8px; font-weight: 600; font-size: var(--small-font); border-bottom: 1px solid #ddd; flex-shrink: 0;">
+                            Irrigation Details
+                        </div>
+                        <div id="irrigationDetailsGrid" style="flex: 1; overflow-y: scroll; overflow-x: auto;">
+                            <table style="width: 100%; font-size: var(--small-font); border-collapse: collapse;">
+                                <thead>
+                                    <tr style="background: #f5f5f5; position: sticky; top: 0; z-index: 1;">
+                                        <th style="padding: 4px;">Ranch</th>
+                                        <th style="padding: 4px;">Planting</th>
+                                        <th style="padding: 4px;">Date</th>
+                                        <th style="padding: 4px;">RecHrs</th>
+                                        <th style="padding: 4px;">Interval</th>
+                                        <th style="padding: 4px;">MgrHrs</th>
+                                        <th style="padding: 4px;">Applied</th>
+                                        <th style="padding: 4px;">RanchID</th>
+                                        <th style="padding: 4px;">PlantingID</th>
+                                        <th style="padding: 4px;">ID</th>
+                                        <th style="padding: 4px;">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="irrigationDetailsBody">
+                                    <tr><td colspan="11" style="text-align: center; color: #999; padding: 20px;">No data</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <!-- Hidden elements for MCP script compatibility -->
+                    <input type="hidden" id="promptInput" value="">
+                    <div id="toolDescription" style="display: none;"></div>
+                    <table style="display: none;"><tbody id="toolsTableBody"></tbody></table>
+                    
+                    <!-- Section Footer Buttons -->
+                    <div style="padding: 8px; margin-top: 8px; border-top: 2px solid #e0e0e0; display: flex; gap: 6px;">
+                        <button onclick="refreshSelectedIrrigations()" style="flex: 1; padding: 6px 8px; font-size: var(--small-font); background: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600;">Refresh Selected Irrigations</button>
+                        <button onclick="updateRecordToCropManage()" style="flex: 1; padding: 6px 8px; font-size: var(--small-font); background: #2196F3; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600;">Update Record</button>
+                        <button onclick="showPostModal()" style="flex: 1; padding: 6px 8px; font-size: var(--small-font); background: #FF9800; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600;">Post to CropManage</button>
+                    </div>
+                </div>
+
+                <div class="details-section">
+                    <h3>💬 Chat Log</h3>
+                    
+                    <!-- Chat log area -->
+                    <div id="chatLog" class="chat-log">
+                        <div style="color: #666;">System ready. Send a command to begin...</div>
+                    </div>
+                    
+                    <!-- Prompt and Send on one line -->
+                    <div style="display: flex; gap: 6px; align-items: center;">
+                        <input 
+                            type="text" 
+                            id="chatPromptInput" 
+                            placeholder="Type command here..."
+                            style="flex: 1; padding: 6px; border: 2px solid #ddd; border-radius: 6px; font-size: var(--small-font);"
+                            onkeypress="if(event.key === 'Enter') sendChatPrompt()"
+                        >
+                        <button onclick="sendChatPrompt()" class="send-button">🚀 Send</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid-container">
+                <div class="grid-section">
+                    <div class="record-count" style="display: flex; justify-content: space-between; align-items: center;">
+                        <h3 style="margin: 0;">📊 <strong>Irrigation Records</strong> (<span id="recordCount">0</span>)</h3>
+                        <h3 style="margin: 0; cursor: pointer;" onclick="toggleWaitQueue()">
+                            <span id="waitQueueToggle" style="color: #666;"><strong>Records Changed</strong></span> (<span id="waitQueueCount">0</span>)
+                        </h3>
+                    </div>
+                    <div class="data-grid">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Ranch</th>
+                                    <th>Planting</th>
+                                    <th>Date</th>
+                                    <th>RecHrs</th>
+                                    <th>Interval</th>
+                                    <th>MgrHrs</th>
+                                    <th>Applied</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="grid-section">
+                    <div class="details-section" style="display: flex; flex-direction: column; overflow: hidden;">
+                        <h3>💧 Selected Field Details</h3>
+                    
+                    <!-- Top row: Date and Interval side by side -->
+                    <div class="field-grid-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-bottom: 2px;">
+                        <div class="field-group">
+                            <label>Date:</label>
+                            <input type="text" id="formDate" style="text-align: center;">
+                        </div>
+                        <div class="field-group">
+                            <label>Interval:</label>
+                            <input type="text" id="formInterval" style="text-align: center;">
+                        </div>
+                    </div>
+                    
+                    <!-- CENTER: BIG GREEN RECOMMENDED HOURS BOX -->
+                    <div class="rec-box">
+                        <div class="rec-label">Recommended Hours</div>
+                        <div id="formRecommendationBig" class="rec-value">-</div>
+                        <input type="hidden" id="formRecommendation">
+                    </div>
+                    
+                    <!-- Bottom row: Manager Hours and Water Applied side by side -->
+                    <div class="field-grid-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-bottom: 2px;">
+                        <div class="field-group">
+                            <label>MgrHrs:</label>
+                            <input type="number" id="formManagerHours" step="0.1" style="text-align: center;">
+                        </div>
+                        <div class="field-group">
+                            <label>Applied:</label>
+                            <input type="number" id="formWaterApplied" step="0.1" style="text-align: center;">
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- CRUD BUTTONS FOOTER (Always visible) -->
+                <div class="crud-footer">
+                    <div class="crud-buttons">
+                        <button class="crud-btn create" onclick="setPromptAndSend('Create next irrigation for the selected field')">
+                            ➕ Create
+                        </button>
+                        <button class="crud-btn reset" onclick="setPromptAndSend('Reset table to show all irrigation records')">
+                            🔄 Reset
+                        </button>
+                        <button class="crud-btn meter" onclick="setPromptAndSend('Apply water to the selected planting')">
+                            📊 Apply
+                        </button>
+                        <button class="crud-btn update" onclick="setPromptAndSend('Update water applied for selected record')">
+                            💾 Update
+                        </button>
+                    </div>
+                </div>
+                <!-- END CRUD FOOTER -->
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+</body>
+
+
+<!-- @@@@ IRRIGATION_COMPONENT v1.1 id:irrigation-mcp @@@@ -->
+<!-- ================================================================
+     IRRIGATION_COMPONENT v1.1
+     ================================================================
+     Purpose: Pure MCP tokens for irrigation domain operations
+     - NO DOM usage - all functions work with in-memory JSON data
+     - Accepts parameters directly (stateless for MCP extraction)
+     - Returns { returnCode, statusMessage, data } for all operations
+     
+     CRUD Tools (4) - SAME NAMES as Dashboard:
+       1. testCreateNext - Create next irrigation event
+       2. resetTable - Reset displayRecords to original/API data
+       3. testReadMeter - Prepare record for meter reading
+       4. updateRecord - Update record by ID
+     
+     JSON Tools (2) - NEW for persistence:
+       1. saveDisplay - Save displayRecords to JSON file
+       2. retrieveDisplay - Load displayRecords from JSON file
+     ================================================================ -->
+<script>
+// ========================================
+// IRRIGATION_COMPONENT v1.1
+// Pure MCP Tokens - NO DOM Dependencies
+// Function names MUST match Dashboard calls
+// ========================================
+
+// ----------------------------------------
+// CRUD TOOL #1: testCreateNext
+// Creates next irrigation event for selected ranch/planting
+// PURE: params in, result out, no DOM
+// ----------------------------------------
+function testCreateNext(ranch, planting, records) {
+    if (!ranch || !planting) {
+        return { returnCode: -1, statusMessage: 'ERROR: No record selected. Click a row first.' };
+    }
+    
+    const sameFieldRecords = records.filter(r => 
+        r.ranch === ranch && r.planting === planting
+    );
+    
+    if (sameFieldRecords.length === 0) {
+        return { returnCode: -2, statusMessage: `No records found for Ranch ${ranch} Planting ${planting}` };
+    }
+    
+    sameFieldRecords.sort((a, b) => {
+        const dateA = parseEventDate(a.scheduledDate);
+        const dateB = parseEventDate(b.scheduledDate);
+        return dateA - dateB;
+    });
+    
+    const lastRecord = sameFieldRecords[sameFieldRecords.length - 1];
+    
+    const currentDate = parseEventDate(lastRecord.scheduledDate);
+    const nextDate = new Date(currentDate);
+    const intervalDays = parseFloat(lastRecord.interval) || 1;
+    const roundedInterval = Math.round(intervalDays);
+    
+    nextDate.setDate(nextDate.getDate() + roundedInterval);
+    const nextDateStr = formatDate(nextDate);
+    
+    const tinyAdjust = (Math.random() * 0.2 + 0.1);
+    const newRecHours = Math.max(0.1, parseFloat((lastRecord.hours + tinyAdjust).toFixed(1)));
+    const newMgrHours = parseFloat((lastRecord.mgrHours + 0.1).toFixed(1));
+    
+    const maxId = Math.max(...records.map(r => r.id));
+    
+    const newRecord = {
+        id: maxId + 1,
+        ranch: lastRecord.ranch,
+        planting: lastRecord.planting,
+        hours: newRecHours,
+        mgrHours: newMgrHours,
+        appliedHours: 0,
+        interval: lastRecord.interval,
+        scheduledDate: nextDateStr,
+        irrigationMethod: lastRecord.irrigationMethod,
+        recommendedInches: lastRecord.recommendedInches,
+        lastUpdatedDate: new Date().toLocaleString(),
+        updatedBy: "CropClient System",
+        isNew: true,
+        isOriginal: false,
+        isUpdated: false,
+        ranchId: lastRecord.ranchId,
+        plantingId: lastRecord.plantingId,
+        status: -1
+    };
+    
+    records.push(newRecord);
+    
+    // Clear isNew flag on all OTHER records
+    records.forEach(r => {
+        if (r.id !== newRecord.id) {
+            r.isNew = false;
+        }
+    });
+    
+    return { 
+        returnCode: 0, 
+        statusMessage: `✅ Created Next Irrigation\n\nRanch: ${newRecord.ranch}\nPlanting: ${newRecord.planting}\nPrevious Date: ${lastRecord.scheduledDate}\nInterval: ${roundedInterval} days\nNext Date: ${nextDateStr}\nWater Budget: ${newRecHours} hours\nManager Hours: ${newMgrHours}`,
+        data: newRecord 
+    };
+}
+
+// ----------------------------------------
+// CRUD TOOL #2: resetTable
+// Resets displayRecords to source data
+// PURE: params in, result out, no DOM
+// ----------------------------------------
+function resetTable(sourceData, targetRecords, dataSourceFlag) {
+    if (dataSourceFlag === 'api') {
+        // Data came from API - need apiDetailData passed in
+        if (!sourceData || sourceData.length === 0) {
+            return { returnCode: -1, statusMessage: '⚠️ No API data stored - please refresh from CropManage first' };
+        }
+    } else {
+        // Data came from JSON default
+        if (!sourceData || !Array.isArray(sourceData)) {
+            return { returnCode: -1, statusMessage: 'Source data array required' };
+        }
+    }
+    
+    targetRecords.length = 0;
+    sourceData.forEach(record => {
+        targetRecords.push(JSON.parse(JSON.stringify(record)));
+    });
+    
+    return { 
+        returnCode: 0, 
+        statusMessage: `✅ Reset Complete\n\nLoaded: ${targetRecords.length} irrigation records\nAll data refreshed to initial state\nReady for new operations`,
+        data: { count: targetRecords.length }
+    };
+}
+
+// ----------------------------------------
+// CRUD TOOL #3: testReadMeter
+// Finds last record for ranch/planting for meter reading
+// PURE: params in, result out, no DOM
+// ----------------------------------------
+function testReadMeter(ranch, planting, records) {
+    if (!ranch || !planting) {
+        return { returnCode: -1, statusMessage: 'ERROR: No record selected. Click a row first.' };
+    }
+    
+    const matchingRecords = records.filter(r => 
+        r.ranch === ranch && r.planting === planting
+    );
+    
+    if (matchingRecords.length === 0) {
+        return { returnCode: -2, statusMessage: `❌ No records found for Ranch ${ranch} Planting ${planting}` };
+    }
+    
+    matchingRecords.sort((a, b) => {
+        const dateA = parseEventDate(a.scheduledDate);
+        const dateB = parseEventDate(b.scheduledDate);
+        return dateA - dateB;
+    });
+    
+    const lastRecord = matchingRecords[matchingRecords.length - 1];
+    
+    return { 
+        returnCode: 0, 
+        statusMessage: `✅ Ready for Meter Reading\n\nRanch: ${lastRecord.ranch}\nPlanting: ${lastRecord.planting}\nDate: ${lastRecord.scheduledDate}\nCurrent Water Applied: ${lastRecord.appliedHours}\n\n→ Enter actual meter reading in Water Applied field`,
+        data: lastRecord
+    };
+}
+
+// ----------------------------------------
+// CRUD TOOL #4: updateRecord
+// Updates record with new values
+// PURE: params in, result out, no DOM
+// ----------------------------------------
+function updateRecord(recordId, patch, records) {
+    if (!recordId) {
+        return { returnCode: -1, statusMessage: 'ERROR: No record selected. Click a row first.' };
+    }
+    
+    const newDate = patch.scheduledDate;
+    const newInterval = patch.interval;
+    const newManagerHours = parseFloat(patch.mgrHours);
+    const newWaterApplied = parseFloat(patch.appliedHours);
+    
+    if (isNaN(newManagerHours) || isNaN(newWaterApplied)) {
+        return { returnCode: -2, statusMessage: 'ERROR: Please enter valid numbers for Manager Hours and Water Applied.' };
+    }
+    
+    const recordToUpdate = records.find(r => r.id === recordId);
+    
+    if (!recordToUpdate) {
+        return { returnCode: -3, statusMessage: `Record ${recordId} not found` };
+    }
+    
+    recordToUpdate.scheduledDate = newDate;
+    recordToUpdate.interval = newInterval;
+    recordToUpdate.mgrHours = newManagerHours;
+    recordToUpdate.appliedHours = newWaterApplied;
+    recordToUpdate.lastUpdatedDate = new Date().toLocaleString();
+    recordToUpdate.updatedBy = "Field Worker";
+    recordToUpdate.isUpdated = true;
+    recordToUpdate.status = -1;
+    
+    return { 
+        returnCode: 0, 
+        statusMessage: `✅ Record Updated Successfully\n\nRanch: ${recordToUpdate.ranch}\nPlanting: ${recordToUpdate.planting}\nDate: ${recordToUpdate.scheduledDate}\nInterval: ${recordToUpdate.interval}\nManager Hours: ${newManagerHours}\nWater Applied: ${newWaterApplied}\n\nChanges saved to working memory!`,
+        data: recordToUpdate
+    };
+}
+
+// ----------------------------------------
+// JSON TOOL #1: saveDisplay
+// Saves displayRecords to JSON (for MCP persistence)
+// ----------------------------------------
+function saveDisplay(records) {
+    if (!records || !Array.isArray(records)) {
+        return { returnCode: -1, statusMessage: 'Records array required' };
+    }
+    
+    return { 
+        returnCode: 0, 
+        statusMessage: `Ready to save ${records.length} records`,
+        data: JSON.parse(JSON.stringify(records))
+    };
+}
+
+// ----------------------------------------
+// JSON TOOL #2: retrieveDisplay
+// Loads displayRecords from JSON (for MCP persistence)
+// ----------------------------------------
+function retrieveDisplay(jsonData, targetRecords) {
+    if (!jsonData || !Array.isArray(jsonData)) {
+        return { returnCode: -1, statusMessage: 'JSON data array required' };
+    }
+    
+    targetRecords.length = 0;
+    jsonData.forEach(record => targetRecords.push(record));
+    
+    return { 
+        returnCode: 0, 
+        statusMessage: `Loaded ${targetRecords.length} records from storage`,
+        data: { count: targetRecords.length }
+    };
+}
+
+</script>
+<!-- @@@@ IRRIGATION_COMPONENT v1.1 id:irrigation-mcp @@@@ -->
+
+<!-- @@@@ DASHBOARD_COMPONENT id:dashboard-crud @@@@ -->
+<script>
+// Purpose: Portable irrigation dashboard with MCP CRUD tools
+// Works with JSON default data (offline) or API-sourced data
+// Self-contained - no external dependencies
+
+// ========================================
+// VARIABLES - Grid Storage (Default Data)
+// ========================================
+        const originalData = [
+            { id: 1, ranch: "1", planting: "1A", hours: 1.3, mgrHours: 1.2, appliedHours: 1.15, interval: "1.5 days", scheduledDate: "10/14/24", irrigationMethod: "Drip", recommendedInches: "0.5", lastUpdatedDate: "10/13/24 14:30", updatedBy: "System", isNew: false, isOriginal: true, isUpdated: false },
+            { id: 2, ranch: "1", planting: "1A", hours: 1.2, mgrHours: 1.1, appliedHours: 1.05, interval: "1.5 days", scheduledDate: "10/16/24", irrigationMethod: "Drip", recommendedInches: "0.5", lastUpdatedDate: "10/15/24 09:15", updatedBy: "System", isNew: false, isOriginal: true, isUpdated: false },
+            { id: 3, ranch: "1", planting: "1A", hours: 1.4, mgrHours: 1.3, appliedHours: 0, interval: "1.5 days", scheduledDate: "10/18/24", irrigationMethod: "Drip", recommendedInches: "0.5", lastUpdatedDate: "10/17/24 11:20", updatedBy: "System", isNew: false, isOriginal: true, isUpdated: false },
+            { id: 4, ranch: "1", planting: "1B", hours: 1.6, mgrHours: 1.4, appliedHours: 0, interval: "1.5 days", scheduledDate: "10/20/24", irrigationMethod: "Drip", recommendedInches: "0.6", lastUpdatedDate: "10/19/24 08:45", updatedBy: "System", isNew: false, isOriginal: true, isUpdated: false },
+            { id: 5, ranch: "1", planting: "1B", hours: 2.1, mgrHours: 2, appliedHours: 1.95, interval: "2 days", scheduledDate: "10/12/24", irrigationMethod: "Sprinkler", recommendedInches: "0.8", lastUpdatedDate: "10/11/24 16:00", updatedBy: "System", isNew: false, isOriginal: true, isUpdated: false },
+            { id: 6, ranch: "1", planting: "1B", hours: 2.2, mgrHours: 2.1, appliedHours: 0, interval: "2 days", scheduledDate: "10/14/24", irrigationMethod: "Sprinkler", recommendedInches: "0.8", lastUpdatedDate: "10/13/24 10:30", updatedBy: "System", isNew: false, isOriginal: true, isUpdated: false },
+            { id: 7, ranch: "2", planting: "2A", hours: 1.8, mgrHours: 1.7, appliedHours: 1.65, interval: "1 days", scheduledDate: "10/15/24", irrigationMethod: "Drip", recommendedInches: "0.6", lastUpdatedDate: "10/14/24 13:20", updatedBy: "System", isNew: false, isOriginal: true, isUpdated: false },
+            { id: 8, ranch: "2", planting: "2A", hours: 1.9, mgrHours: 1.8, appliedHours: 1.75, interval: "1 days", scheduledDate: "10/16/24", irrigationMethod: "Drip", recommendedInches: "0.6", lastUpdatedDate: "10/15/24 14:45", updatedBy: "System", isNew: false, isOriginal: true, isUpdated: false },
+            { id: 9, ranch: "2", planting: "2A", hours: 2, mgrHours: 1.9, appliedHours: 0, interval: "1 days", scheduledDate: "10/17/24", irrigationMethod: "Drip", recommendedInches: "0.6", lastUpdatedDate: "10/16/24 09:00", updatedBy: "System", isNew: false, isOriginal: true, isUpdated: false },
+            { id: 10, ranch: "2", planting: "2B", hours: 1.5, mgrHours: 1.4, appliedHours: 1.35, interval: "2 days", scheduledDate: "10/13/24", irrigationMethod: "Sprinkler", recommendedInches: "0.7", lastUpdatedDate: "10/12/24 15:10", updatedBy: "System", isNew: false, isOriginal: true, isUpdated: false },
+            { id: 11, ranch: "2", planting: "2B", hours: 1.6, mgrHours: 1.5, appliedHours: 0, interval: "2 days", scheduledDate: "10/15/24", irrigationMethod: "Sprinkler", recommendedInches: "0.7", lastUpdatedDate: "10/14/24 12:30", updatedBy: "System", isNew: false, isOriginal: true, isUpdated: false },
+            { id: 12, ranch: "2", planting: "2B", hours: 1.7, mgrHours: 1.6, appliedHours: 0, interval: "2 days", scheduledDate: "10/17/24", irrigationMethod: "Sprinkler", recommendedInches: "0.7", lastUpdatedDate: "10/16/24 11:15", updatedBy: "System", isNew: false, isOriginal: true, isUpdated: false }
+        ];
+
+// ========================================
+// VARIABLES - Working Grid Data
+// ========================================
+        let irrigationData = JSON.parse(JSON.stringify(originalData));
+        let displayRecords = [];
+        let selectedRecord = null;
+
+// ========================================
+// MCP TOOLS REGISTRY
+// Handlers call pure IRRIGATION_COMPONENT functions
+// then do UI refresh (renderTable, selectRecord, showResult)
+// ========================================
+        
+        const mcpTools = {
+            create_next_irrigation: {
+                name: "create_next_irrigation",
+                description: "Creates the next scheduled irrigation event based on the most recent irrigation record. Calculates new date using the interval from the last record and sets recommended hours as manager hours.",
+                inputSchema: {
+                    type: "object",
+                    properties: {
+                        ranch: { type: "string", description: "Ranch name or number" },
+                        planting: { type: "string", description: "Planting name" }
+                    },
+                    required: []
+                },
+                handler: function(params = {}) {
+                    let targetRanch = params.ranch || (selectedRecord ? selectedRecord.ranch : null);
+                    let targetPlanting = params.planting || (selectedRecord ? selectedRecord.planting : null);
+                    
+                    // If ranch/planting provided, find and select a matching record first
+                    if (targetRanch && targetPlanting) {
+                        const matchingRecord = displayRecords.find(r => 
+                            r.ranch === targetRanch && r.planting === targetPlanting
+                        );
+                        if (matchingRecord) {
+                            selectRecord(matchingRecord.id);
+                        } else {
+                            showResult(`ERROR: No records found for Ranch ${targetRanch} Planting ${targetPlanting}`);
+                            return { success: false, error: 'No matching records' };
+                        }
+                    }
+                    
+                    if (!selectedRecord) {
+                        showResult('ERROR: No record selected. Click a row first.');
+                        return { success: false, error: 'No record selected' };
+                    }
+                    
+                    // Call pure function from IRRIGATION_COMPONENT
+                    const result = testCreateNext(selectedRecord.ranch, selectedRecord.planting, displayRecords);
+                    
+                    // UI refresh - DASHBOARD handles this
+                    if (result.returnCode === 0) {
+                        renderTable();
+                        selectRecord(result.data.id);
+                    }
+                    showResult(result.statusMessage);
+                    
+                    return { success: result.returnCode === 0, data: result.data };
+                }
+            },
+            reset_table: {
+                name: "reset_table",
+                description: "Resets the irrigation data table back to original state. Handles both JSON default data and API-sourced data (Grid 4). When data source is API, reloads from cached API detail data. When data source is JSON, reloads from original default data.",
+                inputSchema: {
+                    type: "object",
+                    properties: {},
+                    required: []
+                },
+                handler: function() {
+                    // Turn off wait queue filter
+                    waitQueueFilter = false;
+                    
+                    // Determine source data based on dataSource flag
+                    const sourceData = (dataSource === 'api') ? apiDetailData : originalData;
+                    
+                    // Call pure function from IRRIGATION_COMPONENT
+                    const result = resetTable(sourceData, displayRecords, dataSource);
+                    
+                    // UI refresh - DASHBOARD handles this
+                    if (result.returnCode === 0) {
+                        selectedRecord = null;
+                        renderTable();
+                    }
+                    showResult(result.statusMessage);
+                    
+                    return { success: result.returnCode === 0, data: result.data };
+                }
+            },
+            read_meter: {
+                name: "read_meter",
+                description: "Prepares form to capture actual meter reading for the most recent irrigation event. Finds the last irrigation record for the selected ranch/planting, selects it, and focuses the Water Applied field for data entry. Used by field workers to record real-world water usage.",
+                inputSchema: {
+                    type: "object",
+                    properties: {
+                        ranch: { type: "string", description: "Ranch name or number" },
+                        planting: { type: "string", description: "Planting name" }
+                    },
+                    required: []
+                },
+                handler: function(params = {}) {
+                    let targetRanch = params.ranch || (selectedRecord ? selectedRecord.ranch : null);
+                    let targetPlanting = params.planting || (selectedRecord ? selectedRecord.planting : null);
+                    
+                    // If ranch/planting provided, find and select a matching record first
+                    if (targetRanch && targetPlanting) {
+                        const matchingRecord = displayRecords.find(r => 
+                            r.ranch === targetRanch && r.planting === targetPlanting
+                        );
+                        if (matchingRecord) {
+                            selectRecord(matchingRecord.id);
+                        } else {
+                            showResult(`ERROR: No records found for Ranch ${targetRanch} Planting ${targetPlanting}`);
+                            return { success: false, error: 'No matching records' };
+                        }
+                    }
+                    
+                    if (!selectedRecord) {
+                        showResult('ERROR: No record selected. Click a row first.');
+                        return { success: false, error: 'No record selected' };
+                    }
+                    
+                    // Call pure function from IRRIGATION_COMPONENT
+                    const result = testReadMeter(selectedRecord.ranch, selectedRecord.planting, displayRecords);
+                    
+                    // UI refresh - DASHBOARD handles this
+                    if (result.returnCode === 0) {
+                        selectRecord(result.data.id);
+                        document.getElementById('formWaterApplied').value = '';
+                        document.getElementById('formWaterApplied').focus();
+                    }
+                    showResult(result.statusMessage);
+                    
+                    return { success: result.returnCode === 0, data: result.data };
+                }
+            },
+            update_record: {
+                name: "update_record",
+                description: "Updates the currently selected irrigation record with values from the form fields (date, interval, manager hours, water applied). Marks record status as pending (-1) for sync to CropManage. Changes are saved to working memory.",
+                inputSchema: {
+                    type: "object",
+                    properties: {},
+                    required: []
+                },
+                handler: function() {
+                    if (!selectedRecord) {
+                        showResult('ERROR: No record selected. Click a row first.');
+                        return { success: false, error: 'No record selected' };
+                    }
+                    
+                    // Get values from DOM (UI layer reads DOM)
+                    const patch = {
+                        scheduledDate: document.getElementById('formDate').value,
+                        interval: document.getElementById('formInterval').value,
+                        mgrHours: document.getElementById('formManagerHours').value,
+                        appliedHours: document.getElementById('formWaterApplied').value
+                    };
+                    
+                    // Call pure function from IRRIGATION_COMPONENT
+                    const result = updateRecord(selectedRecord.id, patch, displayRecords);
+                    
+                    // UI refresh - DASHBOARD handles this
+                    if (result.returnCode === 0) {
+                        renderTable();
+                        selectRecord(selectedRecord.id);
+                    }
+                    showResult(result.statusMessage);
+                    
+                    return { success: result.returnCode === 0, data: result.data };
+                }
+            },
+            save_display: {
+                name: "save_display",
+                description: "Saves current displayRecords to JSON format for persistence. Returns the data ready to be written to storage.",
+                inputSchema: {
+                    type: "object",
+                    properties: {},
+                    required: []
+                },
+                handler: function() {
+                    const result = saveDisplay(displayRecords);
+                    showResult(result.statusMessage);
+                    return { success: result.returnCode === 0, data: result.data };
+                }
+            },
+            retrieve_display: {
+                name: "retrieve_display",
+                description: "Loads displayRecords from JSON data. Replaces current working data with provided JSON.",
+                inputSchema: {
+                    type: "object",
+                    properties: {
+                        jsonData: { type: "array", description: "Array of irrigation records to load" }
+                    },
+                    required: ["jsonData"]
+                },
+                handler: function(params = {}) {
+                    if (!params.jsonData) {
+                        showResult('ERROR: jsonData parameter required');
+                        return { success: false, error: 'jsonData required' };
+                    }
+                    const result = retrieveDisplay(params.jsonData, displayRecords);
+                    if (result.returnCode === 0) {
+                        selectedRecord = null;
+                        renderTable();
+                    }
+                    showResult(result.statusMessage);
+                    return { success: result.returnCode === 0, data: result.data };
+                }
+            }
+        };
+
+// ========================================
+// FUNCTIONS - MCP Tool Caller
+// ========================================
+        
+        function callTool(toolName, params = {}) {
+            const tool = mcpTools[toolName];
+            if (!tool) {
+                logToChat(`❌ Tool not found: ${toolName}`, 'M');
+                return { success: false, error: `Tool not found: ${toolName}` };
+            }
+            
+            logToChat(`🔧 ${tool.description}`, 'M');
+            return tool.handler(params);
+        }
+
+// ========================================
+// FUNCTIONS - Utilities
+// ========================================
+
+        function parseEventDate(dateStr) {
+            const parts = dateStr.split('/');
+            const month = parseInt(parts[0]) - 1;
+            const day = parseInt(parts[1]);
+            const year = parseInt('20' + parts[2]);
+            return new Date(year, month, day);
+        }
+
+        function formatDate(date) {
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            const year = String(date.getFullYear()).slice(-2);
+            return `${month}/${day}/${year}`;
+        }
+
+        /* ========================================
+        // TOOL SELECTION FROM GRID - MOVED TO COMPONENT
+        // This section has been extracted to CropClient-Agent-Grid.txt component
+        // ========================================
+
+        const toolDescriptions = {
+            reset: "🔄 RESET TABLE: Refreshes the irrigation data table back to original state. All created records will be removed.",
+            create: "➕ CREATE NEXT: Calculates and creates the next irrigation event for the selected ranch/planting based on interval.",
+            meter: "📊 READ METER: Prepares the form to enter actual meter reading for the most recent irrigation event.",
+            update: "💾 UPDATE RECORD: Saves the Manager Hours and Water Applied values to the selected record."
+        };
+
+        const toolPrompts = {
+            reset: "Reset table to show all irrigation records",
+            create: "Create next irrigation for the selected field",
+            meter: "Read meter for the selected planting",
+            update: "Update water applied for selected record"
+        };
+
+        function selectToolFromGrid(toolId) {
+            // Highlight the selected row
+            document.querySelectorAll('#toolsTableBody tr').forEach(row => {
+                row.style.background = '';
+            });
+            event.currentTarget.style.background = '#C8E6C9';
+            
+            // Show description
+            document.getElementById('toolDescription').textContent = toolDescriptions[toolId];
+            
+            // Fill prompt input
+            document.getElementById('promptInput').value = toolPrompts[toolId];
+        }
+        ======================================== */
+
+// ========================================
+// FUNCTIONS - Prompt Processing & Chat
+// ========================================
+
+
+        /* BEGIN MCP MINI MODULE: host + token handshake (v1.2)
+           Purpose:
+             - Let the Dashboard send the currently selected CropManage API token to the MCP server
+             - MCP stores the token (server-side) so subsequent tools can run without passing token each time
+             - Provide a simple way to set MCP host (localhost vs hosted domain) using the prompt box
+
+           How to use (type into Prompt box, then click Send):
+             - "mcp host http://localhost:3101"           (set MCP host)
+             - "mcp host https://crop-client-services.some/api"  (set hosted MCP base, if proxied under /api)
+             - "mcp token"                               (send current apiToken to MCP + validate with get_ranches)
+             - "mcp refresh"                             (send token then run irrigation detail for current selection)
+
+           Notes:
+             - Does NOT change onload behavior
+             - Does NOT replace existing local API calls
+             - Safe to remove after audit validation
+        */
+        function getMcpBase() {
+            const v = localStorage.getItem('cc.mcpBase');
+            return (v && v.trim()) ? v.trim().replace(/\/+$/, '') : 'http://localhost:3101';
+        }
+
+        function setMcpBase(value) {
+            const v = (value || '').trim().replace(/\/+$/, '');
+            if (!v) throw new Error('MCP host cannot be blank');
+            localStorage.setItem('cc.mcpBase', v);
+            return v;
+        }
+
+        async function mcpCall(toolName, args = {}) {
+            const base = getMcpBase();
+            const url = `${base}/tools/${toolName}`;
+            const res = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(args || {})
+            });
+            const json = await res.json().catch(() => ({}));
+            if (!res.ok || json?.success === false) {
+                const msg = json?.error || json?.message || `MCP tool failed: ${toolName}`;
+                throw new Error(msg);
+            }
+            return json;
+        }
+
+        async function mcpSendTokenAndValidate(mode = 'ranches') {
+            // apiToken already exists in the app (from onload / Get Token)
+            if (!apiToken || !String(apiToken).trim()) {
+                showResult('❌ No apiToken in the app yet. Run Get Token first.');
+                return;
+            }
+
+            const base = getMcpBase();
+            logToChat(`MCP base: ${base}`, 'M');
+
+            // 1) Store token on MCP server (requires MCP tool: set_token)
+            try {
+                await mcpCall('set_token', { token: apiToken });
+                logToChat('✅ MCP stored token (set_token)', 'M');
+            } catch (e) {
+                logToChat(`❌ MCP set_token failed: ${e.message}`, 'M');
+                showResult('❌ MCP set_token missing or failed. Add set_token tool to APIServer1.2.js.');
+                return;
+            }
+
+            // 2) Validate execution path
+            try {
+                if (mode === 'refresh') {
+                    // Use existing selections if available; fall back to ranches
+                    if (selectedPlantingId && selectedPlantingId !== 'ALL') {
+                        const resp = await mcpCall('get_irrigation_details', { plantingId: selectedPlantingId });
+                        logToChat(`✅ MCP irrigation details ok (plantingId=${selectedPlantingId})`, 'M');
+                        showResult(`✅ MCP validated token. get_irrigation_details returned ${(resp.data && resp.data.length) || 0} records`);
+                    } else {
+                        const ranches = await mcpCall('get_ranches', {});
+                        logToChat('✅ MCP get_ranches ok', 'M');
+                        showResult(`✅ MCP validated token. get_ranches returned ${(ranches.data && ranches.data.length) || 0} ranches`);
+                    }
+                } else {
+                    const ranches = await mcpCall('get_ranches', {});
+                    logToChat('✅ MCP get_ranches ok', 'M');
+                    showResult(`✅ MCP validated token. get_ranches returned ${(ranches.data && ranches.data.length) || 0} ranches`);
+                }
+            } catch (e) {
+                logToChat(`❌ MCP validation call failed: ${e.message}`, 'M');
+                showResult(`❌ MCP validation failed: ${e.message}`);
+            }
+        }
+        /* END MCP MINI MODULE */
+
+        function sendPrompt() {
+            const promptInput = document.getElementById('promptInput');
+            const prompt = promptInput.value.trim().toLowerCase();
+
+
+            // MCP MINI MODULE commands (do not affect existing commands)
+            // Examples:
+            //  - mcp host http://localhost:3101
+            //  - mcp token
+            //  - mcp refresh
+            if (prompt.startsWith('mcp host ')) {
+                try {
+                    const host = promptInput.value.trim().substring(9).trim(); // keep original case for URL
+                    const saved = setMcpBase(host);
+                    logToChat(`✅ MCP host set to: ${saved}`, 'M');
+                    showResult(`✅ MCP host saved: ${saved}`);
+                } catch (e) {
+                    showResult(`❌ ${e.message}`);
+                }
+                return;
+            }
+            if (prompt === 'mcp token' || prompt === 'mcp set token' || prompt === 'mcp send token') {
+                mcpSendTokenAndValidate('ranches');
+                return;
+            }
+            if (prompt === 'mcp refresh') {
+                mcpSendTokenAndValidate('refresh');
+                return;
+            }
+            
+            if (!prompt) {
+                showResult('❌ Please enter a prompt or select from dropdown');
+                return;
+            }
+            
+            // Log to chat with P code
+            logToChat(promptInput.value.trim(), 'P');
+            
+            // Route based on prompt keywords - ALL call MCP tools
+            if (prompt.includes('reset') || prompt.includes('refresh') || prompt.includes('show all')) {
+                callTool('reset_table');
+            }
+            else if (prompt.includes('create') && prompt.includes('next')) {
+                callTool('create_next_irrigation');
+            }
+            else if ((prompt.includes('read') && prompt.includes('meter')) || prompt.includes('apply')) {
+                callTool('read_meter');
+            }
+            else if (prompt.includes('update')) {
+                callTool('update_record');
+            }
+            else if (prompt.includes('get') && prompt.includes('token')) {
+                getToken();
+            }
+            else if (prompt.includes('get') && prompt.includes('ranches')) {
+                getRanches();
+            }
+            else if (prompt.includes('get') && prompt.includes('plantings')) {
+                if (selectedRanchGuid) {
+                    getPlantingsByRanch(selectedRanchGuid);
+                } else {
+                    showResult('❌ Select a ranch first');
+                }
+            }
+            else if (prompt.includes('refresh') && prompt.includes('irrigation')) {
+                refreshSelectedIrrigations();
+            }
+            else if (prompt.includes('post') && prompt.includes('irrigation')) {
+                postRecordToCropManage();
+            }
+            else if (prompt.includes('update') && prompt.includes('cropmanage')) {
+                updateRecordToCropManage();
+            }
+            else {
+                showResult('❌ Unknown command. Try: reset, create next, read meter, update, get token, get ranches, get plantings, refresh irrigation, post irrigation');
+            }
+        }
+
+        function setPromptAndSend(prompt) {
+            document.getElementById('promptInput').value = prompt;
+            sendPrompt();
+        }
+
+        function sendChatPrompt() {
+            const chatInput = document.getElementById('chatPromptInput');
+            const prompt = chatInput.value.trim();
+            
+            if (!prompt) return;
+            
+            // Copy to main prompt input and send
+            document.getElementById('promptInput').value = prompt;
+            chatInput.value = '';
+            sendPrompt();
+        }
+
+        function logToChat(message, type = 'P') {
+            const chatLog = document.getElementById('chatLog');
+            const timestamp = new Date().toLocaleTimeString();
+            
+            const entry = document.createElement('div');
+            entry.style.marginBottom = '8px';
+            entry.style.padding = '8px';
+            entry.style.background = 'white';
+            entry.style.borderRadius = '4px';
+            entry.style.borderLeft = '3px solid ' + (type === 'P' ? '#4caf50' : '#2196F3');
+            entry.style.cursor = 'pointer';
+            
+            const label = type === 'P' ? 'Prompt:' : 'Message:';
+            
+            // Create header with label on left, time on right
+            const header = document.createElement('div');
+            header.style.display = 'flex';
+            header.style.justifyContent = 'space-between';
+            header.style.marginBottom = '4px';
+            header.innerHTML = 
+                '<strong style="color: ' + (type === 'P' ? '#2e7d32' : '#1976D2') + ';">' + label + '</strong>' +
+                '<span style="color: #666; font-size: 0.85em;">' + timestamp + '</span>';
+            
+            // Create content area
+            const content = document.createElement('div');
+            content.style.color = '#333';
+            content.style.fontSize = '0.9em';
+            
+            if (type === 'P') {
+                // For prompts, show the text inline
+                content.textContent = message;
+                
+                // Click to put back in prompt field
+                entry.onclick = function() {
+                    document.getElementById('chatPromptInput').value = message;
+                    document.getElementById('chatPromptInput').focus();
+                };
+            } else {
+                // For messages, show truncated with click to expand
+                const preview = message.length > 60 ? message.substring(0, 60) + '...' : message;
+                content.textContent = preview;
+                
+                // Click to show full message in popup
+                entry.onclick = function() {
+                    const popup = document.createElement('div');
+                    popup.style.position = 'fixed';
+                    popup.style.top = '50%';
+                    popup.style.left = '50%';
+                    popup.style.transform = 'translate(-50%, -50%)';
+                    popup.style.background = 'white';
+                    popup.style.border = '3px solid #2196F3';
+                    popup.style.borderRadius = '8px';
+                    popup.style.padding = '20px';
+                    popup.style.maxWidth = '500px';
+                    popup.style.maxHeight = '400px';
+                    popup.style.overflow = 'visible';
+                    popup.style.zIndex = '10000';
+                    popup.style.boxShadow = '0 10px 40px rgba(0,0,0,0.3)';
+                    
+                    popup.innerHTML = 
+                        '<div style="display: flex; justify-content: space-between; margin-bottom: 15px; border-bottom: 2px solid #2196F3; padding-bottom: 10px; align-items: center;">' +
+                        '<strong style="color: #1976D2; font-size: 1.1em;">Message</strong>' +
+                        '<button onclick="this.parentElement.parentElement.remove()" style="padding: 4px 12px; background: #f44336; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600;">✕ Close</button>' +
+                        '</div>' +
+                        '<div style="color: #666; margin-bottom: 10px;">' + timestamp + '</div>' +
+                        '<div style="text-align: left; white-space: pre-line; line-height: 1.6; color: #333; max-height: 300px; overflow-y: auto;">' + message + '</div>';
+                    
+                    document.body.appendChild(popup);
+                };
+            }
+            
+            entry.appendChild(header);
+            entry.appendChild(content);
+            chatLog.appendChild(entry);
+            chatLog.scrollTop = chatLog.scrollHeight; // Auto-scroll to bottom
+        }
+
+        function showResult(message) {
+            logToChat(message, 'M');
+        }
+
+// ========================================
+// FUNCTIONS - CRUD Operations (Reset, Create, Read, Update)
+// ========================================
+
+        function read() {
+            displayRecords = JSON.parse(JSON.stringify(irrigationData));
+            
+            // Set data source flag for Reset CRUD
+            dataSource = 'json';
+            
+            // Sort by ranch → planting → date
+            displayRecords.sort((a, b) => {
+                if (a.ranch < b.ranch) return -1;
+                if (a.ranch > b.ranch) return 1;
+                if (a.planting < b.planting) return -1;
+                if (a.planting > b.planting) return 1;
+                const dateA = parseEventDate(a.scheduledDate);
+                const dateB = parseEventDate(b.scheduledDate);
+                return dateA - dateB;
+            });
+            
+            renderTable();
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+            
+            // Sort by ranch, planting, then date
+            displayRecords.sort((a, b) => {
+                if (a.ranch < b.ranch) return -1;
+                if (a.ranch > b.ranch) return 1;
+                if (a.planting < b.planting) return -1;
+                if (a.planting > b.planting) return 1;
+                const dateA = parseEventDate(a.scheduledDate);
+                const dateB = parseEventDate(b.scheduledDate);
+                return dateA - dateB;
+            });
+            
+            // Filter records based on Wait Queue toggle
+            const recordsToShow = waitQueueFilter 
+                ? displayRecords.filter(r => r.status === -1)
+                : displayRecords;
+            
+            recordsToShow.forEach(record => {
+                const row = tbody.insertRow();
+                row.dataset.recordId = record.id;
+                row.onclick = () => selectRecord(record.id);
+                
+                if (record.isNew) {
+                    row.style.background = '#E3F2FD';
+                }
+                
+                row.insertCell(0).textContent = record.ranch;
+                row.insertCell(1).textContent = record.planting;
+                row.insertCell(2).textContent = record.scheduledDate;
+                row.insertCell(3).textContent = record.hours;
+                row.insertCell(4).textContent = record.interval;
+                row.insertCell(5).textContent = record.mgrHours;
+                row.insertCell(6).textContent = record.appliedHours;
+            });
+            
+            // Update counts
+            document.getElementById('recordCount').textContent = recordsToShow.length;
+            
+            const waitQueueCount = displayRecords.filter(r => r.status === -1).length;
+            document.getElementById('waitQueueCount').textContent = waitQueueCount;
+            
+            // Update toggle color based on filter state
+            const waitQueueToggle = document.getElementById('waitQueueToggle');
+            if (waitQueueFilter) {
+                waitQueueToggle.style.color = '#2196F3';  // Blue when filtering
+                waitQueueToggle.style.fontWeight = '600';
+            } else {
+                waitQueueToggle.style.color = '#666';     // Gray when showing all
+                waitQueueToggle.style.fontWeight = 'normal';
+            }
+            
+            // Select first visible record if none selected
+            if (recordsToShow.length > 0 && !selectedRecord) {
+                selectRecord(recordsToShow[0].id);
+            }
+        }
+
+        function toggleWaitQueue() {
+            // Toggle filter state
+            waitQueueFilter = !waitQueueFilter;
+            
+            // Clear selection to avoid multiple selected rows
+            selectedRecord = null;
+            
+            // Re-render table with new filter
+            renderTable();
+            
+            // Log to chat
+            if (waitQueueFilter) {
+                logToChat('🔍 Filtered to Records Changed (status=-1)', 'M');
+            } else {
+                logToChat('📊 Showing all records', 'M');
+            }
+        }
+
+        function selectRecord(recordId) {
+            selectedRecord = displayRecords.find(r => r.id === recordId);
+            
+            if (!selectedRecord) return;
+            
+            // Highlight row
+            document.querySelectorAll('#tableBody tr').forEach(row => {
+                if (parseInt(row.dataset.recordId) === recordId) {
+                    row.classList.add('selected');
+                    row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                } else {
+                    row.classList.remove('selected');
+                }
+            });
+            
+            // Populate form
+            document.getElementById('formDate').value = selectedRecord.scheduledDate;
+            document.getElementById('formInterval').value = selectedRecord.interval;
+            document.getElementById('formRecommendation').value = selectedRecord.hours;
+            const bigDisplay = document.getElementById('formRecommendationBig');
+            if (bigDisplay) {
+                bigDisplay.textContent = selectedRecord.hours || '-';
+            }
+            document.getElementById('formManagerHours').value = selectedRecord.mgrHours;
+            document.getElementById('formWaterApplied').value = selectedRecord.appliedHours;
+        }
+
+        // ========================================
+        // CRUD OPERATIONS - Now call pure IRRIGATION_COMPONENT functions
+        // Old DOM-mixed versions removed - logic moved to mcpTools handlers
+        // ========================================
+
+        // ========================================
+        // INITIALIZATION
+        // ========================================
+
+        window.onload = function() {
+            read();
+            showResult('✅ CropClient Water Tools Loaded\n12 irrigation records ready.\nSelect a record and try the tools above.');
+        };
+
+</script>
+<!-- @@@@ DASHBOARD_COMPONENT id:dashboard-crud @@@@ -->
+
+
+<!-- @@@@ APISERVICE_COMPONENT id:api-sync @@@@ -->
+<script>
+  // Purpose: CropManage API sync service - connects Dashboard to live API
+  // Handles authentication, ranch/planting/irrigation data fetch, POST/UPDATE operations
+  // Optional - Dashboard works offline without this
+  
+  // ========================================
+  // VARIABLES - API Authentication
+  // ========================================
+  let apiToken = null;
+  
+  // ========================================
+  // VARIABLES - Grid Data (Ranches, Plantings, Lots)
+  // ========================================
+  let ranchData = null;
+  let lotsData = null;
+  let plantingsData = null;
+  
+  // ========================================
+  // VARIABLES - Selection State
+  // ========================================
+  let selectedRanchId = 0;         // The integer Id
+  let selectedRanchGuid = '';      // The Ranch_External_GUID for API calls
+  let selectedRanchName = '';
+  let selectedPlantingId = '';
+  let selectedPlantingName = '';
+  let selectedEventId = '';        // For recommendations (individual event call)
+  
+  // ========================================
+  // VARIABLES - Source Flags (for CRUD Reset)
+  // ========================================
+  let dataSource = 'json';         // 'json' = default data, 'api' = loaded from CropManage API
+  let apiDetailData = [];          // Stores Grid 4 (api detail) data for Reset when dataSource='api'
+  
+  // ========================================
+  // VARIABLES - UI Options
+  // ========================================
+  let waitQueueFilter = false;     // true = showing only status=-1 records
+  
+  // ========================================
+  // VARIABLES - User Preferences
+  // ========================================
+  const defaultRanchName = 'Ranch 1';  // FOR NOW ONLY - Steve's default
+  
+  // ========================================
+  // VARIABLES - Script Metadata (for dropdown)
+  // ========================================
+  const scriptMetadata = {
+      token: {
+          description: "Get CropManage authentication token",
+          url: "POST https://api.dev.cropmanage.ucanr.edu/Token"
+      },
+      ranches: {
+          description: "Fetch all ranches (requires token first). Adds 'All Ranches' option.",
+          url: "GET https://api.dev.cropmanage.ucanr.edu/v2/ranches.json"
+      },
+      plantings: {
+          description: "Get plantings for selected ranch. Adds 'All Plantings' option.",
+          url: "GET https://api.dev.cropmanage.ucanr.edu/v2/ranches/{ranchGuid}/plantings.json"
+      },
+      irrigation_details: {
+          description: "Get irrigation events for selected planting (auto-fetches all recommendations)",
+          url: "GET https://api.dev.cropmanage.ucanr.edu/v2/plantings/{plantingId}/irrigation-events/details.json"
+      },
+      post_irrigation: {
+          description: "Batch process all status=-1 records (POST new, UPDATE existing)",
+          url: "POST/PUT https://api.dev.cropmanage.ucanr.edu/v3/"
+      },
+      update_record: {
+          description: "Update existing irrigation record in CropManage (requires cropManageId)",
+          url: "PUT https://api.dev.cropmanage.ucanr.edu/v3/irrigation-events/{cropManageId}.json"
+      }
+  };
+  
+  // ========================================
+  // FUNCTIONS - Utilities
+  // ========================================
+  
+  function replacePlaceholders(text) {
+      if (!text) return text;
+      
+      let result = text;
+      
+      // Replace from global selection variables (ranch/planting clicks)
+      if (selectedRanchGuid) result = result.replace(/{ranchGuid}/g, selectedRanchGuid);
+      if (selectedPlantingId) result = result.replace(/{plantingId}/g, selectedPlantingId);
+      if (selectedEventId) result = result.replace(/{eventId}/g, selectedEventId);
+      if (selectedRanchName) result = result.replace(/{ranchName}/g, selectedRanchName);
+      if (selectedPlantingName) result = result.replace(/{plantingName}/g, selectedPlantingName);
+      
+      // Replace from selectedRecord (bottom irrigation grid)
+      if (typeof selectedRecord !== 'undefined' && selectedRecord) {
+          if (selectedRecord.ranch) result = result.replace(/{ranch}/g, selectedRecord.ranch);
+          if (selectedRecord.planting) result = result.replace(/{planting}/g, selectedRecord.planting);
+          if (selectedRecord.id) result = result.replace(/{id}/g, selectedRecord.id);
+      }
+      
+      return result;
+  }
+  
+  // ========================================
+  // FUNCTIONS - UI Router (Script Dropdown)
+  // ========================================
+  
+  function selectScript() {
+      const dropdown = document.getElementById('scriptDropdown');
+      const script = dropdown.value;
+      const descArea = document.getElementById('scriptDescription');
+      const urlField = document.getElementById('scriptUrl');
+      
+      if (!script) {
+          descArea.innerHTML = '<div style="color: #999; font-style: italic;">Select a script to see description...</div>';
+          urlField.value = '';
+          return;
+      }
+      
+      const meta = scriptMetadata[script];
+      descArea.innerHTML = `<strong>${dropdown.options[dropdown.selectedIndex].text}:</strong> ${meta.description}`;
+      urlField.value = meta.url;
+  }
+
+  function runScript() {
+      const script = document.getElementById('scriptDropdown').value;
+      if (!script) {
+          showResult('❌ Please select a script first');
+          return;
+      }
+      
+      // Get Token Script
+      if (script === 'token') {
+          const descArea = document.getElementById('scriptDescription');
+          if (descArea) descArea.innerHTML = '⏳ Getting CropManage token...';
+          
+          getToken().then(result => {
+              if (result.success) {
+                  logToChat('✅ SUCCESS: Token acquired', 'M');
+                  if (descArea) descArea.innerHTML = '🔐 Get Token: Get CropManage authentication token';
+              } else {
+                  if (descArea) descArea.innerHTML = result.error;
+              }
+          });
+          return;
+      }
+      
+      // Get Ranches Script
+      if (script === 'ranches') {
+          const descArea = document.getElementById('scriptDescription');
+          if (!apiToken) {
+              if (descArea) descArea.innerHTML = '⚠️ No token available. Run "Get Token" first.';
+              return;
+          }
+          if (descArea) descArea.innerHTML = '⏳ Loading ranches...';
+          
+          getRanches().then(result => {
+              if (result.success) {
+                  if (descArea) descArea.innerHTML = `✅ SUCCESS: ${result.ranches.length} ranches loaded`;
+              } else {
+                  if (descArea) descArea.innerHTML = result.error;
+              }
+          });
+          return;
+      }
+      
+      // Get Plantings Script
+      if (script === 'plantings') {
+          const descArea = document.getElementById('scriptDescription');
+          if (!selectedRanchGuid && selectedRanchId !== 'ALL') {
+              if (descArea) descArea.innerHTML = 'ℹ️ To load plantings: Click a ranch in the Ranches grid first';
+              return;
+          }
+          
+          if (selectedRanchId === 'ALL') {
+              if (descArea) descArea.innerHTML = '⏳ Loading plantings for ALL ranches...';
+              loadAllPlantings();
+          } else {
+              if (descArea) descArea.innerHTML = '⏳ Loading plantings for selected ranch...';
+              getPlantingsByRanch(selectedRanchGuid);
+          }
+          return;
+      }
+      
+      // Get Irrigation Details Script
+      if (script === 'irrigation_details') {
+          const descArea = document.getElementById('scriptDescription');
+          
+          if (!selectedRanchId || !selectedPlantingId) {
+              if (descArea) descArea.innerHTML = 'ℹ️ Select a ranch and planting first, then click Send';
+              return;
+          }
+          
+          if (descArea) descArea.innerHTML = '⏳ Loading irrigation events...';
+          refreshSelectedIrrigations();
+          return;
+      }
+      
+      // Post Irrigation Script
+      if (script === 'post_irrigation') {
+          const descArea = document.getElementById('scriptDescription');
+          const queuedCount = displayRecords.filter(r => r.status === -1).length;
+          if (queuedCount === 0) {
+              if (descArea) descArea.innerHTML = 'ℹ️ No records in queue (status=-1)';
+              return;
+          }
+          if (descArea) descArea.innerHTML = `⏳ Processing ${queuedCount} queued records...`;
+          batchPostQueue();
+          return;
+      }
+      
+      // Update Record Script
+      if (script === 'update_record') {
+          const descArea = document.getElementById('scriptDescription');
+          if (!selectedRecord) {
+              if (descArea) descArea.innerHTML = '❌ No record selected in Display Grid. Click a row in the bottom grid first.';
+              return;
+          }
+          if (descArea) descArea.innerHTML = '⏳ Updating record in CropManage...';
+          updateRecordToCropManage();
+          return;
+      }
+      
+      const descArea = document.getElementById('scriptDescription');
+      if (descArea) descArea.innerHTML = `▶️ Script: ${script}`;
+  }
+  
+  // ========================================
+  // FUNCTIONS - Grid Population
+  // ========================================
+  
+  function populateRanchesGrid(ranches) {
+      const grid = document.getElementById('ranchesGrid');
+      if (!ranches || ranches.length === 0) {
+          grid.innerHTML = '<div style="color: #999; text-align: center; padding: 20px; font-size: var(--small-font);">No ranches</div>';
+          return;
+      }
+      
+      let html = '<table style="width: 100%; font-size: var(--small-font); border-collapse: collapse;">';
+      html += '<thead><tr style="background: #f5f5f5;"><th style="padding: 4px; text-align: left;">Name</th></tr></thead>';
+      html += '<tbody>';
+      
+      // Add "All" option first
+      html += `<tr style="border-bottom: 1px solid #eee; cursor: pointer; background: #e3f2fd;" onclick="selectRanch('ALL', 'ALL', 'All Ranches')">`;
+      html += `<td style="padding: 4px; font-weight: 600;">All Ranches</td>`;
+      html += '</tr>';
+      
+      // Add individual ranches
+      ranches.forEach(ranch => {
+          const ranchId = ranch.Id;  // Integer
+          const ranchGuid = ranch.Ranch_External_GUID;  // GUID string for API calls
+          
+          html += `<tr style="border-bottom: 1px solid #eee; cursor: pointer;" onclick="selectRanch(${ranchId}, '${ranchGuid}', '${ranch.Name.replace(/'/g, "\\'")}')">`;
+          html += `<td style="padding: 4px;">${ranch.Name}</td>`;
+          html += '</tr>';
+      });
+      html += '</tbody></table>';
+      grid.innerHTML = html;
+      
+      // Auto-select first ranch if none selected
+      if (ranches.length > 0 && !selectedRanchId) {
+          const firstRanch = ranches[0];
+          selectRanch(firstRanch.Id, firstRanch.Ranch_External_GUID, firstRanch.Name);
+      }
+  }
+  
+  function populatePlantingsGrid(plantings) {
+      const grid = document.getElementById('plantingsGrid');
+      if (!plantings || plantings.length === 0) {
+          grid.innerHTML = '<div style="color: #999; text-align: center; padding: 20px; font-size: var(--small-font);">No plantings</div>';
+          return;
+      }
+      
+      let html = '<table style="width: 100%; font-size: var(--small-font); border-collapse: collapse;">';
+      html += '<thead><tr style="background: #f5f5f5;"><th style="padding: 4px; text-align: left;">Name</th></tr></thead>';
+      html += '<tbody>';
+      
+      // ALWAYS add "All Plantings" option first
+      html += `<tr style="border-bottom: 1px solid #eee; cursor: pointer; background: #e3f2fd;" onclick="selectPlanting('ALL', 'All Plantings')">`;
+      html += `<td style="padding: 4px; font-weight: 600;">All Plantings</td>`;
+      html += '</tr>';
+      
+      // Add individual plantings
+      plantings.forEach(planting => {
+          html += `<tr style="border-bottom: 1px solid #eee; cursor: pointer;" onclick="selectPlanting('${planting.Id}', '${planting.Name.replace(/'/g, "\\'")}')">`;
+          html += `<td style="padding: 4px;">${planting.Name}</td>`;
+          html += '</tr>';
+      });
+      html += '</tbody></table>';
+      grid.innerHTML = html;
+      
+      // Auto-select "All Plantings" by default
+      selectPlanting('ALL', 'All Plantings');
+  }
+  
+  function populateRecommendationsGrid(recommendation) {
+      console.log('🔍 populateRecommendationsGrid called with:', recommendation);
+      const grid = document.getElementById('recommendationsGrid');
+      
+      if (!recommendation) {
+          grid.innerHTML = '<div style="color: #999; text-align: center; padding: 20px; font-size: var(--small-font);">Click an event in Grid 4 to see recommendation</div>';
+          return;
+      }
+      
+      // Show ONE record - not a table - with ranch/planting context
+      let html = '<div style="padding: 8px; font-size: var(--small-font);">';
+      html += `<div style="margin-bottom: 4px;"><strong>Ranch:</strong> ${selectedRanchName || '-'}</div>`;
+      html += `<div style="margin-bottom: 4px;"><strong>Planting:</strong> ${selectedPlantingName || '-'}</div>`;
+      html += `<div style="margin-bottom: 4px;"><strong>Date:</strong> ${recommendation.EventDate || '-'}</div>`;
+      html += `<div style="margin-bottom: 4px;"><strong>Rec Amount:</strong> ${recommendation.RecommendedIrrigationAmount || '-'} inches</div>`;
+      html += `<div style="margin-bottom: 4px;"><strong>Interval:</strong> ${recommendation.RecommendedInterval || '-'} days</div>`;
+      html += `<div style="margin-bottom: 4px;"><strong>Method:</strong> ${recommendation.IrrigationMethod || '-'}</div>`;
+      html += '</div>';
+      
+      grid.innerHTML = html;
+      console.log('✅ Grid 3 showing ONE recommendation');
+  }
+  
+  function displayFullRecommendation(eventData) {
+      console.log('🔍 displayFullRecommendation called with:', eventData);
+      const grid = document.getElementById('recommendationsGrid');
+      
+      // Extract RecommendationSummary which has the HOURS
+      const summary = eventData.RecommendationSummary || {};
+      
+      // Build a proper table grid
+      let html = '<table style="width: 100%; font-size: var(--small-font); border-collapse: collapse;">';
+      html += '<thead><tr style="background: #f5f5f5;">';
+      html += '<th style="padding: 4px; border: 1px solid #ddd;">Date</th>';
+      html += '<th style="padding: 4px; border: 1px solid #ddd;">Rec Amt</th>';
+      html += '<th style="padding: 4px; border: 1px solid #ddd;">Rec Hrs</th>';
+      html += '<th style="padding: 4px; border: 1px solid #ddd;">Mgr Hrs</th>';
+      html += '<th style="padding: 4px; border: 1px solid #ddd;">Interval</th>';
+      html += '<th style="padding: 4px; border: 1px solid #ddd;">Method</th>';
+      html += '</tr></thead>';
+      html += '<tbody>';
+      html += '<tr style="border-bottom: 1px solid #eee;">';
+      html += `<td style="padding: 4px; border: 1px solid #ddd;">${eventData.EventDate || '-'}</td>`;
+      html += `<td style="padding: 4px; border: 1px solid #ddd; text-align: right; font-weight: 600; color: #ff0000;">${eventData.RecommendedIrrigationAmount || '-'}</td>`;
+      html += `<td style="padding: 4px; border: 1px solid #ddd; text-align: right; font-weight: 600; color: #ff0000;">${summary.RecommendedIrrigationTime || '-'}</td>`;
+      html += `<td style="padding: 4px; border: 1px solid #ddd; text-align: right; font-weight: 600; color: #ff0000;">${summary.ManagerAmountRecommendationHours || '-'}</td>`;
+      html += `<td style="padding: 4px; border: 1px solid #ddd; text-align: center;">${eventData.RecommendedInterval || '-'}</td>`;
+      html += `<td style="padding: 4px; border: 1px solid #ddd;">${eventData.IrrigationMethod || '-'}</td>`;
+      html += '</tr>';
+      html += '</tbody></table>';
+      
+      grid.innerHTML = html;
+      console.log('✅ Grid 3 showing FULL recommendation as PROPER GRID with HOURS');
+  }
+  
+  function populateIrrigationDetailsGrid(events) {
+      console.log('🔍 populateIrrigationDetailsGrid called with', events ? events.length : 0, 'events');
+      const tbody = document.getElementById('irrigationDetailsBody');
+      console.log('🔍 tbody element found:', tbody ? 'YES' : 'NO');
+      
+      if (!events || events.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: #999; padding: 20px;">No data</td></tr>';
+          return;
+      }
+      
+      tbody.innerHTML = '';
+      events.forEach(event => {
+          console.log('🔍 Adding event to Grid 4:', event.EventDate);
+          const row = tbody.insertRow();
+          row.style.borderBottom = '1px solid #eee';
+          row.style.cursor = 'pointer';
+          row.onclick = () => selectEvent(event.Id, event);  // Click to show in Grid 3
+          
+          // Date
+          const dateCell = row.insertCell(0);
+          dateCell.textContent = event.EventDate || '-';
+          dateCell.style.padding = '4px';
+          
+          // Method
+          const methodCell = row.insertCell(1);
+          methodCell.textContent = event.IrrigationMethod || '-';
+          methodCell.style.padding = '4px';
+          
+          // Interval
+          const intervalCell = row.insertCell(2);
+          intervalCell.textContent = event.RecommendedInterval || '-';
+          intervalCell.style.padding = '4px';
+          intervalCell.style.textAlign = 'center';
+          
+          // Recommended Amount
+          const recCell = row.insertCell(3);
+          recCell.textContent = event.RecommendedIrrigationAmount || '-';
+          recCell.style.padding = '4px';
+          recCell.style.textAlign = 'right';
+          
+          // Applied
+          const appliedCell = row.insertCell(4);
+          const applied = event.WaterApplied !== null ? event.WaterApplied : '-';
+          appliedCell.textContent = applied;
+          appliedCell.style.padding = '4px';
+          appliedCell.style.textAlign = 'right';
+          
+          // Crop Coefficient
+          const cropCoefCell = row.insertCell(5);
+          cropCoefCell.textContent = event.CropCoefficient || '-';
+          cropCoefCell.style.padding = '4px';
+          cropCoefCell.style.textAlign = 'right';
+          
+          // Reference ET
+          const refETCell = row.insertCell(6);
+          refETCell.textContent = event.ReferenceET || '-';
+          refETCell.style.padding = '4px';
+          refETCell.style.textAlign = 'right';
+      });
+      console.log('✅ Grid 4 populated with', events.length, 'rows');
+  }
+  
+  function selectRanch(ranchId, ranchGuid, ranchName) {
+      selectedRanchId = ranchId;
+      selectedRanchGuid = ranchGuid;
+      selectedRanchName = ranchName;
+      
+      console.log('Ranch selected - ID:', ranchId, 'GUID:', ranchGuid, 'Name:', ranchName);
+      
+      // Highlight selected ranch using 'selected' class
+      const ranchRows = document.querySelectorAll('#ranchesGrid tbody tr');
+      ranchRows.forEach(row => {
+          row.classList.remove('selected');
+          const rowText = row.textContent.trim();
+          if ((ranchId === 'ALL' && rowText === 'All Ranches') || 
+              (ranchId !== 'ALL' && rowText === ranchName)) {
+              row.classList.add('selected');
+          }
+      });
+      
+      // If specific ranch selected, load its plantings (but keep All option)
+      if (ranchId !== 'ALL') {
+          getPlantingsByRanch(ranchGuid);
+      }
+  }
+  
+  function selectPlanting(plantingId, plantingName) {
+      selectedPlantingId = plantingId;
+      selectedPlantingName = plantingName;
+      
+      console.log('Planting selected:', plantingId, plantingName);
+      
+      // Highlight selected planting using 'selected' class
+      const plantingRows = document.querySelectorAll('#plantingsGrid tbody tr');
+      plantingRows.forEach(row => {
+          row.classList.remove('selected');
+          const rowText = row.textContent.trim();
+          if ((plantingId === 'ALL' && rowText === 'All Plantings') || 
+              (plantingId !== 'ALL' && rowText === plantingName)) {
+              row.classList.add('selected');
+          }
+      });
+      
+      if (plantingId === 'ALL') {
+          logToChat(`All Plantings selected. Click "Refresh Selected Irrigations" to load all.`, 'M');
+      } else {
+          logToChat(`Planting selected: ${plantingName}. Click "Refresh Selected Irrigations" to load data.`, 'M');
+      }
+  }
+  
+  function selectEvent(eventId, eventData) {
+      selectedEventId = eventId;
+      console.log('Event selected:', eventId);
+      
+      // Grid 3 is now auto-populated with all rows
+      // This click just stores the selected event ID
+      
+      logToChat(`Event selected: ${eventData.EventDate}`, 'M');
+  }
+  
+  // ========================================
+  // FUNCTIONS - CropManage API Calls
+  // ========================================
+  
+  // Script: Get Token + Ranches
+  // Script: Get Token Only
+  async function getToken() {
+      try {
+          const username = 'stevep@sspnet.com';
+          const credentials = username;  // Use email for display
+          
+          // Show obtaining token message
+          const descArea = document.getElementById('scriptDescription');
+          if (descArea) descArea.innerHTML = `⏳ Obtaining Token for "${credentials}"...`;
+          
+          const tokenResponse = await fetch('https://api.dev.cropmanage.ucanr.edu/Token', {
+              method: 'POST',
+              headers: {
+                  'Content-Type': 'application/x-www-form-urlencoded'
+              },
+              body: `username=${username}&password=gosteve1!&grant_type=password`
+          });
+          
+          if (!tokenResponse.ok) {
+              throw new Error(`Token request failed: ${tokenResponse.status}`);
+          }
+          
+          const tokenData = await tokenResponse.json();
+          apiToken = tokenData.access_token;
+          
+          console.log('✅ Token acquired:', apiToken.substring(0, 20) + '...');
+          
+          // Update token display
+          document.getElementById('tokenDisplay').value = apiToken.substring(0, 50) + '...';
+          
+          // Show success message
+          if (descArea) descArea.innerHTML = `✅ Token obtained for "${credentials}"`;
+          
+          return {
+              success: true,
+              token: apiToken
+          };
+          
+      } catch (error) {
+          // If token fetch fails, show error in Script Description area
+          const errorMessage = '❌ Token not Created for Logon User.';
+          
+          // Update Script Description directly
+          const descArea = document.getElementById('scriptDescription');
+          if (descArea) {
+              descArea.innerHTML = errorMessage;
+          }
+          
+          return {
+              success: false,
+              error: errorMessage
+          };
+      }
+  }
+  
+  // Script: Get Ranches (requires token first)
+  async function getRanches() {
+      try {
+          if (!apiToken) {
+              throw new Error('No token available. Get token first.');
+          }
+          
+          const ranchesResponse = await fetch('https://api.dev.cropmanage.ucanr.edu/v2/ranches.json', {
+              method: 'GET',
+              headers: {
+                  'Authorization': `Bearer ${apiToken}`
+              }
+          });
+          
+          if (!ranchesResponse.ok) {
+              throw new Error(`Ranches request failed: ${ranchesResponse.status}`);
+          }
+          
+          ranchData = await ranchesResponse.json();
+          
+          console.log('✅ Ranches loaded:', ranchData.length, 'ranches');
+          
+          // Populate ranches grid with "All" option
+          populateRanchesGrid(ranchData);
+          
+          // No chat message on auto-load
+          
+          return {
+              success: true,
+              ranches: ranchData
+          };
+          
+      } catch (error) {
+          console.error('❌ Error getting ranches:', error);
+          // No chat message - just return error
+          return {
+              success: false,
+              error: error.message
+          };
+      }
+  }
+  
+  // Script: Get Token + Ranches (legacy - calls both)
+  async function getTokenAndRanches() {
+      const tokenResult = await getToken();
+      if (!tokenResult.success) return tokenResult;
+      
+      const ranchesResult = await getRanches();
+      return ranchesResult;
+  }
+  // End Script: Get Token + Ranches
+  
+  // Script: Get Plantings by Ranch
+  async function getPlantingsByRanch(ranchGuid) {
+      try {
+          if (!apiToken) {
+              throw new Error('No token available. Run "Get Token + Ranches" first.');
+          }
+          
+          if (!ranchGuid) {
+              throw new Error('Ranch GUID required. Select a ranch first.');
+          }
+          
+          console.log('📨 Fetching plantings for ranch GUID:', ranchGuid);
+          
+          const url = `https://api.dev.cropmanage.ucanr.edu/v2/ranches/${ranchGuid}/plantings.json`;
+          console.log('📨 Full URL:', url);
+          
+          const response = await fetch(url, {
+              method: 'GET',
+              headers: {
+                  'Authorization': `Bearer ${apiToken}`
+              }
+          });
+          
+          if (!response.ok) {
+              console.error('❌ Response status:', response.status);
+              console.error('❌ Response text:', await response.text());
+              throw new Error(`Plantings request failed: ${response.status}`);
+          }
+          
+          plantingsData = await response.json();
+          
+          console.log('✅ Plantings loaded:', plantingsData.length, 'plantings');
+          
+          // Populate plantings grid
+          populatePlantingsGrid(plantingsData);
+          
+          // NO auto-select - user clicks manually
+          
+          // Log to chat
+          logToChat(`✅ ${plantingsData.length} plantings loaded. Click a planting.`, 'M');
+          
+          return {
+              success: true,
+              plantings: plantingsData,
+              message: `${plantingsData.length} plantings loaded.`
+          };
+          
+      } catch (error) {
+          console.error('❌ Error:', error);
+          logToChat(`❌ ${error.message}`, 'M');
+          return {
+              success: false,
+              error: error.message
+          };
+      }
+  }
+  // End Script: Get Plantings by Ranch
+  
+  // Script: Load All Plantings (from all ranches)
+  async function loadAllPlantings() {
+      try {
+          if (!apiToken) {
+              throw new Error('No token available. Get token first.');
+          }
+          
+          if (!ranchData || ranchData.length === 0) {
+              throw new Error('No ranches loaded. Get ranches first.');
+          }
+          
+          console.log('🔄 Loading plantings from ALL ranches...');
+          let allPlantings = [];
+          
+          for (const ranch of ranchData) {
+              const response = await fetch(`https://api.dev.cropmanage.ucanr.edu/v2/ranches/${ranch.Ranch_External_GUID}/plantings.json`, {
+                  headers: { 'Authorization': `Bearer ${apiToken}` }
+              });
+              
+              if (response.ok) {
+                  const plantings = await response.json();
+                  // Add ranch context to each planting
+                  plantings.forEach(p => {
+                      p.RanchName = ranch.Name;
+                      p.RanchId = ranch.Id;
+                  });
+                  allPlantings = allPlantings.concat(plantings);
+              }
+          }
+          
+          plantingsData = allPlantings;
+          console.log('✅ Total plantings loaded:', allPlantings.length);
+          
+          // Populate grid with ALL plantings
+          populatePlantingsGrid(allPlantings);
+          
+          logToChat(`✅ ${allPlantings.length} total plantings loaded from all ranches`, 'M');
+          
+          return {
+              success: true,
+              plantings: allPlantings
+          };
+          
+      } catch (error) {
+          console.error('❌ Error loading all plantings:', error);
+          logToChat(`❌ ${error.message}`, 'M');
+          return {
+              success: false,
+              error: error.message
+          };
+      }
+  }
+  // End Script: Load All Plantings
+  
+  // Script: Get Irrigation Events by Planting
+  async function getIrrigationEventsByPlanting(plantingId) {
+      try {
+          if (!apiToken) {
+              throw new Error('No token available. Run "Get Token + Ranches" first.');
+          }
+          
+          if (!plantingId) {
+              throw new Error('Planting ID required. Select a planting first.');
+          }
+          
+          console.log('📨 Fetching irrigation events for planting:', plantingId);
+          
+          const url = `https://api.dev.cropmanage.ucanr.edu/v2/plantings/${plantingId}/irrigation-events/details.json`;
+          console.log('📨 Full URL:', url);
+          
+          const response = await fetch(url, {
+              method: 'GET',
+              headers: {
+                  'Authorization': `Bearer ${apiToken}`
+              }
+          });
+          
+          if (!response.ok) {
+              // 404 means no irrigation events exist for this planting yet - not an error
+              if (response.status === 404) {
+                  console.log('ℹ️ No irrigation events found for this planting (404)');
+                  logToChat(`ℹ️ No irrigation events found for ${selectedPlantingName}`, 'M');
+                  
+                  // Clear grids
+                  const grid4 = document.getElementById('irrigationDetailsBody');
+                  if (grid4) grid4.innerHTML = '<tr><td colspan="11" style="text-align: center; color: #999; padding: 20px;">No irrigation events found</td></tr>';
+                  
+                  return {
+                      success: true,
+                      events: [],
+                      message: 'No events found'
+                  };
+              }
+              
+              // Other errors are real errors
+              console.error('❌ Response status:', response.status);
+              console.error('❌ Response text:', await response.text());
+              throw new Error(`Irrigation events request failed: ${response.status}`);
+          }
+          
+          const irrigationEventsData = await response.json();
+          
+          console.log('✅ Irrigation events loaded:', irrigationEventsData.length, 'events');
+          
+          // Populate irrigation details grid (4th grid - clickable list)
+          populateIrrigationDetailsGrid(irrigationEventsData);
+          
+          // AUTOMATICALLY fetch all recommendations for Grid 3
+          console.log('🔄 Auto-fetching recommendations for all events...');
+          await fetchAllRecommendations(irrigationEventsData);
+          
+          // Log to chat
+          logToChat(`✅ ${irrigationEventsData.length} irrigation events loaded. Recommendations populated automatically.`, 'M');
+          
+          return {
+              success: true,
+              events: irrigationEventsData,
+              message: `${irrigationEventsData.length} events loaded.`
+          };
+          
+      } catch (error) {
+          console.error('❌ Error:', error);
+          logToChat(`❌ ${error.message}`, 'M');
+          return {
+              success: false,
+              error: error.message
+          };
+      }
+  }
+  // End Script: Get Irrigation Events by Planting
+  
+  // Script: Get Individual Event (Full Recommendation with HOURS)
+  async function getIndividualEvent(eventId) {
+      try {
+          console.log('📨 Fetching individual event:', eventId);
+          
+          const url = `https://api.dev.cropmanage.ucanr.edu/v2/irrigation-events/${eventId}.json`;
+          const response = await fetch(url, {
+              method: 'GET',
+              headers: {
+                  'Authorization': `Bearer ${apiToken}`,
+                  'Content-Type': 'application/json'
+              }
+          });
+          
+          if (!response.ok) {
+              throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+          }
+          
+          const eventData = await response.json();
+          
+          console.log('✅ Individual event loaded:', eventData);
+          console.log('🔍 RecommendationSummary:', eventData.RecommendationSummary);
+          
+          // Display in Grid 3 with HOURS data
+          displayFullRecommendation(eventData);
+          
+          // Log to chat
+          logToChat(`✅ Full recommendation loaded with HOURS data`, 'M');
+          
+          return {
+              success: true,
+              event: eventData
+          };
+          
+      } catch (error) {
+          console.error('❌ Error:', error);
+          logToChat(`❌ ${error.message}`, 'M');
+          return {
+              success: false,
+              error: error.message
+          };
+      }
+  }
+  // End Script: Get Individual Event
+  
+  // Auto-fetch all recommendations for Grid 3 AND Grid 4
+  async function fetchAllRecommendations(events) {
+      const recommendations = [];
+      
+      // Loop through each event and fetch full recommendation
+      for (const event of events) {
+          try {
+              const url = `https://api.dev.cropmanage.ucanr.edu/v2/irrigation-events/${event.Id}.json`;
+              const response = await fetch(url, {
+                  method: 'GET',
+                  headers: {
+                      'Authorization': `Bearer ${apiToken}`,
+                      'Content-Type': 'application/json'
+                  }
+              });
+              
+              if (response.ok) {
+                  const fullEvent = await response.json();
+                  
+                  // Preserve ranch/planting context from original event
+                  fullEvent.RanchName = event.RanchName;
+                  fullEvent.PlantingName = event.PlantingName;
+                  fullEvent.RanchId = event.RanchId;
+                  fullEvent.PlantingId = event.PlantingId;
+                  
+                  recommendations.push(fullEvent);
+                  console.log(`✅ Fetched recommendation for event ${event.Id}`);
+              }
+          } catch (error) {
+              console.error(`❌ Error fetching event ${event.Id}:`, error);
+          }
+      }
+      
+      console.log(`✅ Fetched ${recommendations.length} recommendations`);
+      
+      // Populate Grid 3 with all recommendations
+      populateRecommendationsGridMultiRow(recommendations);
+      
+      // Populate Grid 4 with DEFAULT format using same data
+      populateIrrigationDetailsGridDEFAULT(recommendations);
+      
+      // Load into displayRecords for MCP tools and POST
+      loadEventsIntoDisplayRecords(recommendations);
+  }
+  
+  // Populate Grid 3 with multiple recommendation rows
+  function populateRecommendationsGridMultiRow(recommendations) {
+      console.log('🔍 populateRecommendationsGridMultiRow called with', recommendations.length, 'recommendations');
+      const grid = document.getElementById('recommendationsGrid');
+      
+      if (!recommendations || recommendations.length === 0) {
+          grid.innerHTML = '<div style="color: #999; text-align: center; padding: 20px; font-size: var(--small-font);">No recommendations</div>';
+          return;
+      }
+      
+      // Build multi-row table
+      let html = '<table style="width: 100%; font-size: var(--small-font); border-collapse: collapse;">';
+      html += '<thead><tr style="background: #f5f5f5;">';
+      html += '<th style="padding: 4px; border: 1px solid #ddd;">ID</th>';
+      html += '<th style="padding: 4px; border: 1px solid #ddd;">Date</th>';
+      html += '<th style="padding: 4px; border: 1px solid #ddd;">Rec Hrs</th>';
+      html += '<th style="padding: 4px; border: 1px solid #ddd;">Rec Inch</th>';
+      html += '<th style="padding: 4px; border: 1px solid #ddd;">Mgr Hrs</th>';
+      html += '<th style="padding: 4px; border: 1px solid #ddd;">Mgr Inch</th>';
+      html += '<th style="padding: 4px; border: 1px solid #ddd;">Interval</th>';
+      html += '<th style="padding: 4px; border: 1px solid #ddd;">Method</th>';
+      html += '</tr></thead>';
+      html += '<tbody>';
+      
+      recommendations.forEach(event => {
+          // Debug logging
+          console.log('Event:', event.Id, 'Data:', {
+              MgrInch: event.ManagerAmountRecommendation,
+              MgrHrs: event.ManagerAmountRecommendationHours,
+              RecInch: event.RecommendedIrrigationAmount,
+              Interval: event.RecommendedInterval
+          });
+          
+          // Format date to MM/DD/YY using existing formatDate function
+          let formattedDate = '-';
+          if (event.EventDate) {
+              const dateObj = new Date(event.EventDate);
+              formattedDate = formatDate(dateObj);
+          }
+          
+          // Calculate Rec Hrs = RecommendedIrrigationAmount / 0.3
+          const recInch = parseFloat(event.RecommendedIrrigationAmount) || 0;
+          const recHrs = recInch > 0 ? (recInch / 0.3).toFixed(2) : '-';
+          
+          html += '<tr style="border-bottom: 1px solid #eee;">';
+          html += `<td style="padding: 4px; border: 1px solid #ddd;">${event.Id || '-'}</td>`;
+          html += `<td style="padding: 4px; border: 1px solid #ddd;">${formattedDate}</td>`;
+          html += `<td style="padding: 4px; border: 1px solid #ddd; text-align: right; font-weight: 600; color: #ff0000;">${recHrs}</td>`;
+          html += `<td style="padding: 4px; border: 1px solid #ddd; text-align: right; font-weight: 600; color: #ff0000;">${recInch || '-'}</td>`;
+          html += `<td style="padding: 4px; border: 1px solid #ddd; text-align: right; font-weight: 600; color: #ff0000;">${event.ManagerAmountRecommendationHours || '-'}</td>`;
+          html += `<td style="padding: 4px; border: 1px solid #ddd; text-align: right; font-weight: 600; color: #ff0000;">${event.ManagerAmountRecommendation || '-'}</td>`;
+          html += `<td style="padding: 4px; border: 1px solid #ddd; text-align: center;">${event.RecommendedInterval ? parseFloat(event.RecommendedInterval).toFixed(2) : '-'}</td>`;
+          html += `<td style="padding: 4px; border: 1px solid #ddd; text-align: center;">${event.IrrigationMethodId || '-'}</td>`;
+          html += '</tr>';
+      });
+      
+      html += '</tbody></table>';
+      grid.innerHTML = html;
+      console.log('✅ Grid 3 populated with', recommendations.length, 'recommendation rows');
+  }
+  
+  // Populate Grid 4 with DEFAULT irrigation records format
+  function populateIrrigationDetailsGridDEFAULT(recommendations) {
+      console.log('🔍 populateIrrigationDetailsGridDEFAULT called with', recommendations.length, 'recommendations');
+      const tbody = document.getElementById('irrigationDetailsBody');
+      
+      if (!recommendations || recommendations.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="10" style="text-align: center; color: #999; padding: 20px;">No data</td></tr>';
+          return;
+      }
+      
+      tbody.innerHTML = '';
+      recommendations.forEach(event => {
+          // Format date to MM/DD/YY using existing formatDate function
+          let formattedDate = '-';
+          if (event.EventDate) {
+              const dateObj = new Date(event.EventDate);
+              formattedDate = formatDate(dateObj);
+          }
+          
+          // Calculate RecHrs = RecommendedIrrigationAmount / 0.3
+          const recInch = parseFloat(event.RecommendedIrrigationAmount) || 0;
+          const recHrs = recInch > 0 ? (recInch / 0.3).toFixed(2) : '-';
+          
+          const row = tbody.insertRow();
+          row.style.borderBottom = '1px solid #eee';
+          row.style.cursor = 'pointer';
+          row.id = `event-row-${event.Id}`;
+          row.onclick = () => selectEventForPost(event.Id, row);
+          
+          // Ranch
+          const ranchCell = row.insertCell(0);
+          ranchCell.textContent = event.RanchName || selectedRanchName || '-';
+          ranchCell.style.padding = '4px';
+          
+          // Planting
+          const plantingCell = row.insertCell(1);
+          plantingCell.textContent = event.PlantingName || selectedPlantingName || '-';
+          plantingCell.style.padding = '4px';
+          
+          // Date
+          const dateCell = row.insertCell(2);
+          dateCell.textContent = formattedDate;
+          dateCell.style.padding = '4px';
+          
+          // RecHrs
+          const recHrsCell = row.insertCell(3);
+          recHrsCell.textContent = recHrs;
+          recHrsCell.style.padding = '4px';
+          recHrsCell.style.textAlign = 'right';
+          recHrsCell.style.fontWeight = '600';
+          recHrsCell.style.color = '#ff0000';
+          
+          // Interval
+          const intervalCell = row.insertCell(4);
+          intervalCell.textContent = event.RecommendedInterval ? parseFloat(event.RecommendedInterval).toFixed(2) : '-';
+          intervalCell.style.padding = '4px';
+          intervalCell.style.textAlign = 'center';
+          
+          // MgrHrs
+          const mgrHrsCell = row.insertCell(5);
+          mgrHrsCell.textContent = event.ManagerAmountRecommendationHours || '-';
+          mgrHrsCell.style.padding = '4px';
+          mgrHrsCell.style.textAlign = 'right';
+          mgrHrsCell.style.fontWeight = '600';
+          mgrHrsCell.style.color = '#ff0000';
+          
+          // Applied
+          const appliedCell = row.insertCell(6);
+          appliedCell.textContent = event.WaterApplied || '-';
+          appliedCell.style.padding = '4px';
+          appliedCell.style.textAlign = 'right';
+          
+          // RanchID
+          const ranchIdCell = row.insertCell(7);
+          ranchIdCell.textContent = event.RanchId || selectedRanchId || '-';
+          ranchIdCell.style.padding = '4px';
+          
+          // PlantingID
+          const plantingIdCell = row.insertCell(8);
+          plantingIdCell.textContent = event.PlantingId || selectedPlantingId || '-';
+          plantingIdCell.style.padding = '4px';
+          
+          // ID
+          const idCell = row.insertCell(9);
+          idCell.textContent = event.Id || '-';
+          idCell.style.padding = '4px';
+          
+          // Status
+          const statusCell = row.insertCell(10);
+          statusCell.textContent = '';
+          statusCell.style.padding = '4px';
+          statusCell.style.textAlign = 'center';
+          statusCell.style.fontWeight = '600';
+          statusCell.className = 'status-cell';
+      });
+      
+      console.log('✅ Grid 4 populated with', recommendations.length, 'DEFAULT format rows');
+      
+      // Auto-select first row if any exist
+      if (recommendations.length > 0) {
+          const firstEvent = recommendations[0];
+          const firstRow = document.getElementById(`event-row-${firstEvent.Id}`);
+          if (firstRow) {
+              selectEventForPost(firstEvent.Id, firstRow);
+          }
+      }
+  }
+  
+  // Load API events into displayRecords for MCP tools and POST
+  function loadEventsIntoDisplayRecords(events) {
+      console.log('🔄 Loading', events.length, 'events into displayRecords');
+      
+      // Transform API events to displayRecords format
+      displayRecords = events.map((event, index) => {
+          // Format date to MM/DD/YY
+          let scheduledDate = '-';
+          if (event.EventDate) {
+              const dateObj = new Date(event.EventDate);
+              scheduledDate = formatDate(dateObj);
+          }
+          
+          // Calculate hours from inches (or use RecommendedIrrigationTime if available)
+          const recInch = parseFloat(event.RecommendedIrrigationAmount) || 0;
+          const hours = event.RecommendedIrrigationTime || (recInch > 0 ? parseFloat((recInch / 0.3).toFixed(1)) : 0);
+          
+          // Calculate appliedHours from WaterApplied inches
+          const appliedInch = parseFloat(event.WaterApplied) || 0;
+          const appliedHours = appliedInch > 0 ? parseFloat((appliedInch / 0.3).toFixed(1)) : 0;
+          
+          // Format interval with "days"
+          const intervalDays = event.RecommendedInterval ? parseFloat(event.RecommendedInterval).toFixed(1) : '0';
+          const interval = intervalDays + ' days';
+          
+          // Map irrigation method ID to name
+          let irrigationMethod = 'Sprinkler';
+          if (event.IrrigationMethodId === 2) irrigationMethod = 'Drip';
+          else if (event.IrrigationMethodId === 3) irrigationMethod = 'Micro-Sprinkler';
+          
+          return {
+              id: index + 1,  // Sequential display grid ID (1, 2, 3...)
+              eventId: event.Id,  // CropManage event ID (4123153)
+              ranch: event.RanchName || selectedRanchName || '-',
+              planting: event.PlantingName || selectedPlantingName || '-',
+              hours: hours,
+              mgrHours: event.ManagerAmountRecommendationHours || 0,
+              appliedHours: appliedHours,
+              interval: interval,
+              scheduledDate: scheduledDate,
+              irrigationMethod: irrigationMethod,
+              recommendedInches: event.RecommendedIrrigationAmount || '0',
+              lastUpdatedDate: new Date().toLocaleString(),
+              updatedBy: 'CropManage API',
+              isNew: false,
+              isOriginal: true,
+              isUpdated: false,
+              ranchId: event.RanchId || selectedRanchId || 0,
+              plantingId: event.PlantingId || selectedPlantingId || 0,
+              status: 0  // 0=synced, -1=pending, 1=posted
+          };
+      });
+      
+      console.log('✅ displayRecords loaded with', displayRecords.length, 'records from CropManage API');
+      
+      // Store TRANSFORMED data for Reset functionality (same format as displayRecords)
+      apiDetailData = JSON.parse(JSON.stringify(displayRecords));
+      
+      // Clear selected record so renderTable will auto-select first one
+      selectedRecord = null;
+      
+      // Render the MCP test grid with live API data
+      renderTable();
+  }
+  
+  // Refresh Selected Irrigations - loads from API Details into displayRecords
+  // Refresh Selected Irrigations - handles ALL logic with loops
+  async function refreshSelectedIrrigations() {
+      if (!selectedRanchId || !selectedPlantingId) {
+          logToChat('⚠️ Please select a ranch and planting first', 'M');
+          showResult('ℹ️ Please select a ranch and planting before refreshing');
+          return;
+      }
+      
+      console.log('🔄 Refreshing - Ranch:', selectedRanchId, 'Planting:', selectedPlantingId);
+      console.log('🔄 Ranch is ALL?', selectedRanchId === 'ALL', '| Planting is ALL?', selectedPlantingId === 'ALL');
+      
+      // Check for pending records (status < 0) before clearing
+      const pendingCount = displayRecords.filter(r => r.status < 0).length;
+      if (pendingCount > 0) {
+          const proceed = confirm(`⚠️ Warning: You have ${pendingCount} pending record(s) not posted to CropManage. Refresh will lose these changes. Continue?`);
+          if (!proceed) {
+              logToChat('ℹ️ Refresh cancelled - pending records preserved', 'M');
+              return;
+          }
+      }
+      
+      // Set data source flag for Reset CRUD
+      dataSource = 'api';
+      
+      try {
+          // Clear displayRecords array - we'll rebuild it
+          displayRecords = [];
+          let allEvents = [];
+          
+          // Clear ONLY grids 3 and 4 - leave display grid until final step
+          const recommendationsGrid = document.getElementById('recommendationsGrid');
+          recommendationsGrid.innerHTML = '<div style="color: #999; text-align: center; padding: 20px; font-size: var(--small-font);">Loading...</div>';
+          
+          const irrigationDetailsBody = document.getElementById('irrigationDetailsBody');
+          irrigationDetailsBody.innerHTML = '<tr><td colspan="11" style="text-align: center; color: #999; padding: 20px;">Loading irrigations...</td></tr>';
+          
+          // SCENARIO 1: ALL Ranches, ALL Plantings
+          if (selectedRanchId === 'ALL' && selectedPlantingId === 'ALL') {
+              console.log('🔄 SCENARIO 1: ALL ranches, ALL plantings');
+              logToChat('🔄 Loading ALL irrigations from ALL plantings in ALL ranches...', 'M');
+              
+              for (const ranch of ranchData) {
+                  console.log(`🔄 Processing ranch: ${ranch.Name}`);
+                  
+                  // Get plantings for this ranch
+                  const plantingsResponse = await fetch(`https://api.dev.cropmanage.ucanr.edu/v2/ranches/${ranch.Ranch_External_GUID}/plantings.json`, {
+                      headers: { 'Authorization': `Bearer ${apiToken}` }
+                  });
+                  const plantings = await plantingsResponse.json();
+                  
+                  for (const planting of plantings) {
+                      console.log(`  🔄 Processing planting: ${planting.Name}`);
+                      
+                      // Get irrigation DETAILS (base data only, no recommendations yet)
+                      const eventsResponse = await fetch(`https://api.dev.cropmanage.ucanr.edu/v2/plantings/${planting.Id}/irrigation-events/details.json`, {
+                          headers: { 'Authorization': `Bearer ${apiToken}` }
+                      });
+                      
+                      if (eventsResponse.ok) {
+                          const events = await eventsResponse.json();
+                          console.log(`    Got ${events.length} base events for ${planting.Name}`);
+                          
+                          // Add ranch/planting context to each event
+                          events.forEach(event => {
+                              event.RanchName = ranch.Name;
+                              event.RanchId = ranch.Id;
+                              event.PlantingName = planting.Name;
+                              event.PlantingId = planting.Id;
+                          });
+                          
+                          // Accumulate base events
+                          allEvents = allEvents.concat(events);
+                      }
+                  }
+              }
+              
+              console.log(`✅ Accumulated ${allEvents.length} total base events from all ranches`);
+              logToChat(`✅ Loaded ${allEvents.length} base irrigation events. Fetching recommendations...`, 'M');
+              
+              // NOW fetch all recommendations in one pass
+              await fetchAllRecommendations(allEvents);
+              
+              logToChat(`✅ All grids populated with ${allEvents.length} irrigations including recommendations`, 'M');
+              return; // fetchAllRecommendations handles everything
+          }
+          
+          // SCENARIO 2: Specific Ranch, ALL Plantings
+          else if (selectedRanchId !== 'ALL' && selectedPlantingId === 'ALL') {
+              console.log('🔄 SCENARIO 2: Specific ranch, ALL plantings');
+              logToChat(`🔄 Loading ALL irrigations from ALL plantings in ${selectedRanchName}...`, 'M');
+              
+              // Use already-loaded plantingsData
+              if (!plantingsData || plantingsData.length === 0) {
+                  throw new Error('No plantings loaded. Run "Get Plantings" first.');
+              }
+              
+              console.log(`🔄 Processing ${plantingsData.length} plantings from ${selectedRanchName}`);
+              
+              for (const planting of plantingsData) {
+                  console.log(`  🔄 Processing planting: ${planting.Name}`);
+                  
+                  // Get irrigation DETAILS (base data only, no recommendations yet)
+                  const eventsResponse = await fetch(`https://api.dev.cropmanage.ucanr.edu/v2/plantings/${planting.Id}/irrigation-events/details.json`, {
+                      headers: { 'Authorization': `Bearer ${apiToken}` }
+                  });
+                  
+                  if (!eventsResponse.ok) {
+                      console.warn(`⚠️ Failed to get events for ${planting.Name}`);
+                      continue; // Skip this planting
+                  }
+                  
+                  const events = await eventsResponse.json();
+                  console.log(`    Got ${events.length} base events for ${planting.Name}`);
+                  
+                  // Add ranch/planting context to each event
+                  events.forEach(event => {
+                      event.RanchName = selectedRanchName;
+                      event.RanchId = selectedRanchId;
+                      event.PlantingName = planting.Name;
+                      event.PlantingId = planting.Id;
+                  });
+                  
+                  // Accumulate base events
+                  allEvents = allEvents.concat(events);
+              }
+              
+              console.log(`✅ Accumulated ${allEvents.length} total base events from ${selectedRanchName}`);
+              logToChat(`✅ Loaded ${allEvents.length} base irrigation events. Fetching recommendations...`, 'M');
+              
+              // NOW fetch all recommendations in one pass
+              await fetchAllRecommendations(allEvents);
+              
+              logToChat(`✅ All grids populated with ${allEvents.length} irrigations including recommendations`, 'M');
+              return; // fetchAllRecommendations handles everything
+          }
+          
+          // SCENARIO 3: Specific Ranch, Specific Planting
+          else {
+              if (selectedPlantingId === 'ALL' || selectedRanchId === 'ALL') {
+                  throw new Error('Logic error: Scenario 3 should not run with ALL selected');
+              }
+              
+              console.log('🔄 SCENARIO 3: Single planting');
+              logToChat(`🔄 Loading irrigations for ${selectedPlantingName}...`, 'M');
+              
+              // Use existing function for single planting
+              getIrrigationEventsByPlanting(selectedPlantingId);
+              return; // Function handles everything
+          }
+          
+      } catch (error) {
+          console.error('❌ Error refreshing:', error);
+          logToChat(`❌ Error: ${error.message}`, 'M');
+      }
+  }
+  
+  // Select event for POST - marks row with status -1
+  function selectEventForPost(eventId, row) {
+      // Clear all other row highlights
+      const allRows = document.querySelectorAll('#irrigationDetailsBody tr');
+      allRows.forEach(r => r.classList.remove('selected'));
+      
+      // Highlight selected row using 'selected' class
+      row.classList.add('selected');
+      
+      // Set variable only - don't modify data
+      selectedEventId = eventId;
+      console.log('Event selected:', eventId);
+  }
+  
+  // ========================================
+  // MODAL CONTROL FUNCTIONS
+  // ========================================
+  
+  function showPostModal() {
+      const modal = document.getElementById('postModal');
+      const queueCount = displayRecords.filter(r => r.status === -1).length;
+      document.getElementById('modalQueueCount').textContent = queueCount;
+      modal.style.display = 'flex';
+  }
+  
+  function closePostModal() {
+      const modal = document.getElementById('postModal');
+      modal.style.display = 'none';
+  }
+  
+  function postSelected() {
+      closePostModal();
+      postIrrigationToCropManage();
+  }
+  
+  function postAllQueued() {
+      closePostModal();
+      batchPostQueue();
+  }
+  
+  // ========================================
+  // BATCH QUEUE PROCESSING
+  // ========================================
+  
+  async function batchPostQueue() {
+      try {
+          const descArea = document.getElementById('scriptDescription');
+          
+          // Get all queued records (status=-1)
+          const queuedRecords = displayRecords.filter(r => r.status === -1);
+          
+          if (queuedRecords.length === 0) {
+              const msg = 'ℹ️ No records in queue (status=-1)';
+              if (descArea) descArea.innerHTML = msg;
+              logToChat(msg, 'M');
+              return;
+          }
+          
+          const total = queuedRecords.length;
+          logToChat(`🚀 Starting batch POST: ${total} records in queue`, 'M');
+          if (descArea) descArea.innerHTML = `⏳ Processing ${total} queued records...`;
+          
+          let successCount = 0;
+          let failCount = 0;
+          
+          // Process each queued record
+          for (let i = 0; i < queuedRecords.length; i++) {
+              const record = queuedRecords[i];
+              const recordNum = i + 1;
+              
+              try {
+                  logToChat(`📤 [${recordNum}/${total}] Processing: ${record.scheduledDate} - ${record.ranchName} / ${record.plantingName}`, 'M');
+                  
+                  // Temporarily select this record
+                  selectedRecord = record;
+                  
+                  // Check if has eventId (UPDATE) or not (POST)
+                  if (record.eventId) {
+                      // UPDATE existing record
+                      const result = await updateRecordToCropManage();
+                      if (result && result.success) {
+                          record.status = 0; // Mark synced
+                          successCount++;
+                          logToChat(`   ✅ Updated Event ID ${record.eventId}`, 'M');
+                      } else {
+                          failCount++;
+                          logToChat(`   ❌ Update failed - staying in queue`, 'M');
+                      }
+                  } else {
+                      // POST new record
+                      const result = await postIrrigationToCropManage();
+                      if (result && result.success && result.id) {
+                          record.status = 0; // Mark synced
+                          record.eventId = result.id; // Store new event ID
+                          successCount++;
+                          logToChat(`   ✅ Posted - New Event ID ${result.id}`, 'M');
+                      } else {
+                          failCount++;
+                          logToChat(`   ❌ Post failed - staying in queue`, 'M');
+                      }
+                  }
+                  
+              } catch (error) {
+                  failCount++;
+                  logToChat(`   ❌ Error: ${error.message}`, 'M');
+              }
+              
+              // Small delay between requests
+              await new Promise(resolve => setTimeout(resolve, 200));
+          }
+          
+          // Final summary
+          const summary = `✅ Batch complete: ${successCount} synced, ${failCount} failed (remain in queue)`;
+          logToChat(summary, 'M');
+          if (descArea) descArea.innerHTML = summary;
+          
+          // Refresh table to show updated status
+          renderTable();
+          
+      } catch (error) {
+          console.error('❌ Batch error:', error);
+          logToChat(`❌ Batch processing error: ${error.message}`, 'M');
+      }
+  }
+  
+  // POST Irrigation Record to CropManage - Creates NEXT irrigation
+  async function postIrrigationToCropManage() {
+      try {
+          const descArea = document.getElementById('scriptDescription');
+          
+          // Check if a record is selected in DISPLAY GRID
+          if (!selectedRecord) {
+              if (descArea) descArea.innerHTML = '❌ No record selected in Display Grid. Click a row in the bottom grid first.';
+              return { success: false, error: 'No record selected' };
+          }
+          
+          console.log('📤 Posting selected record from Display Grid:', selectedRecord);
+          
+          // Check if already posted (has eventId from CropManage)
+          if (selectedRecord.eventId) {
+              const msg = `ℹ️ Record already exists in CropManage: ${selectedRecord.scheduledDate} (${selectedRecord.hours} hrs). Event ID: ${selectedRecord.eventId}. Use Update Record to modify.`;
+              if (descArea) descArea.innerHTML = msg;
+              return { success: true, message: 'Already posted' };
+          }
+          
+          // Get plantingId from selected record
+          const plantingId = parseInt(selectedRecord.plantingId);
+          
+          if (!plantingId || isNaN(plantingId)) {
+              throw new Error(`Invalid plantingId: ${selectedRecord.plantingId}`);
+          }
+          
+          console.log('PlantingID:', plantingId);
+          
+          // Parse date from display format (MM/DD/YY) to API format (YYYY-MM-DD)
+          const displayDate = selectedRecord.scheduledDate; // "12/28/24"
+          const dateObj = parseEventDate(displayDate);
+          const apiDate = `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}-${String(dateObj.getDate()).padStart(2, '0')}`;
+          
+          console.log('Date conversion:', displayDate, '→', apiDate);
+          
+          // Build payload from selected record
+          const payload = {
+              eventdate: apiDate,
+              irrigationmethodid: 1, // Default Sprinkler
+              manageramountrecommendation: parseFloat(selectedRecord.mgrHours) || 0,
+              manageramountrecommendationhours: parseFloat(selectedRecord.mgrHours) || 0,
+              waterapplied: parseFloat(selectedRecord.appliedHours) || 0,
+              waterappliedhours: parseFloat(selectedRecord.appliedHours) || 0
+          };
+          
+          console.log('POST Payload:', payload);
+          
+          // POST to CropManage API
+          const url = `https://api.dev.cropmanage.ucanr.edu/v3/plantings/${plantingId}/irrigation-events.json`;
+          
+          if (descArea) descArea.innerHTML = '⏳ Posting to CropManage...';
+          
+          const response = await fetch(url, {
+              method: 'POST',
+              headers: {
+                  'Authorization': `Bearer ${apiToken}`,
+                  'Content-Type': 'application/json'
+              },
+              body: JSON.stringify(payload)
+          });
+          
+          if (!response.ok) {
+              const errorText = await response.text();
+              console.error('❌ POST failed:', errorText);
+              throw new Error(`HTTP ${response.status}: ${errorText}`);
+          }
+          
+          const result = await response.json();
+          console.log('✅ POST successful:', result);
+          
+          // Extract new CropManage irrigation ID from response
+          const eventId = result.Id || result.id;
+          
+          if (!eventId) {
+              throw new Error('API did not return an ID');
+          }
+          
+          // Store CropManage event ID
+          selectedRecord.eventId = eventId;
+          selectedRecord.status = 1; // Mark as posted
+          selectedRecord.isNew = false; // No longer new
+          
+          // Update in displayRecords array
+          const recordIndex = displayRecords.findIndex(r => r === selectedRecord);
+          if (recordIndex !== -1) {
+              displayRecords[recordIndex] = selectedRecord;
+          }
+          
+          // Refresh display to show updated record
+          renderTable();
+          
+          // Success message - Script Description only
+          const msg = `✅ Posted to CropManage! ${selectedRecord.scheduledDate} (${selectedRecord.hours} hrs) - Event ID: ${eventId}`;
+          if (descArea) descArea.innerHTML = msg;
+          
+          return {
+              success: true,
+              id: eventId,
+              result: result
+          };
+          
+      } catch (error) {
+          console.error('❌ Error:', error);
+          const msg = `❌ Post failed: ${error.message}`;
+          const descArea = document.getElementById('scriptDescription');
+          if (descArea) descArea.innerHTML = msg;
+          return {
+              success: false,
+              error: error.message
+          };
+      }
+  }
+  
+  // UPDATE Irrigation Record to CropManage - Updates existing irrigation
+  async function updateRecordToCropManage() {
+      try {
+          const descArea = document.getElementById('scriptDescription');
+          
+          // Check if a record is selected in DISPLAY GRID
+          if (!selectedRecord) {
+              if (descArea) descArea.innerHTML = '❌ No record selected in Display Grid. Click a row in the bottom grid first.';
+              return { success: false, error: 'No record selected' };
+          }
+          
+          console.log('🔄 Updating record in CropManage:', selectedRecord);
+          
+          // Get eventId from selected record
+          const eventId = selectedRecord.eventId;
+          
+          // Check if record has eventId (can't update without it)
+          if (!eventId) {
+              const msg = `❌ Cannot update: Record has no CropManage Event ID. This record was created locally and needs to be posted first.`;
+              if (descArea) descArea.innerHTML = msg;
+              return { success: false, error: 'No Event ID' };
+          }
+          
+          // Parse date from display format (MM/DD/YY) to API format (MM/DD/YYYY)
+          const displayDate = selectedRecord.scheduledDate; // "12/28/24"
+          const dateObj = parseEventDate(displayDate);
+          const apiDate = `${dateObj.getMonth() + 1}/${dateObj.getDate()}/${dateObj.getFullYear()}`;
+          
+          console.log('Date conversion:', displayDate, '→', apiDate);
+          
+          // Convert hours to inches (ratio = 0.3 for sprinkler)
+          const managerInches = parseFloat((selectedRecord.mgrHours * 0.3).toFixed(2));
+          const appliedInches = parseFloat((selectedRecord.appliedHours * 0.3).toFixed(2));
+          
+          // Build payload from selected record
+          const payload = {
+              EventDate: apiDate,
+              IrrigationMethodId: 1, // Default Sprinkler (could enhance later)
+              WaterApplied: appliedInches,
+              WaterAppliedHours: parseFloat(selectedRecord.appliedHours) || 0,
+              ManagerAmountRecommendation: managerInches,
+              ManagerAmountRecommendationHours: parseFloat(selectedRecord.mgrHours) || 0
+          };
+          
+          console.log('PUT Payload:', payload);
+          
+          // PUT to CropManage API using eventId
+          const url = `https://api.dev.cropmanage.ucanr.edu/v3/irrigation-events/${eventId}.json`;
+          
+          if (descArea) descArea.innerHTML = '⏳ Updating in CropManage...';
+          
+          const response = await fetch(url, {
+              method: 'PUT',
+              headers: {
+                  'Authorization': `Bearer ${apiToken}`,
+                  'Content-Type': 'application/json'
+              },
+              body: JSON.stringify(payload)
+          });
+          
+          if (!response.ok) {
+              const errorText = await response.text();
+              console.error('❌ PUT failed:', errorText);
+              throw new Error(`HTTP ${response.status}: ${errorText}`);
+          }
+          
+          const result = await response.json();
+          console.log('✅ PUT successful:', result);
+          
+          // Update status to synced
+          selectedRecord.status = 1; // Mark as synced
+          selectedRecord.isUpdated = false; // No longer pending update
+          
+          // Update in displayRecords array
+          const recordIndex = displayRecords.findIndex(r => r === selectedRecord);
+          if (recordIndex !== -1) {
+              displayRecords[recordIndex] = selectedRecord;
+          }
+          
+          // Refresh display to show updated status
+          renderTable();
+          
+          // Success message - Script Description only
+          const msg = `✅ Updated in CropManage! ${selectedRecord.scheduledDate} (${selectedRecord.hours} hrs) - Event ID: ${eventId}`;
+          if (descArea) descArea.innerHTML = msg;
+          
+          return {
+              success: true,
+              id: eventId,
+              result: result
+          };
+          
+      } catch (error) {
+          console.error('❌ Error:', error);
+          const msg = `❌ Update failed: ${error.message}`;
+          const descArea = document.getElementById('scriptDescription');
+          if (descArea) descArea.innerHTML = msg;
+          return {
+              success: false,
+              error: error.message
+          };
+      }
+  }
+  
+  // SQLite API Scripts
+  // ----------------------------------------
+  
+  
+  // ========================================
+  // AUTO-LOAD TOKEN ON PAGE STARTUP
+  // ========================================
+  window.addEventListener('DOMContentLoaded', async function() {
+      try {
+          const tokenResult = await getToken();
+          if (!tokenResult.success) {
+              // Token failed - error message already shown by getToken in script description
+              return;
+          }
+          // Token success - no chat message
+          
+          // Auto-load ranches
+          const ranchesResult = await getRanches();
+          if (!ranchesResult.success) {
+              // Ranches failed - no chat message
+              return;
+          }
+          // Ranches success - no chat message
+          
+          // Auto-select default ranch
+          if (defaultRanchName && ranchData && ranchData.length > 0) {
+              // Find the ranch with matching name
+              const defaultRanch = ranchData.find(r => r.Name === defaultRanchName);
+              
+              if (defaultRanch) {
+                  // Found the default ranch - select it
+                  selectRanch(defaultRanch.Id, defaultRanch.Ranch_External_GUID, defaultRanch.Name);
+                  // No chat message
+              } else {
+                  // Default ranch not found - fall back to "All Ranches"
+                  selectRanch('ALL', 'ALL', 'All Ranches');
+                  // No chat message
+              }
+          } else {
+              // No default set - use "All Ranches"
+              selectRanch('ALL', 'ALL', 'All Ranches');
+              // No chat message
+          }
+          
+      } catch (error) {
+          // Error already shown by getToken in script description area
+          // Don't show anything else
+      }
+  });
+  
+    </script>
+<!-- @@@@ APISERVICE_COMPONENT id:api-sync @@@@ -->
+    
+    
+    <!-- POST Modal -->
+    <div id="postModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; justify-content: center; align-items: center;">
+        <div style="background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); max-width: 400px; width: 90%;">
+            <h3 style="margin: 0 0 20px 0; color: #2e7d32;">Post to CropManage</h3>
+            <p style="margin-bottom: 20px; color: #666;">Choose which records to post:</p>
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+                <button onclick="postSelected()" style="padding: 12px; background: #FF9800; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 1em;">
+                    Post Selected Record Only
+                </button>
+                <button onclick="postAllQueued()" style="padding: 12px; background: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 1em;">
+                    Post All Queued Records (<span id="modalQueueCount">0</span>)
+                </button>
+                <button onclick="closePostModal()" style="padding: 12px; background: #999; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 1em;">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>  
+</html>

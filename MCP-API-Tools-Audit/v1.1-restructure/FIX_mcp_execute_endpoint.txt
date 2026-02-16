@@ -1,0 +1,65 @@
+FIX: /mcp/execute endpoint
+==========================
+IS THIS  DONE OR NEEDS TO BE DONE CHECK FIRST SSP 
+
+
+FIND THIS:
+----------
+// NEW ENDPOINT - MCP Router Execute
+app.post('/mcp/execute', async (req, res) => {
+    const { promptText } = req.body;
+    
+    if (!promptText) {
+        return res.status(400).json({
+            success: false,
+            error: 'No prompt provided'
+        });
+    }
+    
+    try {
+        const result = await routeCommand(promptText);
+        res.json(result);
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+
+
+REPLACE WITH:
+-------------
+// NEW ENDPOINT - MCP Router Execute (FIXED: uses toolName directly, no DOM code)
+app.post('/mcp/execute', async (req, res) => {
+    const { toolName, promptText } = req.body;
+    
+    if (!toolName) {
+        return res.status(400).json({
+            success: false,
+            error: 'No toolName provided'
+        });
+    }
+    
+    const tool = mcpTools[toolName];
+    if (!tool) {
+        return res.status(404).json({
+            success: false,
+            error: `Tool not found: ${toolName}`
+        });
+    }
+    
+    try {
+        const result = tool.handler();
+        res.json({
+            success: true,
+            toolName: toolName,
+            result: result
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});

@@ -1,0 +1,66 @@
+GitHub Butler - How To Use
+==========================
+Version: v1.0
+Date: February 15, 2026
+
+WHAT IT DOES
+------------
+Butler lets you browse and manage your GitHub repos from a single HTML page.
+No installs. No command line. Just open in a browser.
+
+SETUP (ONE TIME)
+----------------
+1. Go to github.com
+2. Click your profile pic (top right) > Settings
+3. Scroll to very bottom of left sidebar > Developer settings
+4. Personal access tokens > Tokens (classic)
+5. Generate new token (classic)
+6. Name: "Butler"
+7. Check the "repo" box (full control of private repositories)
+8. Click "Generate token"
+9. COPY THE TOKEN - it starts with ghp_ and you only see it once
+10. Save it somewhere safe (notepad, password manager, etc.)
+
+HOW TO USE
+----------
+1. Open CropClient-Github-Butler.html in your browser
+2. Click "Login" button (top right)
+3. Paste your token when prompted
+4. Your repos appear in the dropdown
+
+FEATURES (v1.0)
+---------------
+- Login/Logout     : Enter your GitHub token, stays for the browser session
+- Repo Dropdown    : Lists all your repos, sorted by recently updated
+- Browse Files     : Click a repo to see its files and folders
+- Navigate Folders : Click folders to go in, click ".." to go back up
+- View Files       : Click any file to see its contents
+- Create Repo      : Click "+ Create New Repo" to make a new repo on GitHub
+- Refresh          : Reload your repo list
+
+BUTTONS AT BOTTOM
+-----------------
+- Pull / Push / Sync : These are local git operations.
+  Butler is a browser app so it can't run git commands on your machine.
+  Use Claude Code or your terminal for these.
+
+SECURITY
+--------
+- Your token is stored in sessionStorage (browser tab memory only)
+- Close the tab = token is gone
+- Token is NEVER saved to disk or sent anywhere except github.com
+- Never share your token with anyone
+
+VERSIONS
+--------
+v1.0 (Feb 15, 2026)
+  - Login with GitHub Personal Access Token
+  - Real repo list from GitHub API
+  - Browse real files and folders
+  - View file contents
+  - Create new repos
+  - Folder navigation with back button
+
+COMING NEXT
+-----------
+  (Steve decides what goes here)

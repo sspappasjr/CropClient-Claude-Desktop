@@ -1,0 +1,46 @@
+**Full Layout Drawing:**
+
+```
+┌───────────────────────────────────────────────────┐
+│ 🐙 GitHub Butler |                    DASHBOARD                                            sspappasjr 👤      │
+├───────────────────────────────────────────────────┤
+│ Repository [Select Repository Dropdown..........]                             Create Refresh [🔐 Login]│
+├───────────────────────────────────────────────────                                                                                                                                                            │
+│ ┌───────────────┬──────────────────────────────────┐   
+│ │ Files         │ Content                      Grid List Reset                              Grid    List               │
+│ ├───────────────┼─────────────────────────────────   
+│ │ 📁 src/                                                                                                                             │ 
+│ │ 📄 READ   │                                                                                                                   │  
+│ │ 📄 package.json│         (Empty or file content here)                                                                   
+│ │ 📄 index.html                                                                                                                    │  
+│ │                     │                                                                                                                │   
+│ │                     │                                                                                                                │
+│ └───────────────┴──────────────────── ─  ───────────┘ 
+│                                                                             │
+│ Status: Ready                              ⬇️ Pull                  ⬆️ Push  🔄 Sync                                      │
+└──────────────────────────────────────────  ────────┘
+```
+
+When file is clicked → "Content" becomes "file name"
+
+**Build it now?** 🚀
+
+✅ Done - New Layout Built!
+What's New:
+Line 1: Header
+🐙 GitHub Butler | DASHBOARD (centered, bigger) | username 👤 (right)
+Line 2: Toolbar
+Repository [Dropdown] Create Refresh [🔐 Login] (right side)
+Line 3-4: Two-Section Content Box
+Left: Files (file tree)
+Right: Content (file preview) with Grid/List/Reset controls
+Bottom: Actions Bar
+Status message, Pull, Push, Sync buttons
+Features Working:
+✅ Login button shows prompt, displays username in header
+✅ Repository dropdown loads repos
+✅ File tree shows in left section
+✅ Clicking files shows preview in right section
+✅ Reset button clears content area
+✅ Grid/List toggle ready
+✅ Clean two-section layout

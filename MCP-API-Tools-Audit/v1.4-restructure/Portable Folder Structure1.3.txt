@@ -1,0 +1,28 @@
+C:\AICode\crop-client-services\
+  ├── api-server\
+  │   ├── APIServer1.2.js           (server with injections)
+  │   ├── test-apiserver.html       (API tester app)
+  │   ├── ReadMeSetup.md            (setup instructions)
+  │   ├── package.json              (npm config)
+  │   ├── package-lock.json         (dependency lock)
+  │   ├── sources\
+  │   │   ├── api-component1.2.js   (CropManage API source)
+  │   │   └── JsonCrudAPI.js        (JSON operations source)
+  │   └── data\
+  │       ├── test.json
+  │       ├── steve.json
+  │       ├── stevep.json
+  │       ├── irrigation.json
+  │       └── (other .json files)
+  │
+  ├── pages\
+  │   ├── CropClient-v1.3.html      (irrigation dashboard)
+  │   └── sources\
+  │
+  ├── components\
+  │   ├── filter-section.html       (reusable filter UI)
+  │   ├── header-config.json        (app configuration)
+  │   ├── shared-mcp-functions.js   (shared JS functions)
+  │   └── shared-styles.css         (shared CSS styles)
+  │
+  └── node_modules\                 (auto-generated - NOT in git)

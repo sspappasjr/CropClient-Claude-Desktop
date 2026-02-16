@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Butler Agents & Tokens - Interactive Mockup</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f5f5; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+        /* Header */
+        .header {
+            background: #2E7D32;
+            color: white;
+            padding: 8px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        }
+        .header h1 { font-size: 1.1rem; }
+        .header h1::before { content: "🐙 "; }
+        .header-right { display: flex; gap: 10px; align-items: center; font-size: 0.85rem; }
+        .version { opacity: 0.7; font-size: 0.75rem; }
+
+        /* Toolbar */
+        .toolbar {
+            background: #f5f5f5;
+            padding: 8px 15px;
+            border-bottom: 1px solid #ddd;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .toolbar select {
+            padding: 6px 10px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            font-size: 0.9rem;
+            background: white;
+        }
+        .toolbar .loc-select {
+            background: #fff3e0;
+            border-color: #ff9800;
+            min-width: 180px;
+        }
+        .toolbar .repo-select { min-width: 280px; }
+        .toolbar label { font-size: 0.8rem; color: #666; font-weight: 600; }
+
+        /* Main */
+        .main { flex: 1; display: flex; overflow: hidden; }
+
+        /* Sidebar */
+        .sidebar {
+            width: 200px;
+            background: white;
+            border-right: 1px solid #ddd;
+            display: flex;
+            flex-direction: column;
+        }
+        .sidebar-header {
+            padding: 8px 12px;
+            background: #f5f5f5;
+            border-bottom: 1px solid #ddd;
+            font-weight: 600;
+            font-size: 0.8rem;
+            color: #555;
+        }
+        .sidebar-item {
+            padding: 7px 12px;
+            font-size: 0.8rem;
+            border-bottom: 1px solid #f5f5f5;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+        .sidebar-item:hover { background: #f5f5f5; }
+        .sidebar-item.active { background: #E8F5E9; color: #2E7D32; font-weight: 500; }
+
+        /* Content area */
+        .content {
+            flex: 1;
+            margin: 10px;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .content-header {
+            padding: 10px 15px;
+            border-bottom: 1px solid #ddd;
+            background: #fafafa;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .content-header h2 { font-size: 1rem; color: #333; }
+        .view-toggle { display: flex; gap: 8px; }
+        .view-toggle button {
+            padding: 4px 12px;
+            border: 1px solid #ccc;
+            background: white;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.15s;
+        }
+        .view-toggle button.active { background: #2E7D32; color: white; border-color: #2E7D32; }
+
+        .content-body { flex: 1; overflow-y: auto; padding: 15px; }
+
+        /* Agent Grid */
+        .agent-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+        .agent-grid.list-view {
+            grid-template-columns: 1fr;
+        }
+
+        .agent-card {
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 18px 14px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: white;
+        }
+        .agent-card:hover {
+            border-color: #4CAF50;
+            box-shadow: 0 2px 8px rgba(76,175,80,0.15);
+            transform: translateY(-2px);
+        }
+        .agent-card.selected {
+            border-color: #2E7D32;
+            background: #E8F5E9;
+            box-shadow: 0 2px 12px rgba(76,175,80,0.25);
+        }
+        .agent-icon { font-size: 1.8rem; margin-bottom: 6px; }
+        .agent-name { font-weight: 600; font-size: 0.9rem; color: #333; }
+        .agent-desc { font-size: 0.72rem; color: #888; margin-top: 4px; }
+        .agent-token-count {
+            font-size: 0.65rem;
+            color: #4CAF50;
+            margin-top: 6px;
+            padding: 2px 8px;
+            background: rgba(76,175,80,0.08);
+            border-radius: 8px;
+            display: inline-block;
+        }
+
+        /* List view card */
+        .agent-grid.list-view .agent-card {
+            display: grid;
+            grid-template-columns: 50px 1fr auto;
+            text-align: left;
+            padding: 12px 16px;
+            gap: 12px;
+            align-items: center;
+        }
+        .agent-grid.list-view .agent-icon { font-size: 1.4rem; margin: 0; }
+        .agent-grid.list-view .agent-name { font-size: 0.85rem; }
+        .agent-grid.list-view .agent-desc { margin: 0; }
+        .agent-grid.list-view .agent-token-count { margin: 0; }
+
+        /* Token detail panel */
+        .token-panel {
+            display: none;
+            border-top: 1px solid #ddd;
+            background: #fafafa;
+            max-height: 45%;
+            overflow-y: auto;
+        }
+        .token-panel.visible { display: block; }
+        .token-panel-header {
+            padding: 10px 15px;
+            background: #2E7D32;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+        }
+        .token-panel-header h3 { font-size: 0.9rem; }
+        .token-panel-close {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-size: 1.1rem;
+            padding: 0 5px;
+        }
+
+        .token-list { padding: 12px 15px; }
+
+        .token-item {
+            display: grid;
+            grid-template-columns: 36px 36px 1fr auto;
+            gap: 10px;
+            align-items: center;
+            padding: 10px 12px;
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            margin-bottom: 6px;
+            font-size: 0.82rem;
+            transition: all 0.15s;
+        }
+        .token-item:hover { border-color: #4CAF50; }
+
+        .token-step {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: #E8F5E9;
+            color: #2E7D32;
+            font-weight: 700;
+            font-size: 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .token-icon { font-size: 1.1rem; text-align: center; }
+        .token-name { font-weight: 600; color: #333; }
+        .token-detail { color: #888; font-size: 0.75rem; }
+        .token-fromto {
+            font-size: 0.7rem;
+            color: #666;
+            background: #f5f5f5;
+            padding: 2px 8px;
+            border-radius: 4px;
+        }
+
+        /* Test button */
+        .token-test-area {
+            padding: 10px 15px;
+            border-top: 1px solid #e0e0e0;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            background: #f9f9f9;
+        }
+        .test-btn {
+            background: #2E7D32;
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: background 0.15s;
+        }
+        .test-btn:hover { background: #1B5E20; }
+        .test-btn.dry { background: #FF9800; }
+        .test-btn.dry:hover { background: #F57C00; }
+        .test-info { font-size: 0.75rem; color: #888; }
+
+        /* Status bar */
+        .status-bar {
+            padding: 8px 15px;
+            background: #f5f5f5;
+            border-top: 1px solid #ddd;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .status-msg {
+            flex: 1;
+            padding: 5px 10px;
+            background: #E3F2FD;
+            color: #1976D2;
+            border-left: 3px solid #2196F3;
+            font-size: 0.8rem;
+        }
+        .status-context {
+            font-size: 0.75rem;
+            color: #888;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>GitHub Butler</h1>
+        <div class="header-right">
+            <span>sspappasjr</span>
+            <span class="version">v2.0 concept</span>
+        </div>
+    </div>
+
+    <div class="toolbar">
+        <label>Repo:</label>
+        <select class="repo-select" onchange="updateStatus()">
+            <option>sspappasjr/CropClient-Claude-Desktop</option>
+            <option>sspappasjr/Crop-Client-Services</option>
+        </select>
+        <label>Location:</label>
+        <select class="loc-select" onchange="updateStatus()">
+            <option value="laptop">💻 Steve's Laptop</option>
+            <option value="server">🖥️ CropClient Server</option>
+            <option value="field">🌾 Field Office</option>
+        </select>
+    </div>
+
+    <div class="main">
+        <div class="sidebar">
+            <div class="sidebar-header">Browse</div>
+            <div class="sidebar-item active" onclick="showAgents()">🎯 Services</div>
+            <div class="sidebar-item" onclick="showFiles()">📁 Files</div>
+            <div class="sidebar-item">📊 Status</div>
+            <div class="sidebar-item">📋 Activity Log</div>
+        </div>
+
+        <div class="content">
+            <div class="content-header">
+                <h2 id="contentTitle">Services — What can Butler do?</h2>
+                <div class="view-toggle">
+                    <button class="active" onclick="setView('grid', this)">Grid</button>
+                    <button onclick="setView('list', this)">List</button>
+                </div>
+            </div>
+
+            <div class="content-body" id="contentBody">
+                <div class="agent-grid" id="agentGrid">
+                    <!-- Cards injected by JS -->
+                </div>
+            </div>
+
+            <!-- Token detail panel (slides up when agent selected) -->
+            <div class="token-panel" id="tokenPanel">
+                <div class="token-panel-header">
+                    <h3 id="tokenPanelTitle">Agent Tokens</h3>
+                    <button class="token-panel-close" onclick="closeTokenPanel()">✕</button>
+                </div>
+                <div class="token-list" id="tokenList"></div>
+                <div class="token-test-area">
+                    <button class="test-btn dry" onclick="dryRun()">🧪 Dry Run</button>
+                    <button class="test-btn" onclick="executeAgent()">▶️ Execute</button>
+                    <div class="test-info">Dry run shows what would happen. Execute runs it for real.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="status-bar">
+        <div class="status-msg" id="statusMsg">Ready — Select a service from the grid</div>
+        <div class="status-context" id="statusContext">Repo: CropClient-Claude-Desktop | Location: Steve's Laptop</div>
+    </div>
+
+<script>
+    // =============================================
+    // AGENT & TOKEN DEFINITIONS
+    // =============================================
+    const agents = [
+        {
+            id: 'new-project',
+            icon: '⚡',
+            name: 'New Project',
+            desc: 'Local folder → GitHub for first time',
+            tokens: [
+                { name: 'INIT', icon: '🔧', detail: 'Initialize git repo', fromto: 'folder → git' },
+                { name: 'STAGE', icon: '📋', detail: 'Add all files', fromto: 'files → staging' },
+                { name: 'COMMIT', icon: '💾', detail: 'Initial commit', fromto: 'staging → history' },
+                { name: 'CREATE-REPO', icon: '🌐', detail: 'Create repo on GitHub', fromto: 'new → GitHub' },
+                { name: 'PUSH', icon: '⬆️', detail: 'Send to filing cabinet', fromto: 'local → GitHub' },
+                { name: 'NOTIFY', icon: '📢', detail: 'Project created', fromto: 'Butler → team' }
+            ]
+        },
+        {
+            id: 'save-work',
+            icon: '💾',
+            name: 'Save Work',
+            desc: 'Check in — save current work to GitHub',
+            tokens: [
+                { name: 'STATUS', icon: '🔍', detail: 'See what changed', fromto: 'local → report' },
+                { name: 'STAGE', icon: '📋', detail: 'Add changed files', fromto: 'files → staging' },
+                { name: 'COMMIT', icon: '💾', detail: 'Save with message', fromto: 'staging → history' },
+                { name: 'PUSH', icon: '⬆️', detail: 'Send to filing cabinet', fromto: 'local → GitHub' }
+            ]
+        },
+        {
+            id: 'get-latest',
+            icon: '⬇️',
+            name: 'Get Latest',
+            desc: 'Check out — get fresh code from GitHub',
+            tokens: [
+                { name: 'PULL', icon: '⬇️', detail: 'Get from filing cabinet', fromto: 'GitHub → local' },
+                { name: 'STATUS', icon: '🔍', detail: 'Confirm clean', fromto: 'local → report' }
+            ]
+        },
+        {
+            id: 'fresh-install',
+            icon: '📦',
+            name: 'Fresh Install',
+            desc: 'Set up repo on a new location',
+            tokens: [
+                { name: 'CLONE', icon: '📦', detail: 'Copy entire repo', fromto: 'GitHub → new location' },
+                { name: 'STATUS', icon: '🔍', detail: 'Verify files arrived', fromto: 'local → report' },
+                { name: 'NOTIFY', icon: '📢', detail: 'Location ready', fromto: 'Butler → team' }
+            ]
+        },
+        {
+            id: 'alpha-release',
+            icon: '🚀',
+            name: 'Alpha Release',
+            desc: 'Dev done → push alpha for testing',
+            tokens: [
+                { name: 'STATUS', icon: '🔍', detail: 'Verify dev is clean', fromto: 'local → report' },
+                { name: 'STAGE', icon: '📋', detail: 'Add all changes', fromto: 'files → staging' },
+                { name: 'COMMIT', icon: '💾', detail: 'Alpha release ready', fromto: 'staging → history' },
+                { name: 'BRANCH', icon: '🌿', detail: 'Switch to alpha branch', fromto: 'dev → alpha' },
+                { name: 'PUSH', icon: '⬆️', detail: 'Send alpha to GitHub', fromto: 'local → GitHub' },
+                { name: 'TAG', icon: '🏷️', detail: 'Mark as alpha version', fromto: 'commit → tag' },
+                { name: 'NOTIFY', icon: '📢', detail: 'Alpha ready for install', fromto: 'Butler → team' }
+            ]
+        },
+        {
+            id: 'server-pull',
+            icon: '🖥️',
+            name: 'Server Pull',
+            desc: 'Install alpha on CropClient server',
+            tokens: [
+                { name: 'BRANCH', icon: '🌿', detail: 'Switch to alpha', fromto: 'current → alpha' },
+                { name: 'PULL', icon: '⬇️', detail: 'Get alpha from GitHub', fromto: 'GitHub → server' },
+                { name: 'STATUS', icon: '🔍', detail: 'Confirm files are there', fromto: 'server → report' },
+                { name: 'NOTIFY', icon: '📢', detail: 'Ready for install', fromto: 'Butler → team' }
+            ]
+        },
+        {
+            id: 'go-live',
+            icon: '🏁',
+            name: 'Go Live',
+            desc: 'Testing passed → push to production',
+            tokens: [
+                { name: 'BRANCH', icon: '🌿', detail: 'Switch to main', fromto: 'alpha → main' },
+                { name: 'MERGE', icon: '🔀', detail: 'Merge alpha into main', fromto: 'alpha → main' },
+                { name: 'PUSH', icon: '⬆️', detail: 'Send production to GitHub', fromto: 'local → GitHub' },
+                { name: 'TAG', icon: '🏷️', detail: 'Mark as release', fromto: 'commit → v1.0' },
+                { name: 'NOTIFY', icon: '📢', detail: 'Production live, team notified', fromto: 'Butler → team' }
+            ]
+        },
+        {
+            id: 'sync-check',
+            icon: '🔍',
+            name: 'Sync Check',
+            desc: 'Am I up to date? Compare local vs GitHub',
+            tokens: [
+                { name: 'STATUS', icon: '🔍', detail: 'Local changes?', fromto: 'local → report' },
+                { name: 'DIFF', icon: '📝', detail: 'What is different?', fromto: 'local ↔ GitHub' },
+                { name: 'LOG', icon: '📋', detail: 'Recent history', fromto: 'history → report' }
+            ]
+        },
+        {
+            id: 'partner-notify',
+            icon: '🤝',
+            name: 'Partner Notify',
+            desc: 'Tell partners API is ready',
+            tokens: [
+                { name: 'STATUS', icon: '🔍', detail: 'Confirm production is live', fromto: 'server → report' },
+                { name: 'NOTIFY', icon: '📢', detail: 'Notify MobileFrame / CropManage', fromto: 'Butler → partners' },
+                { name: 'LOG', icon: '📋', detail: 'Record notification', fromto: 'event → log' }
+            ]
+        }
+    ];
+
+    let selectedAgent = null;
+
+    // =============================================
+    // RENDER
+    // =============================================
+    function renderAgents() {
+        const grid = document.getElementById('agentGrid');
+        grid.innerHTML = '';
+        agents.forEach(agent => {
+            const card = document.createElement('div');
+            card.className = 'agent-card' + (selectedAgent === agent.id ? ' selected' : '');
+            card.onclick = () => selectAgent(agent);
+
+            if (grid.classList.contains('list-view')) {
+                card.innerHTML =
+                    '<div class="agent-icon">' + agent.icon + '</div>' +
+                    '<div><div class="agent-name">' + agent.name + '</div>' +
+                    '<div class="agent-desc">' + agent.desc + '</div></div>' +
+                    '<div class="agent-token-count">' + agent.tokens.length + ' tokens</div>';
+            } else {
+                card.innerHTML =
+                    '<div class="agent-icon">' + agent.icon + '</div>' +
+                    '<div class="agent-name">' + agent.name + '</div>' +
+                    '<div class="agent-desc">' + agent.desc + '</div>' +
+                    '<div class="agent-token-count">' + agent.tokens.length + ' tokens</div>';
+            }
+            grid.appendChild(card);
+        });
+    }
+
+    function selectAgent(agent) {
+        selectedAgent = agent.id;
+        renderAgents();
+        showTokenPanel(agent);
+        document.getElementById('statusMsg').textContent = 'Selected: ' + agent.name + ' — ' + agent.tokens.length + ' tokens in chain';
+    }
+
+    function showTokenPanel(agent) {
+        const panel = document.getElementById('tokenPanel');
+        const title = document.getElementById('tokenPanelTitle');
+        const list = document.getElementById('tokenList');
+
+        title.textContent = agent.icon + ' ' + agent.name + ' — Token Chain';
+        list.innerHTML = '';
+
+        agent.tokens.forEach((token, i) => {
+            const item = document.createElement('div');
+            item.className = 'token-item';
+            item.innerHTML =
+                '<div class="token-step">' + (i + 1) + '</div>' +
+                '<div class="token-icon">' + token.icon + '</div>' +
+                '<div><div class="token-name">' + token.name + '</div>' +
+                '<div class="token-detail">' + token.detail + '</div></div>' +
+                '<div class="token-fromto">' + token.fromto + '</div>';
+            list.appendChild(item);
+        });
+
+        panel.classList.add('visible');
+    }
+
+    function closeTokenPanel() {
+        document.getElementById('tokenPanel').classList.remove('visible');
+        selectedAgent = null;
+        renderAgents();
+        document.getElementById('statusMsg').textContent = 'Ready — Select a service from the grid';
+    }
+
+    function setView(type, btn) {
+        const grid = document.getElementById('agentGrid');
+        document.querySelectorAll('.view-toggle button').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        if (type === 'list') {
+            grid.classList.add('list-view');
+        } else {
+            grid.classList.remove('list-view');
+        }
+        renderAgents();
+    }
+
+    function showAgents() {
+        document.querySelectorAll('.sidebar-item').forEach(s => s.classList.remove('active'));
+        document.querySelectorAll('.sidebar-item')[0].classList.add('active');
+        document.getElementById('contentTitle').textContent = 'Services — What can Butler do?';
+        document.getElementById('contentBody').innerHTML = '<div class="agent-grid" id="agentGrid"></div>';
+        renderAgents();
+    }
+
+    function showFiles() {
+        document.querySelectorAll('.sidebar-item').forEach(s => s.classList.remove('active'));
+        document.querySelectorAll('.sidebar-item')[1].classList.add('active');
+        document.getElementById('contentTitle').textContent = 'Files — Repository Contents';
+        closeTokenPanel();
+        document.getElementById('contentBody').innerHTML =
+            '<div style="padding:20px;color:#999;text-align:center;">' +
+            '<div style="font-size:2rem;margin-bottom:10px;">📂</div>' +
+            'File browser view — same as v1.1<br>Sidebar tree + file content viewer</div>';
+    }
+
+    function updateStatus() {
+        const repo = document.querySelector('.repo-select').value.split('/')[1];
+        const loc = document.querySelector('.loc-select option:checked').textContent;
+        document.getElementById('statusContext').textContent = 'Repo: ' + repo + ' | Location: ' + loc;
+    }
+
+    function dryRun() {
+        const agent = agents.find(a => a.id === selectedAgent);
+        if (!agent) return;
+        document.getElementById('statusMsg').textContent =
+            '🧪 DRY RUN: ' + agent.name + ' would execute ' + agent.tokens.length +
+            ' tokens: ' + agent.tokens.map(t => t.name).join(' → ');
+    }
+
+    function executeAgent() {
+        const agent = agents.find(a => a.id === selectedAgent);
+        if (!agent) return;
+        document.getElementById('statusMsg').textContent =
+            '▶️ EXECUTE: Would write to butler-commands.json → CropClient picks it up';
+    }
+
+    // Init
+    renderAgents();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Butler v2 Concept - Visual Mockup</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #1a1a2e; color: #e0e0e0; }
+
+        .page-tabs {
+            display: flex;
+            background: #16213e;
+            border-bottom: 2px solid #0f3460;
+        }
+        .page-tab {
+            padding: 12px 30px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #888;
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s;
+        }
+        .page-tab:hover { color: #ccc; }
+        .page-tab.active { color: #4CAF50; border-bottom-color: #4CAF50; }
+
+        .page { display: none; padding: 30px; }
+        .page.active { display: block; }
+
+        /* ============ VIEW 1: NETWORK MAP ============ */
+        .network-title {
+            text-align: center;
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+            color: #4CAF50;
+        }
+        .network-subtitle {
+            text-align: center;
+            font-size: 0.85rem;
+            color: #888;
+            margin-bottom: 30px;
+        }
+
+        .network-map {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        /* Truth Server */
+        .truth-server {
+            background: linear-gradient(135deg, #1B5E20, #2E7D32);
+            border: 2px solid #4CAF50;
+            border-radius: 12px;
+            padding: 20px 40px;
+            text-align: center;
+            box-shadow: 0 0 20px rgba(76, 175, 80, 0.3);
+        }
+        .truth-server .label { font-size: 0.75rem; color: #A5D6A7; text-transform: uppercase; letter-spacing: 2px; }
+        .truth-server .name { font-size: 1.3rem; font-weight: 700; color: white; margin-top: 4px; }
+        .truth-server .desc { font-size: 0.8rem; color: #C8E6C9; margin-top: 4px; }
+
+        /* Connector lines */
+        .connector {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #4CAF50;
+            font-size: 1.2rem;
+        }
+        .connector-line { width: 2px; height: 30px; background: #4CAF50; opacity: 0.5; }
+
+        /* CropClient Hub */
+        .cropclient-hub {
+            background: linear-gradient(135deg, #0f3460, #16213e);
+            border: 2px solid #e94560;
+            border-radius: 16px;
+            padding: 25px 50px;
+            text-align: center;
+            box-shadow: 0 0 30px rgba(233, 69, 96, 0.2);
+            position: relative;
+        }
+        .cropclient-hub .label { font-size: 0.75rem; color: #e94560; text-transform: uppercase; letter-spacing: 2px; }
+        .cropclient-hub .name { font-size: 1.5rem; font-weight: 700; color: white; margin-top: 4px; }
+        .cropclient-hub .desc { font-size: 0.85rem; color: #aaa; margin-top: 6px; }
+        .cropclient-hub .role { font-size: 0.75rem; color: #e94560; margin-top: 8px; font-style: italic; }
+
+        /* GitHub filing cabinet */
+        .github-box {
+            position: absolute;
+            right: -180px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            padding: 12px 18px;
+            text-align: center;
+            font-size: 0.8rem;
+        }
+        .github-box .icon { font-size: 1.5rem; margin-bottom: 4px; }
+        .github-box .name { color: #8b949e; font-weight: 600; }
+        .github-box .desc { color: #6e7681; font-size: 0.7rem; margin-top: 2px; }
+        .github-line {
+            position: absolute;
+            right: -20px;
+            top: 50%;
+            width: 20px;
+            height: 2px;
+            background: #30363d;
+        }
+
+        /* Spoke nodes */
+        .spokes {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .spoke {
+            background: #16213e;
+            border: 1px solid #333;
+            border-radius: 10px;
+            padding: 18px 22px;
+            min-width: 180px;
+            text-align: center;
+            transition: all 0.2s;
+        }
+        .spoke:hover { border-color: #4CAF50; box-shadow: 0 0 10px rgba(76, 175, 80, 0.15); }
+        .spoke .icon { font-size: 1.8rem; margin-bottom: 8px; }
+        .spoke .name { font-weight: 600; font-size: 0.9rem; color: #ddd; }
+        .spoke .type { font-size: 0.7rem; color: #888; margin-top: 3px; text-transform: uppercase; letter-spacing: 1px; }
+        .spoke .privacy { font-size: 0.7rem; color: #4CAF50; margin-top: 6px; padding: 3px 8px; background: rgba(76,175,80,0.1); border-radius: 10px; display: inline-block; }
+        .spoke .llm { font-size: 0.65rem; color: #e94560; margin-top: 4px; }
+
+        /* ============ VIEW 2: BUTLER SERVICE MENU ============ */
+        .butler-mockup {
+            max-width: 1000px;
+            margin: 0 auto;
+            border: 2px solid #333;
+            border-radius: 8px;
+            overflow: hidden;
+            background: #f5f5f5;
+        }
+
+        .mock-header {
+            background: #2E7D32;
+            color: white;
+            padding: 10px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .mock-header h1 { font-size: 1.1rem; }
+        .mock-header .right { display: flex; gap: 10px; align-items: center; font-size: 0.85rem; }
+
+        .mock-toolbar {
+            background: #f5f5f5;
+            padding: 8px 15px;
+            border-bottom: 1px solid #ddd;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .mock-toolbar select {
+            flex: 1;
+            max-width: 300px;
+            padding: 6px 10px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            font-size: 0.9rem;
+        }
+        .mock-toolbar .loc-select {
+            max-width: 200px;
+            background: #fff3e0;
+            border-color: #ff9800;
+        }
+
+        .mock-main {
+            display: flex;
+            min-height: 450px;
+        }
+
+        .mock-sidebar {
+            width: 200px;
+            background: white;
+            border-right: 1px solid #ddd;
+        }
+        .mock-sidebar-header {
+            padding: 8px 12px;
+            background: #f5f5f5;
+            border-bottom: 1px solid #ddd;
+            font-weight: 600;
+            font-size: 0.8rem;
+            color: #555;
+        }
+        .mock-sidebar-item {
+            padding: 7px 12px;
+            font-size: 0.8rem;
+            color: #333;
+            border-bottom: 1px solid #f5f5f5;
+            cursor: default;
+        }
+
+        .mock-content {
+            flex: 1;
+            background: white;
+            margin: 10px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .mock-content-header {
+            padding: 10px 15px;
+            border-bottom: 1px solid #ddd;
+            background: #fafafa;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .mock-content-header h2 { font-size: 1rem; color: #333; }
+        .mock-view-toggle { display: flex; gap: 10px; font-size: 0.8rem; color: #333; }
+        .mock-view-toggle label { cursor: pointer; }
+
+        /* SKILL GRID */
+        .skill-grid {
+            flex: 1;
+            padding: 20px;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            align-content: start;
+        }
+
+        .skill-card {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .skill-card:hover {
+            border-color: #4CAF50;
+            box-shadow: 0 2px 8px rgba(76,175,80,0.15);
+            transform: translateY(-2px);
+        }
+        .skill-card .skill-icon { font-size: 2rem; margin-bottom: 8px; }
+        .skill-card .skill-name { font-weight: 600; font-size: 0.95rem; color: #333; }
+        .skill-card .skill-desc { font-size: 0.75rem; color: #888; margin-top: 5px; }
+        .skill-card.disabled { opacity: 0.4; cursor: not-allowed; }
+        .skill-card.disabled:hover { border-color: #e0e0e0; box-shadow: none; transform: none; }
+
+        .mock-status {
+            padding: 8px 15px;
+            background: #f5f5f5;
+            border-top: 1px solid #ddd;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .mock-status .status-msg {
+            flex: 1;
+            padding: 5px 10px;
+            background: #E3F2FD;
+            color: #1976D2;
+            border-left: 3px solid #2196F3;
+            font-size: 0.8rem;
+        }
+
+        .annotation {
+            background: #fff3e0;
+            border-left: 3px solid #ff9800;
+            padding: 10px 15px;
+            margin-top: 20px;
+            font-size: 0.85rem;
+            color: #333;
+            border-radius: 0 4px 4px 0;
+            max-width: 1000px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .annotation strong { color: #e65100; }
+    </style>
+</head>
+<body>
+
+<div class="page-tabs">
+    <div class="page-tab active" onclick="showPage('network')">1. Network Map</div>
+    <div class="page-tab" onclick="showPage('butler')">2. Butler Service Menu</div>
+</div>
+
+<!-- ============ PAGE 1: NETWORK MAP ============ -->
+<div class="page active" id="page-network">
+    <div class="network-title">CropClient Network</div>
+    <div class="network-subtitle">The Great Integrator — connecting everyone, everywhere, with privacy and care</div>
+
+    <div class="network-map">
+        <!-- Truth Server -->
+        <div class="truth-server">
+            <div class="label">Source of Truth</div>
+            <div class="name">Main Server</div>
+            <div class="desc">The estate — central authority</div>
+        </div>
+
+        <div class="connector">
+            <div class="connector-line"></div>
+        </div>
+
+        <!-- CropClient Hub -->
+        <div style="position:relative;">
+            <div class="cropclient-hub">
+                <div class="label">MCP Integrator</div>
+                <div class="name">CropClient</div>
+                <div class="desc">The Butler — serves the community</div>
+                <div class="role">"Cares for everyone, everywhere"</div>
+                <div class="github-line"></div>
+            </div>
+            <div class="github-box">
+                <div class="icon">📦</div>
+                <div class="name">GitHub</div>
+                <div class="desc">Filing Cabinet</div>
+            </div>
+        </div>
+
+        <div class="connector">
+            <div class="connector-line"></div>
+        </div>
+
+        <!-- Spoke Nodes -->
+        <div class="spokes">
+            <div class="spoke">
+                <div class="icon">🌾</div>
+                <div class="name">Field Office</div>
+                <div class="type">Remote Location</div>
+                <div class="privacy">Private Data</div>
+                <div class="llm">Local LLM Active</div>
+            </div>
+            <div class="spoke">
+                <div class="icon">🏢</div>
+                <div class="name">Main Office</div>
+                <div class="type">Office Location</div>
+                <div class="privacy">Private Data</div>
+                <div class="llm">Local LLM Active</div>
+            </div>
+            <div class="spoke">
+                <div class="icon">💻</div>
+                <div class="name">Steve's Laptop</div>
+                <div class="type">Personal</div>
+                <div class="privacy">Private Data</div>
+                <div class="llm">Local LLM Active</div>
+            </div>
+            <div class="spoke">
+                <div class="icon">🖥️</div>
+                <div class="name">Dev Server</div>
+                <div class="type">Development</div>
+                <div class="privacy">Private Data</div>
+                <div class="llm">Local LLM Active</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="annotation">
+        <strong>Each unit knows its role and services.</strong> Every node has its own privacy boundary and local LLM.
+        CropClient integrates them all — the digital servant that cares for the whole community.
+    </div>
+</div>
+
+<!-- ============ PAGE 2: BUTLER SERVICE MENU ============ -->
+<div class="page" id="page-butler">
+    <div class="network-title" style="margin-bottom:5px;">Butler Service Menu</div>
+    <div class="network-subtitle">What can the Butler do for you today?</div>
+
+    <div class="butler-mockup">
+        <div class="mock-header">
+            <h1>GitHub Butler</h1>
+            <div class="right">
+                <span>sspappasjr</span>
+                <span style="opacity:0.6;font-size:0.75rem;">v2.0</span>
+            </div>
+        </div>
+
+        <div class="mock-toolbar">
+            <select>
+                <option>sspappasjr/CropClient-Claude-Desktop</option>
+            </select>
+            <select class="loc-select">
+                <option>Steve's Laptop</option>
+                <option>Dev Server</option>
+                <option>Field Office</option>
+                <option>Main Office</option>
+            </select>
+            <span style="font-size:0.75rem;color:#333;">+ New Repo</span>
+            <span style="font-size:0.75rem;color:#333;">Refresh</span>
+        </div>
+
+        <div class="mock-main">
+            <div class="mock-sidebar">
+                <div class="mock-sidebar-header">Repository Contents</div>
+                <div class="mock-sidebar-item">📁 src</div>
+                <div class="mock-sidebar-item">📁 config</div>
+                <div class="mock-sidebar-item">📄 README.md</div>
+                <div class="mock-sidebar-item">📄 package.json</div>
+                <div class="mock-sidebar-item">📄 CLAUDE.md</div>
+            </div>
+
+            <div class="mock-content">
+                <div class="mock-content-header">
+                    <h2>Services</h2>
+                    <div class="mock-view-toggle">
+                        <label><input type="radio" name="v" checked> Grid</label>
+                        <label><input type="radio" name="v"> List</label>
+                    </div>
+                </div>
+
+                <div class="skill-grid">
+                    <div class="skill-card">
+                        <div class="skill-icon">⬇️</div>
+                        <div class="skill-name">Pull</div>
+                        <div class="skill-desc">Get latest from filing cabinet</div>
+                    </div>
+                    <div class="skill-card">
+                        <div class="skill-icon">⬆️</div>
+                        <div class="skill-name">Push</div>
+                        <div class="skill-desc">Send work to filing cabinet</div>
+                    </div>
+                    <div class="skill-card">
+                        <div class="skill-icon">🔄</div>
+                        <div class="skill-name">Sync</div>
+                        <div class="skill-desc">Match both ways</div>
+                    </div>
+                    <div class="skill-card">
+                        <div class="skill-icon">🚀</div>
+                        <div class="skill-name">Deploy</div>
+                        <div class="skill-desc">Push to a location</div>
+                    </div>
+                    <div class="skill-card">
+                        <div class="skill-icon">⚙️</div>
+                        <div class="skill-name">Setup</div>
+                        <div class="skill-desc">Configure a new node</div>
+                    </div>
+                    <div class="skill-card">
+                        <div class="skill-icon">📊</div>
+                        <div class="skill-name">Status</div>
+                        <div class="skill-desc">Check all locations</div>
+                    </div>
+                    <div class="skill-card">
+                        <div class="skill-icon">🧠</div>
+                        <div class="skill-name">Teach</div>
+                        <div class="skill-desc">Update local LLM / config</div>
+                    </div>
+                    <div class="skill-card disabled">
+                        <div class="skill-icon">🔒</div>
+                        <div class="skill-name">Privacy</div>
+                        <div class="skill-desc">Manage node permissions</div>
+                    </div>
+                    <div class="skill-card disabled">
+                        <div class="skill-icon">📋</div>
+                        <div class="skill-name">Audit</div>
+                        <div class="skill-desc">Review activity log</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mock-status">
+            <div class="status-msg">Ready — Repo: CropClient-Claude-Desktop | Location: Steve's Laptop</div>
+        </div>
+    </div>
+
+    <div class="annotation">
+        <strong>The Butler's service menu.</strong> Repo selected (top left) + Location selected (top right, orange) = context.
+        Click a service card and the Butler knows what to do. Greyed cards = coming soon.
+        Sidebar still browses files. Content area is now the service launcher.
+    </div>
+</div>
+
+<script>
+    function showPage(id) {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.page-tab').forEach(t => t.classList.remove('active'));
+        document.getElementById('page-' + id).classList.add('active');
+        event.target.classList.add('active');
+    }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,191 @@
+// ────────────────────────────────────────
+        // TOOL 5: FIND AND SELECT RECORD
+        // ────────────────────────────────────────
+        // Purpose: Search for and select records by ranch/planting name
+        // Triggers: "select", "show", "find" + "ranch" or "planting"
+        // Special: "find first" or "find last" for quick access
+        // Examples:
+        //   - "select Ranch 1 Planting 1A"
+        //   - "show Ranch 2"
+        //   - "find Planting 1B"
+        //   - "find first" → select first record in grid
+        //   - "find last" → select last (most recent) record in grid
+        // 
+        // How it works:
+        //   1. Check for "first" or "last" keywords
+        //   2. OR parse search text for ranch number and/or planting
+        //   3. Searches displayRecords for matching record
+        //   4. Calls selectRecord(id) if found
+        //   5. Shows confirmation or error message
+        //
+        // Status: NEW - Testing before adding to official MCP script
+        // ────────────────────────────────────────
+        
+        function findAndSelectRecord(searchText) {
+            console.log('=== findAndSelectRecord called ===');
+            console.log('searchText:', searchText);
+            
+            let lowerSearch = searchText.toLowerCase().trim();
+            
+            // Remove "to" if it appears after filter/select/show
+            // "filter to ranch 1" → "filter ranch 1"
+            // "select to planting 1a" → "select planting 1a"
+            lowerSearch = lowerSearch.replace(/^(filter|select|show|show me)\s+to\s+/i, '$1 ');
+            
+            console.log('After removing "to":', lowerSearch);
+            
+            // Check for CLEAR FILTER - ALL 12 VARIATIONS
+            if (lowerSearch === 'select' || 
+                lowerSearch === 'filter' || 
+                lowerSearch === 'select all' || 
+                lowerSearch === 'filter all' || 
+                lowerSearch === 'show all' || 
+                lowerSearch === 'all records' ||
+                lowerSearch === 'all' ||
+                lowerSearch === 'select all records' ||
+                lowerSearch === 'filter all records' ||
+                lowerSearch === 'show me all' ||
+                lowerSearch === 'show me all records' ||
+                lowerSearch === 'show all records') {
+                
+                console.log('Clear filter - show all records');
+                currentFilter = 'all';
+                filterRanchPattern = null;
+                filterPlantingPattern = null;
+                populateDataGrid();
+                
+                // Select first record
+                if (displayRecords.length > 0) {
+                    selectRecord(displayRecords[0].id);
+                    showResult(`✅ Showing all ${displayRecords.length} records - Filter cleared`);
+                } else {
+                    showResult('✅ Filter cleared - No records available');
+                }
+                return true;
+            }
+            
+            // Check for FIRST or LAST
+            if (lowerSearch.includes('first')) {
+                if (displayRecords.length > 0) {
+                    const firstRecord = displayRecords[0];
+                    selectRecord(firstRecord.id);
+                    showResult(`✅ Selected FIRST record: ${firstRecord.ranch} ${firstRecord.planting}`);
+                    return true;
+                } else {
+                    showResult('❌ No records available');
+                    return false;
+                }
+            }
+            
+            if (lowerSearch.includes('last')) {
+                if (displayRecords.length > 0) {
+                    const lastRecord = displayRecords[displayRecords.length - 1];
+                    selectRecord(lastRecord.id);
+                    showResult(`✅ Selected LAST record: ${lastRecord.ranch} ${lastRecord.planting}`);
+                    return true;
+                } else {
+                    showResult('❌ No records available');
+                    return false;
+                }
+            }
+            
+            // THREE-TIER MATCHING
+            // Extract BOTH ranch and planting patterns
+            const ranchMatch = lowerSearch.match(/ranch\s+(\S+)/);
+            const plantingMatch = lowerSearch.match(/planting\s+(\S+)/);
+            
+            const ranchPattern = ranchMatch ? ranchMatch[1] : null;
+            const plantingPattern = plantingMatch ? plantingMatch[1] : null;
+            
+            console.log('Extracted - Ranch:', ranchPattern, 'Planting:', plantingPattern);
+            
+            let matches = [];
+            
+            // CASE 1: BOTH ranch AND planting specified
+            // Example: "ranch 1 planting 1a" or "select ranch 1 planting 1a"
+            if (ranchPattern && plantingPattern) {
+                console.log('Full specification - filter grid and select first');
+                
+                const ranchRegex = new RegExp('\\b' + ranchPattern + '\\b', 'i');
+                const plantingRegex = new RegExp('\\b' + plantingPattern + '\\b', 'i');
+                
+                matches = displayRecords.filter(r => 
+                    ranchRegex.test(r.ranch) && plantingRegex.test(r.planting)
+                );
+                
+                if (matches.length === 0) {
+                    showResult(`❌ No records found for Ranch ${ranchPattern} Planting ${plantingPattern}`);
+                    return false;
+                }
+                
+                // Set filter and render grid
+                currentFilter = `ranch_${ranchPattern}_planting_${plantingPattern}`;
+                filterRanchPattern = ranchPattern;
+                filterPlantingPattern = plantingPattern;
+                populateDataGrid();
+                
+                // Select first record
+                selectRecord(matches[0].id);
+                showResult(`✅ Showing ${matches.length} record(s) - Selected first`);
+                return true;
+            }
+            
+            // CASE 2: ONLY ranch specified
+            // Example: "ranch 1" or "select ranch 1"
+            // Filter grid to show Ranch 1 records, select first
+            else if (ranchPattern && !plantingPattern) {
+                console.log('Ranch-only specification - filter grid and select first');
+                
+                const ranchRegex = new RegExp('\\b' + ranchPattern + '\\b', 'i');
+                matches = displayRecords.filter(r => ranchRegex.test(r.ranch));
+                
+                if (matches.length === 0) {
+                    showResult(`❌ No records found for Ranch ${ranchPattern}`);
+                    return false;
+                }
+                
+                // Set filter and render grid
+                currentFilter = `ranch_${ranchPattern}`;
+                filterRanchPattern = ranchPattern;
+                filterPlantingPattern = null;
+                populateDataGrid();
+                
+                // Select first record
+                selectRecord(matches[0].id);
+                showResult(`✅ Showing ${matches.length} Ranch ${ranchPattern} record(s) - Selected first`);
+                return true;
+            }
+            
+            // CASE 3: ONLY planting specified
+            // Example: "planting 1a" or "select planting 1a"
+            // Filter grid to show Planting 1A records, select first
+            else if (!ranchPattern && plantingPattern) {
+                console.log('Planting-only specification - filter grid and select first');
+                
+                const plantingRegex = new RegExp('\\b' + plantingPattern + '\\b', 'i');
+                matches = displayRecords.filter(r => plantingRegex.test(r.planting));
+                
+                if (matches.length === 0) {
+                    showResult(`❌ No records found for Planting ${plantingPattern}`);
+                    return false;
+                }
+                
+                // Set filter and render grid
+                currentFilter = `planting_${plantingPattern}`;
+                filterRanchPattern = null;
+                filterPlantingPattern = plantingPattern;
+                populateDataGrid();
+                
+                // Select first record
+                selectRecord(matches[0].id);
+                showResult(`✅ Showing ${matches.length} Planting ${plantingPattern} record(s) - Selected first`);
+                return true;
+            }
+            
+            // CASE 4: Neither ranch nor planting found
+            else {
+                showResult(`❌ Could not parse: ${searchText}. Try "ranch 1" or "planting 1a"`);
+                return false;
+            }
+        }
+        

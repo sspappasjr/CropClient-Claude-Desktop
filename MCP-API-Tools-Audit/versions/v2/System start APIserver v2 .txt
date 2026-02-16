@@ -1,0 +1,34 @@
+this is my start API cmd window
+ mainly built for Mongo and SQL server 
+   note we will have to add SQLlite
+
+C:\AICode\hello-world-system\mcp-server>node src/index.js
+  this is Start for MCP cmd window
+   we should produce a tech doc for each to explain what's contained
+------------------  from hello-world-system-2 -------------------------
+
+this is my start API cmd window
+ mainly built for Mongo and SQL server 
+   note we will have to add SQLlite
+
+C:\AICode\hello-world-system\mcp-server>node src/index.js
+  this is Start for MCP cmd window
+   we should produce a tech doc for each to explain what's contained
+
+API
+cd C:\AICode\hello-world-system\api
+node JsonCrudAPI.js
+
+MCP
+cd C:\AICode\hello-world-system\mcp-server
+node src/index.js
+
+
+API server v2 Only 
+cd c:\AIcode\crop-client-services\api-server
+npm init -y
+npm install express cors
+
+then to start server ...
+cd c:\AIcode\crop-client-services\api-server
+node APIServer1.2.js

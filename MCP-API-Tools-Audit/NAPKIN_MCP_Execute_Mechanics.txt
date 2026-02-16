@@ -1,0 +1,124 @@
+NAPKIN: MCP Execute Mechanics
+==============================
+Created: 2025-01-18
+Purpose: Track what we learned about /mcp/execute flow
+
+FOLDER LAYOUT
+=============
+C:\AICode\CropClient-Claude-Desktop\
+└── MCP-API-Tools-Audit\
+    ├── CropClient-MCP-API-Tools-Audit-Q.html  (CLIENT - test UI)
+    ├── dashboard.js                            (SERVER - MCP + HTTP)
+    ├── dashboard-component.js                  (COMPONENT - extracted script)
+    ├── APIServer.js                            (API SERVER - port 3101)
+    └── NAPKIN_MCP_Execute_Mechanics.txt        (this file)
+
+VERSION FOLDERS (future)
+========================
+v1/ - baseline before changes
+v2/ - after fix
+v3/ - etc.
+
+
+THE MECHANIC (What We Learned)
+==============================
+
+CLIENT SIDE (HTML fetch):
+-------------------------
+User clicks button → mcpSend() runs
+  ↓
+chatInput.value = "create next irrigation"
+  ↓
+routeCommand(promptText) in BROWSER
+  ↓
+parseCommandToTool(input) → returns "create_next_irrigation"
+  ↓
+fetch('/mcp/execute', {
+    body: { promptText, toolName }   ← BOTH are sent!
+})
+
+
+SERVER SIDE (dashboard.js):
+---------------------------
+app.post('/mcp/execute', ...) receives request
+  ↓
+CURRENT (broken):
+  const { promptText } = req.body   ← Only extracts promptText
+  routeCommand(promptText)          ← Has document.getElementById - FAILS
+  
+SHOULD BE (fixed):
+  const { toolName } = req.body     ← Use toolName directly (client already parsed it)
+  mcpTools[toolName].handler()      ← Call handler - no DOM needed
+  res.json(result)
+
+
+THE FIX
+=======
+Server-side /mcp/execute should:
+1. Extract toolName from body (client already sent it)
+2. Call mcpTools[toolName].handler() directly
+3. Return result
+4. Skip routeCommand() entirely - that's for browser use only
+
+
+PROCESS (Our Workflow)
+======================
+1. FIX & TEST in Audit App (HTML client)
+   - Verify the fetch sends toolName
+   - Verify server uses it correctly
+   
+2. MAKE COMPONENT from working app
+   - Extract <script> content 
+   - Save as dashboard-component.js
+   
+3. INJECT into dashboard.js server
+   - Paste component code WITHOUT <script> tags
+   - Between the @@@@ markers
+   
+4. VERSION before each change
+   - Copy current files to v1/, v2/, etc.
+   - Always have rollback
+
+
+SERVERS
+=======
+Dashboard: http://localhost:3100
+  - /ping           → health check
+  - /tools          → list tools
+  - /mcp/execute    → master router (needs fix)
+  - /tools/:name    → direct tool call (works)
+  - /records        → get displayRecords
+
+API Server: http://localhost:3101
+  - /ping           → health check  
+  - /tools          → list tools
+  - /tools/:name    → direct tool call
+
+
+TOOLS REGISTRY
+==============
+Dashboard (port 3100):
+  - create_next_irrigation
+  - reset_table
+  - read_meter
+  - update_record
+
+API (port 3101):
+  - get_token
+  - get_ranches
+  - get_plantings
+  - get_irrigation_details
+  - load_into_displayRecords
+  - post_new_irrigation
+  - update_irrigation
+  - batch_post_queue
+
+
+NEXT STEPS
+==========
+[ ] Create v1/ folder with current files
+[ ] Fix /mcp/execute endpoint in dashboard.js
+[ ] Test via Audit app
+[ ] Update component
+[ ] Verify server runs clean
+

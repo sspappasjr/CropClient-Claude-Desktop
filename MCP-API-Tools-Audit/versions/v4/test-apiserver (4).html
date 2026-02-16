@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Server Tester - APIServer1.2.js</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        header {
+            background: linear-gradient(135deg, #2e7d32 0%, #4caf50 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        header h1 {
+            font-size: 1.8em;
+            margin-bottom: 5px;
+        }
+        header p {
+            opacity: 0.9;
+            font-size: 0.95em;
+        }
+        .main-content {
+            padding: 20px;
+        }
+        .test-section {
+            background: #fafafa;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .test-section h2 {
+            color: #2e7d32;
+            font-size: 1.3em;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #4caf50;
+            padding-bottom: 8px;
+        }
+        .button-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+        .test-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9em;
+            transition: transform 0.2s, box-shadow 0.2s;
+            color: white;
+        }
+        .test-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        .test-btn:active {
+            transform: translateY(0);
+        }
+        .test-btn.json {
+            background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
+        }
+        .test-btn.api {
+            background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%);
+        }
+        .test-btn.send {
+            background: linear-gradient(135deg, #4caf50 0%, #388e3c 100%);
+            font-size: 1.1em;
+            padding: 15px 40px;
+        }
+        .test-btn.clear {
+            background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
+        }
+        .server-info {
+            background: #e8f5e9;
+            border-left: 4px solid #4caf50;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+        .server-info strong {
+            color: #2e7d32;
+        }
+        .credentials {
+            background: #fff3e0;
+            border-left: 4px solid #ff9800;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 4px;
+        }
+        .credentials input {
+            padding: 8px;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            margin: 5px 10px 5px 0;
+            width: 250px;
+        }
+        .field-group {
+            margin-bottom: 15px;
+        }
+        .field-group label {
+            display: block;
+            font-weight: 600;
+            color: #2e7d32;
+            margin-bottom: 5px;
+            font-size: 0.95em;
+        }
+        .field-group input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+        .field-group input[type="text"]:focus {
+            outline: none;
+            border-color: #4caf50;
+        }
+        .field-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            min-height: 120px;
+            resize: vertical;
+        }
+        .field-group textarea:focus {
+            outline: none;
+            border-color: #4caf50;
+        }
+        .split-container {
+            display: grid;
+            grid-template-columns: 60% 40%;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        .data-grid-panel {
+            background: #fafafa;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+        }
+        .data-grid-panel h2 {
+            color: #2e7d32;
+            font-size: 1.3em;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #4caf50;
+            padding-bottom: 8px;
+        }
+        .data-grid {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            overflow-x: auto;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        .data-grid table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85em;
+        }
+        .data-grid th {
+            background: linear-gradient(135deg, #2e7d32 0%, #4caf50 100%);
+            color: white;
+            padding: 10px;
+            text-align: left;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        .data-grid td {
+            padding: 8px 10px;
+            border-bottom: 1px solid #eee;
+        }
+        .data-grid tr:hover {
+            background: #f5f5f5;
+        }
+        .data-grid .empty-state {
+            padding: 40px;
+            text-align: center;
+            color: #999;
+            font-style: italic;
+        }
+        .message-log-panel {
+            background: #fafafa;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+        }
+        .message-log-panel h2 {
+            color: #2e7d32;
+            font-size: 1.3em;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #4caf50;
+            padding-bottom: 8px;
+        }
+        .message-log {
+            background: #263238;
+            color: #aed581;
+            font-family: 'Courier New', monospace;
+            padding: 15px;
+            border-radius: 6px;
+            min-height: 500px;
+            max-height: 500px;
+            overflow-y: auto;
+            font-size: 0.85em;
+            line-height: 1.5;
+        }
+        .message-log .success {
+            color: #81c784;
+        }
+        .message-log .error {
+            color: #ef5350;
+        }
+        .message-log .info {
+            color: #64b5f6;
+        }
+        .json-preview {
+            background: #263238;
+            color: #aed581;
+            font-family: 'Courier New', monospace;
+            padding: 15px;
+            border-radius: 6px;
+            max-height: 500px;
+            overflow: auto;
+            font-size: 0.85em;
+            line-height: 1.5;
+            white-space: pre-wrap;
+        }
+        .interactive-panel {
+            background: #fff3e0;
+            border: 3px solid #ff9800;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .interactive-panel h3 {
+            color: #f57c00;
+            margin-bottom: 15px;
+        }
+        .json-row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        .json-row .field-group {
+            flex: 1;
+            margin-bottom: 0;
+        }
+        .json-row .button-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            min-width: 150px;
+        }
+        .json-row .button-stack button {
+            width: 100%;
+        }
+        .tool-buttons-section {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 2px solid #ff9800;
+        }
+        .tool-buttons-section h4 {
+            color: #f57c00;
+            margin-bottom: 10px;
+            font-size: 0.95em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🧪 API Server Interactive Tester</h1>
+            <p>Test APIServer1.2.js - 15 MCP Tools - Edit & Send Custom Calls</p>
+        </header>
+
+        <div class="main-content">
+            <div class="server-info">
+                <strong>Data Directory:</strong> C:\AICode\crop-client-services\api-server\data\
+            </div>
+
+            <!-- INTERACTIVE COMMAND PANEL -->
+            <div class="interactive-panel">
+                <h3>⚡ Interactive Command Panel</h3>
+                
+                <div class="field-group">
+                    <label>Server URL:</label>
+                    <input type="text" id="serverUrl" value="http://localhost:3101" placeholder="http://localhost:3101 or https://crop-client-services.com">
+                </div>
+
+                <div class="field-group">
+                    <label>Tool Name:</label>
+                    <input type="text" id="toolName" value="json_write" placeholder="json_write, get_token, data_operation, etc.">
+                </div>
+
+                <div class="json-row">
+                    <div class="field-group">
+                        <label>JSON Data (edit as needed):</label>
+                        <textarea id="jsonData">{
+  "filepath": "test.json",
+  "data": {
+    "testName": "API Server Test",
+    "timestamp": "2026-02-13T20:00:00Z",
+    "values": [1, 2, 3]
+  }
+}</textarea>
+                    </div>
+                    <div class="button-stack">
+                        <button class="test-btn send" onclick="sendCustomCall()">📤 SEND</button>
+                        <button class="test-btn clear" onclick="clearFields()">Clear Fields</button>
+                        <button class="test-btn clear" onclick="clearResults()">Clear Results</button>
+                    </div>
+                </div>
+
+                <!-- JSON TOOL BUTTONS -->
+                <div class="tool-buttons-section">
+                    <h4>📁 Quick Load JSON Tools:</h4>
+                    <div class="button-group">
+                        <button class="test-btn json" onclick="loadJsonWrite()">json_write</button>
+                        <button class="test-btn json" onclick="loadJsonRead()">json_read</button>
+                        <button class="test-btn json" onclick="loadJsonUpdate()">json_update</button>
+                        <button class="test-btn json" onclick="loadJsonDelete()">json_delete</button>
+                        <button class="test-btn json" onclick="loadJsonExists()">json_exists</button>
+                        <button class="test-btn json" onclick="loadJsonList()">json_list</button>
+                        <button class="test-btn json" onclick="loadDataOperation()">data_operation</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SPLIT SCREEN: DATA GRID + MESSAGE LOG -->
+            <div class="split-container">
+                <!-- LEFT: DATA GRID -->
+                <div class="data-grid-panel">
+                    <h2>📊 Data Grid</h2>
+                    <div class="data-grid" id="dataGrid">
+                        <div class="empty-state">No data loaded. Click SEND to view results as table.</div>
+                    </div>
+                </div>
+
+                <!-- RIGHT: MESSAGE LOG -->
+                <div class="message-log-panel">
+                    <h2>💬 Message Log</h2>
+                    <div class="message-log" id="messageLog">
+                        <span class="info">Click buttons below to populate fields, or edit manually and click SEND...</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- API SERVICE TESTS -->
+            <div class="test-section">
+                <h2>🌐 CropManage API (8 tools)</h2>
+                <div class="credentials">
+                    <strong>CropManage Credentials:</strong><br>
+                    <input type="text" id="username" placeholder="Username" value="stevep@sspnet.com">
+                    <input type="password" id="password" placeholder="Password" value="gosteve1!">
+                    <br>
+                    <strong>Save/Restore User:</strong><br>
+                    <input type="text" id="saveUsername" placeholder="Save as..." value="steve">
+                </div>
+                <div class="button-group">
+                    <button class="test-btn api" onclick="loadGetToken()">get_token</button>
+                    <button class="test-btn api" onclick="loadGetRanches()">get_ranches</button>
+                    <button class="test-btn api" onclick="loadGetPlantings()">get_plantings</button>
+                    <button class="test-btn api" onclick="loadGetIrrigationDetails()">get_irrigation_details</button>
+                    <button class="test-btn api" onclick="loadDisplayRecords()">load_into_displayRecords</button>
+                    <button class="test-btn api" onclick="loadPostIrrigation()">post_new_irrigation</button>
+                    <button class="test-btn api" onclick="loadUpdateIrrigation()">update_irrigation</button>
+                    <button class="test-btn api" onclick="loadBatchPost()">batch_post_queue</button>
+                    <button class="test-btn json" onclick="saveCurrent()" style="background: linear-gradient(135deg, #4caf50 0%, #388e3c 100%);">💾 SAVE</button>
+                    <button class="test-btn json" onclick="restoreCurrent()" style="background: linear-gradient(135deg, #9c27b0 0%, #7b1fa2 100%);">📥 RESTORE</button>
+                </div>
+            </div>
+
+            <!-- QUICK PRESETS -->
+            <div class="test-section">
+                <h2>⚡ Quick Server Presets</h2>
+                <div class="button-group">
+                    <button class="test-btn json" onclick="setServerLocal()">📍 Localhost (3101)</button>
+                    <button class="test-btn api" onclick="setServerProduction()">🌐 Production Server</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let ranchGuid = null;
+        let plantingId = null;
+        let currentGridData = null;  // Track current data in grid for save/restore
+
+        // Utility: Log to message area
+        function log(text, type = 'info') {
+            const area = document.getElementById('messageLog');
+            const span = document.createElement('div');
+            span.className = type;
+            span.textContent = text;
+            area.appendChild(span);
+            area.scrollTop = area.scrollHeight;
+        }
+
+        // Utility: Render data as grid
+        function renderDataGrid(data) {
+            const gridContainer = document.getElementById('dataGrid');
+            
+            // Store current data for save/restore
+            currentGridData = data;
+            
+            // Clear existing content
+            gridContainer.innerHTML = '';
+
+            // Handle null/undefined
+            if (data === null || data === undefined) {
+                gridContainer.innerHTML = '<div class="empty-state">No data returned.</div>';
+                return;
+            }
+
+            // Handle array of objects (table format)
+            if (Array.isArray(data) && data.length > 0 && typeof data[0] === 'object') {
+                const table = document.createElement('table');
+                
+                // Create header
+                const thead = document.createElement('thead');
+                const headerRow = document.createElement('tr');
+                const keys = Object.keys(data[0]);
+                keys.forEach(key => {
+                    const th = document.createElement('th');
+                    th.textContent = key;
+                    headerRow.appendChild(th);
+                });
+                thead.appendChild(headerRow);
+                table.appendChild(thead);
+
+                // Create rows
+                const tbody = document.createElement('tbody');
+                data.forEach(row => {
+                    const tr = document.createElement('tr');
+                    keys.forEach(key => {
+                        const td = document.createElement('td');
+                        const value = row[key];
+                        // Format nested objects/arrays
+                        if (typeof value === 'object' && value !== null) {
+                            td.textContent = JSON.stringify(value);
+                        } else {
+                            td.textContent = value !== null && value !== undefined ? value : '';
+                        }
+                        tr.appendChild(td);
+                    });
+                    tbody.appendChild(tr);
+                });
+                table.appendChild(tbody);
+                gridContainer.appendChild(table);
+                return;
+            }
+
+            // Handle single object (key-value pairs)
+            if (typeof data === 'object' && !Array.isArray(data)) {
+                const table = document.createElement('table');
+                const tbody = document.createElement('tbody');
+                
+                Object.keys(data).forEach(key => {
+                    const tr = document.createElement('tr');
+                    const tdKey = document.createElement('td');
+                    const tdValue = document.createElement('td');
+                    
+                    tdKey.textContent = key;
+                    tdKey.style.fontWeight = '600';
+                    tdKey.style.background = '#f5f5f5';
+                    
+                    const value = data[key];
+                    if (typeof value === 'object' && value !== null) {
+                        tdValue.innerHTML = `<pre style="margin:0; font-size:0.85em;">${JSON.stringify(value, null, 2)}</pre>`;
+                    } else {
+                        tdValue.textContent = value !== null && value !== undefined ? value : '';
+                    }
+                    
+                    tr.appendChild(tdKey);
+                    tr.appendChild(tdValue);
+                    tbody.appendChild(tr);
+                });
+                
+                table.appendChild(tbody);
+                gridContainer.appendChild(table);
+                return;
+            }
+
+            // Handle simple array (list)
+            if (Array.isArray(data)) {
+                const table = document.createElement('table');
+                const tbody = document.createElement('tbody');
+                
+                data.forEach((item, index) => {
+                    const tr = document.createElement('tr');
+                    const tdIndex = document.createElement('td');
+                    const tdValue = document.createElement('td');
+                    
+                    tdIndex.textContent = index;
+                    tdIndex.style.fontWeight = '600';
+                    tdIndex.style.background = '#f5f5f5';
+                    tdIndex.style.width = '50px';
+                    
+                    if (typeof item === 'object' && item !== null) {
+                        tdValue.innerHTML = `<pre style="margin:0; font-size:0.85em;">${JSON.stringify(item, null, 2)}</pre>`;
+                    } else {
+                        tdValue.textContent = item !== null && item !== undefined ? item : '';
+                    }
+                    
+                    tr.appendChild(tdIndex);
+                    tr.appendChild(tdValue);
+                    tbody.appendChild(tr);
+                });
+                
+                table.appendChild(tbody);
+                gridContainer.appendChild(table);
+                return;
+            }
+
+            // Handle primitives (string, number, boolean)
+            const pre = document.createElement('pre');
+            pre.className = 'json-preview';
+            pre.textContent = String(data);
+            gridContainer.appendChild(pre);
+        }
+
+        // Set fields
+        function setFields(toolName, data) {
+            document.getElementById('toolName').value = toolName;
+            document.getElementById('jsonData').value = JSON.stringify(data, null, 2);
+        }
+
+        // Send custom call
+        async function sendCustomCall() {
+            const serverUrl = document.getElementById('serverUrl').value.trim();
+            const toolName = document.getElementById('toolName').value.trim();
+            const jsonText = document.getElementById('jsonData').value.trim();
+
+            if (!serverUrl || !toolName) {
+                log('❌ Server URL and Tool Name required!', 'error');
+                return;
+            }
+
+            let args = {};
+            if (jsonText) {
+                try {
+                    args = JSON.parse(jsonText);
+                } catch (e) {
+                    log(`❌ Invalid JSON: ${e.message}`, 'error');
+                    return;
+                }
+            }
+
+            try {
+                log(`→ Calling ${toolName} on ${serverUrl}...`, 'info');
+                log(`→ Args: ${JSON.stringify(args)}`, 'info');
+                
+                const response = await fetch(`${serverUrl}/tools/${toolName}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(args)
+                });
+
+                const result = await response.json();
+
+                if (result.success || response.ok) {
+                    log(`✅ ${toolName}: SUCCESS`, 'success');
+                    
+                    // Render data in grid
+                    if (result.data) {
+                        renderDataGrid(result.data);
+                        
+                        // If it's a read operation, also populate JSON field
+                        if (toolName.includes('read') || toolName === 'data_operation') {
+                            document.getElementById('jsonData').value = JSON.stringify(result.data, null, 2);
+                        }
+                    } else if (result.ranches) {
+                        renderDataGrid(result.ranches);
+                    } else if (result.plantings) {
+                        renderDataGrid(result.plantings);
+                    } else if (result.events) {
+                        renderDataGrid(result.events);
+                    } else if (result.records) {
+                        renderDataGrid(result.records);
+                    } else {
+                        // Display full result as key-value pairs
+                        renderDataGrid(result);
+                    }
+
+                    // Log success message
+                    log(`Response: ${JSON.stringify(result, null, 2)}`, 'info');
+
+                    // Store ranch/planting IDs for API calls
+                    if (toolName === 'get_ranches' && result.ranches && result.ranches.length > 0) {
+                        ranchGuid = result.ranches[0].Ranch_External_GUID;
+                        log(`📌 Saved Ranch GUID: ${ranchGuid}`, 'success');
+                    }
+                    if (toolName === 'get_plantings' && result.plantings && result.plantings.length > 0) {
+                        plantingId = result.plantings[0].Id;
+                        log(`📌 Saved Planting ID: ${plantingId}`, 'success');
+                    }
+                } else {
+                    log(`❌ ${toolName}: FAILED - ${result.error || result.message}`, 'error');
+                    renderDataGrid(result);
+                }
+            } catch (error) {
+                log(`❌ ERROR: ${error.message}`, 'error');
+            }
+        }
+
+        // Clear fields
+        function clearFields() {
+            document.getElementById('toolName').value = '';
+            document.getElementById('jsonData').value = '{}';
+        }
+
+        function clearResults() {
+            document.getElementById('messageLog').innerHTML = '<span class="info">Log cleared.</span>';
+            document.getElementById('dataGrid').innerHTML = '<div class="empty-state">No data loaded.</div>';
+        }
+
+        // Server presets
+        function setServerLocal() {
+            document.getElementById('serverUrl').value = 'http://localhost:3101';
+            log('📍 Server set to localhost:3101', 'success');
+        }
+
+        function setServerProduction() {
+            document.getElementById('serverUrl').value = 'https://crop-client-services.com';
+            log('🌐 Server set to production', 'success');
+        }
+
+        // JSON Tool Loaders
+        function loadJsonWrite() {
+            setFields('json_write', {
+                filepath: 'test.json',
+                data: {
+                    testName: 'API Server Test',
+                    timestamp: new Date().toISOString(),
+                    version: '1.2',
+                    values: [1, 2, 3]
+                }
+            });
+        }
+
+        function loadJsonRead() {
+            setFields('json_read', {
+                filepath: 'test.json'
+            });
+        }
+
+        function loadJsonUpdate() {
+            setFields('json_update', {
+                filepath: 'test.json',
+                updates: {
+                    updated: true,
+                    lastModified: new Date().toISOString()
+                }
+            });
+        }
+
+        function loadJsonDelete() {
+            setFields('json_delete', {
+                filepath: 'test.json'
+            });
+        }
+
+        function loadJsonExists() {
+            setFields('json_exists', {
+                filepath: 'test.json'
+            });
+        }
+
+        function loadJsonList() {
+            setFields('json_list', {
+                directory: '/.'
+            });
+        }
+
+        function loadDataOperation() {
+            setFields('data_operation', {
+                action: 'read',
+                table: 'test'
+            });
+        }
+
+        // API Tool Loaders
+        function loadGetToken() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            setFields('get_token', {
+                username: username,
+                password: password
+            });
+        }
+
+        function loadGetRanches() {
+            setFields('get_ranches', {});
+        }
+
+        function loadGetPlantings() {
+            if (!ranchGuid) {
+                log('⚠️ No Ranch GUID stored. Run get_ranches first or enter manually.', 'error');
+            }
+            setFields('get_plantings', {
+                ranchGuid: ranchGuid || 'ENTER_RANCH_GUID_HERE'
+            });
+        }
+
+        function loadGetIrrigationDetails() {
+            if (!plantingId) {
+                log('⚠️ No Planting ID stored. Run get_plantings first or enter manually.', 'error');
+            }
+            setFields('get_irrigation_details', {
+                plantingId: plantingId || 'ENTER_PLANTING_ID_HERE'
+            });
+        }
+
+        function loadDisplayRecords() {
+            if (!plantingId) {
+                log('⚠️ No Planting ID stored. Run get_plantings first or enter manually.', 'error');
+            }
+            setFields('load_into_displayRecords', {
+                plantingId: plantingId || 'ENTER_PLANTING_ID_HERE'
+            });
+        }
+
+        function loadPostIrrigation() {
+            if (!plantingId) {
+                log('⚠️ No Planting ID stored. Run get_plantings first or enter manually.', 'error');
+            }
+            setFields('post_new_irrigation', {
+                plantingId: plantingId || 'ENTER_PLANTING_ID_HERE',
+                scheduledDate: '12/28/24',
+                recommendedInches: 1.5,
+                appliedHours: 5.0,
+                irrigationMethod: 'Sprinkler'
+            });
+        }
+
+        function loadUpdateIrrigation() {
+            setFields('update_irrigation', {
+                eventId: 'ENTER_EVENT_ID_HERE',
+                appliedHours: 6.0,
+                mgrHours: 5.5
+            });
+        }
+
+        function loadBatchPost() {
+            setFields('batch_post_queue', {
+                records: [
+                    {
+                        id: 1,
+                        plantingId: plantingId || 'ENTER_PLANTING_ID',
+                        scheduledDate: '12/28/24',
+                        hours: 5.0,
+                        status: -1,
+                        isNew: true
+                    }
+                ]
+            });
+        }
+
+        // SAVE current grid data to {username}.json
+        async function saveCurrent() {
+            const saveUser = document.getElementById('saveUsername').value.trim();
+            
+            if (!saveUser) {
+                log('❌ Enter a username for save/restore!', 'error');
+                return;
+            }
+
+            if (!currentGridData) {
+                log('❌ No data in grid to save! Load some data first.', 'error');
+                return;
+            }
+
+            // Set fields for json_write
+            setFields('json_write', {
+                filepath: `${saveUser}.json`,
+                data: currentGridData
+            });
+
+            log(`💾 Ready to save as ${saveUser}.json - Click SEND to confirm`, 'success');
+        }
+
+        // RESTORE grid data from {username}.json
+        async function restoreCurrent() {
+            const saveUser = document.getElementById('saveUsername').value.trim();
+            
+            if (!saveUser) {
+                log('❌ Enter a username for save/restore!', 'error');
+                return;
+            }
+
+            // Set fields for json_read
+            setFields('json_read', {
+                filepath: `${saveUser}.json`
+            });
+
+            log(`📥 Ready to restore from ${saveUser}.json - Click SEND to load`, 'success');
+        }
+
+        // On load
+        window.addEventListener('DOMContentLoaded', () => {
+            log('✅ API Server Tester Ready!', 'success');
+            log('📍 Default: localhost:3101', 'info');
+            log('', 'info');
+            log('📋 Instructions:', 'info');
+            log('1. Click any button to populate fields', 'info');
+            log('2. Edit Server URL, Tool Name, or JSON as needed', 'info');
+            log('3. Click SEND to execute', 'info');
+            log('4. View data in grid (left) and messages in log (right)', 'info');
+            log('', 'info');
+            log('Ready to test!', 'success');
+        });
+    </script>
+</body>
+</html>

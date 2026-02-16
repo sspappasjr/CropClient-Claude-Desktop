@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>CropClient Architecture</title>
+<style>
+  body { margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; background: #e8e4de; flex-direction: column; font-family: 'Segoe UI', sans-serif; }
+  svg { max-width: 960px; width: 95%; }
+  .download-btn { margin: 20px; padding: 12px 28px; background: #1e3a5f; color: white; border: none; border-radius: 8px; font-size: 15px; cursor: pointer; font-weight: 600; }
+  .download-btn:hover { background: #2a5a8f; }
+</style>
+</head>
+<body>
+<button class="download-btn" onclick="downloadSVG()">⬇ Download SVG</button>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 620" id="archSVG"
+     data-project="CropClient" 
+     data-version="1.0" 
+     data-author="CropClient Solutions" 
+     data-date="2026-02-13"
+     data-description="CropClient Integration Architecture - Three Layer System">
+
+  <defs>
+    <linearGradient id="gradData" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1a6b3c"/>
+      <stop offset="100%" stop-color="#2d8f55"/>
+    </linearGradient>
+    <linearGradient id="gradIntel" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1e3a5f"/>
+      <stop offset="100%" stop-color="#2a5a8f"/>
+    </linearGradient>
+    <linearGradient id="gradDelivery" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#7a3b10"/>
+      <stop offset="100%" stop-color="#b85c1a"/>
+    </linearGradient>
+    <filter id="shadow">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.15"/>
+    </filter>
+    <marker id="arrowDown" viewBox="0 0 10 10" refX="5" refY="10" markerWidth="8" markerHeight="8" orient="auto">
+      <path d="M0,0 L5,10 L10,0" fill="none" stroke="#667" stroke-width="1.5"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="960" height="620" fill="#f5f2ed" rx="8" data-element="background"/>
+
+  <!-- Title -->
+  <g data-element="title" data-type="header">
+    <text x="480" y="42" text-anchor="middle" font-size="22" font-weight="700" fill="#1a1a1a" letter-spacing="0.5" font-family="Segoe UI, sans-serif">CropClient Integration Architecture</text>
+    <text x="480" y="64" text-anchor="middle" font-size="13" font-weight="400" fill="#777" font-family="Segoe UI, sans-serif">Shared Agricultural Intelligence Platform</text>
+  </g>
+
+  <!-- LAYER 1: DATA SOURCE -->
+  <g data-layer="data-source" data-layer-number="1" data-status="active" data-provider="UC Agriculture">
+    <rect x="60" y="90" width="840" height="130" rx="12" fill="url(#gradData)" filter="url(#shadow)" data-element="layer-bg"/>
+    <text x="85" y="116" font-size="11" font-weight="600" fill="#a8d8b8" letter-spacing="1.5" font-family="Segoe UI, sans-serif">DATA SOURCE</text>
+
+    <rect x="90" y="128" width="260" height="72" rx="8" fill="rgba(255,255,255,0.12)" data-component="cropmanage" data-provider="UC Agriculture" data-api="REST" data-status="active"/>
+    <text x="110" y="155" font-size="15" font-weight="600" fill="#ffffff" font-family="Segoe UI, sans-serif">UC Agriculture</text>
+    <text x="110" y="175" font-size="12" fill="#c8e6d0" font-family="Segoe UI, sans-serif">CropManage API</text>
+    <text x="110" y="192" font-size="10" fill="#a0cca8" font-family="Segoe UI, sans-serif">Water Recommendations · ET Data</text>
+
+    <g data-component="data-types">
+      <rect x="390" y="128" width="150" height="72" rx="8" fill="rgba(255,255,255,0.12)" data-datatype="ranches"/>
+      <text x="465" y="153" text-anchor="middle" font-size="13" font-weight="600" fill="#fff" font-family="Segoe UI, sans-serif">Ranches</text>
+      <text x="465" y="170" text-anchor="middle" font-size="10" fill="#c8e6d0" font-family="Segoe UI, sans-serif">Fields · Blocks</text>
+      <text x="465" y="186" text-anchor="middle" font-size="10" fill="#a0cca8" font-family="Segoe UI, sans-serif">Soil · Plantings</text>
+
+      <rect x="560" y="128" width="150" height="72" rx="8" fill="rgba(255,255,255,0.12)" data-datatype="irrigation"/>
+      <text x="635" y="153" text-anchor="middle" font-size="13" font-weight="600" fill="#fff" font-family="Segoe UI, sans-serif">Irrigation</text>
+      <text x="635" y="170" text-anchor="middle" font-size="10" fill="#c8e6d0" font-family="Segoe UI, sans-serif">Water Budgets</text>
+      <text x="635" y="186" text-anchor="middle" font-size="10" fill="#a0cca8" font-family="Segoe UI, sans-serif">Scheduling · Compliance</text>
+
+      <rect x="730" y="128" width="140" height="72" rx="8" fill="rgba(255,255,255,0.12)" data-datatype="weather"/>
+      <text x="800" y="153" text-anchor="middle" font-size="13" font-weight="600" fill="#fff" font-family="Segoe UI, sans-serif">Weather</text>
+      <text x="800" y="170" text-anchor="middle" font-size="10" fill="#c8e6d0" font-family="Segoe UI, sans-serif">ET Values</text>
+      <text x="800" y="186" text-anchor="middle" font-size="10" fill="#a0cca8" font-family="Segoe UI, sans-serif">Forecasts · History</text>
+    </g>
+  </g>
+
+  <!-- Connectors 1 → 2 -->
+  <g data-element="connector" data-from="data-source" data-to="intelligence">
+    <line x1="320" y1="220" x2="320" y2="260" stroke="#889" stroke-width="2" stroke-dasharray="6,4" marker-end="url(#arrowDown)"/>
+    <line x1="560" y1="220" x2="560" y2="260" stroke="#889" stroke-width="2" stroke-dasharray="6,4" marker-end="url(#arrowDown)"/>
+    <text x="440" y="248" text-anchor="middle" font-size="10" fill="#888" font-weight="500" font-family="Segoe UI, sans-serif">MCP Tools</text>
+  </g>
+
+  <!-- LAYER 2: INTELLIGENCE -->
+  <g data-layer="intelligence" data-layer-number="2" data-status="active" data-server="CropClient.com">
+    <rect x="60" y="268" width="840" height="150" rx="12" fill="url(#gradIntel)" filter="url(#shadow)" data-element="layer-bg"/>
+    <text x="85" y="295" font-size="11" font-weight="600" fill="#a8c4e0" letter-spacing="1.5" font-family="Segoe UI, sans-serif">INTELLIGENCE LAYER — CropClient Server</text>
+
+    <rect x="90" y="310" width="200" height="88" rx="8" fill="rgba(255,255,255,0.12)" data-component="mcp-tools" data-protocol="MCP" data-transport="stdio" data-status="active"/>
+    <text x="190" y="337" text-anchor="middle" font-size="14" font-weight="600" fill="#fff" font-family="Segoe UI, sans-serif">MCP Tools</text>
+    <text x="190" y="356" text-anchor="middle" font-size="10" fill="#b0cce6" font-family="Segoe UI, sans-serif">Get Ranches · Get Recs</text>
+    <text x="190" y="372" text-anchor="middle" font-size="10" fill="#b0cce6" font-family="Segoe UI, sans-serif">Calculate · Refresh</text>
+    <text x="190" y="388" text-anchor="middle" font-size="10" fill="#8ab0d4" font-family="Segoe UI, sans-serif">Live Data Operations</text>
+
+    <rect x="320" y="310" width="200" height="88" rx="8" fill="rgba(255,255,255,0.12)" data-component="rag" data-type="knowledge-base" data-status="planned"/>
+    <text x="420" y="337" text-anchor="middle" font-size="14" font-weight="600" fill="#fff" font-family="Segoe UI, sans-serif">RAG Knowledge</text>
+    <text x="420" y="356" text-anchor="middle" font-size="10" fill="#b0cce6" font-family="Segoe UI, sans-serif">Domain Training</text>
+    <text x="420" y="372" text-anchor="middle" font-size="10" fill="#b0cce6" font-family="Segoe UI, sans-serif">Irrigation Intelligence</text>
+    <text x="420" y="388" text-anchor="middle" font-size="10" fill="#8ab0d4" font-family="Segoe UI, sans-serif">Shared Knowledge Base</text>
+
+    <rect x="550" y="310" width="200" height="88" rx="8" fill="rgba(255,255,255,0.12)" data-component="ai-assistant" data-provider-current="OpenAI" data-provider-future="Phi-3 (Gus)" data-status="planned"/>
+    <text x="650" y="337" text-anchor="middle" font-size="14" font-weight="600" fill="#fff" font-family="Segoe UI, sans-serif">AI Assistant</text>
+    <text x="650" y="356" text-anchor="middle" font-size="10" fill="#b0cce6" font-family="Segoe UI, sans-serif">Phase 1: OpenAI API</text>
+    <text x="650" y="372" text-anchor="middle" font-size="10" fill="#b0cce6" font-family="Segoe UI, sans-serif">Phase 2: Shared Assistant</text>
+    <text x="650" y="388" text-anchor="middle" font-size="10" fill="#8ab0d4" font-family="Segoe UI, sans-serif">Phase 3: Gus (Phi-3 Local)</text>
+
+    <rect x="780" y="310" width="90" height="88" rx="8" fill="rgba(255,255,255,0.12)" data-component="api-endpoint" data-port="3000" data-protocol="HTTP" data-status="active"/>
+    <text x="825" y="340" text-anchor="middle" font-size="13" font-weight="600" fill="#fff" font-family="Segoe UI, sans-serif">API</text>
+    <text x="825" y="358" text-anchor="middle" font-size="10" fill="#b0cce6" font-family="Segoe UI, sans-serif">Port 3000</text>
+    <text x="825" y="374" text-anchor="middle" font-size="10" fill="#b0cce6" font-family="Segoe UI, sans-serif">REST</text>
+    <text x="825" y="390" text-anchor="middle" font-size="10" fill="#8ab0d4" font-family="Segoe UI, sans-serif">Endpoints</text>
+  </g>
+
+  <!-- Connectors 2 → 3 -->
+  <g data-element="connector" data-from="intelligence" data-to="delivery">
+    <line x1="320" y1="418" x2="320" y2="462" stroke="#889" stroke-width="2" stroke-dasharray="6,4" marker-end="url(#arrowDown)"/>
+    <line x1="560" y1="418" x2="560" y2="462" stroke="#889" stroke-width="2" stroke-dasharray="6,4" marker-end="url(#arrowDown)"/>
+    <text x="440" y="448" text-anchor="middle" font-size="10" fill="#888" font-weight="500" font-family="Segoe UI, sans-serif">AI-Powered Responses</text>
+  </g>
+
+  <!-- LAYER 3: DELIVERY -->
+  <g data-layer="delivery" data-layer-number="3" data-status="active">
+    <rect x="60" y="470" width="840" height="110" rx="12" fill="url(#gradDelivery)" filter="url(#shadow)" data-element="layer-bg"/>
+    <text x="85" y="497" font-size="11" font-weight="600" fill="#e8c8a8" letter-spacing="1.5" font-family="Segoe UI, sans-serif">DELIVERY PLATFORMS</text>
+
+    <rect x="90" y="510" width="350" height="52" rx="8" fill="rgba(255,255,255,0.12)" data-component="cropclient-web" data-platform="web" data-url="CropClient.com" data-users="growers,managers,admins" data-status="active"/>
+    <text x="120" y="535" font-size="15" font-weight="600" fill="#fff" font-family="Segoe UI, sans-serif">🌐  CropClient.com</text>
+    <text x="120" y="553" font-size="11" fill="#e0c8a8" font-family="Segoe UI, sans-serif">Web App — Growers · Managers · Admins</text>
+
+    <rect x="480" y="510" width="390" height="52" rx="8" fill="rgba(255,255,255,0.12)" data-component="mobileframe" data-platform="mobile" data-devices="iPad,iPhone" data-partner="MobileFrame" data-status="planned"/>
+    <text x="510" y="535" font-size="15" font-weight="600" fill="#fff" font-family="Segoe UI, sans-serif">📱  MobileFrame Mobile Apps</text>
+    <text x="510" y="553" font-size="11" fill="#e0c8a8" font-family="Segoe UI, sans-serif">iPad · iPhone — Field Workers</text>
+  </g>
+
+  <!-- Footer -->
+  <text x="480" y="608" text-anchor="middle" font-size="10" fill="#aaa" font-family="Segoe UI, sans-serif" data-element="footer">CropClient © 2026 — Shared Agricultural Intelligence for Web &amp; Mobile</text>
+</svg>
+
+<script>
+function downloadSVG() {
+  const svg = document.getElementById('archSVG');
+  const serializer = new XMLSerializer();
+  const source = '<?xml version="1.0" encoding="UTF-8"?>\n' + serializer.serializeToString(svg);
+  const blob = new Blob([source], {type: 'image/svg+xml;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'cropclient-architecture.svg';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+</script>
+</body>
+</html>

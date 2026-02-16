@@ -1,0 +1,95 @@
+================================================================================
+NAPKIN - CropClient MCP Restructure - 01-28-2026
+================================================================================
+
+FOLDER LAYOUT
+-------------
+crop-client-services\
+├── Pages\
+│   └── CropClient-v1.1.html         ← App + Dashboard (UI only)
+│
+├── MCP-server\
+│   └── IrrigationServer.js          ← MCP: CRUD + JSON tools (port 3100)
+│
+├── api-server\
+│   └── APIServer.js                 ← MCP: CropManage API (port 3101) ✅
+│
+└── support-files\
+
+================================================================================
+
+WORKFLOW PROCESS
+----------------
+1. CODE      → Edit component inside @@@@ markers in v1.1.html
+2. TEST      → Run harness in browser, verify app works
+3. EXTRACT   → Copy working code from @@@@ block to .js file
+4. INSERT    → Add to IrrigationServer.js or APIServer.js
+5. VERIFY    → Test MCP tool via Claude Desktop
+
+Component Markers:
+  <!-- @@@@ DASHBOARD_COMPONENT @@@@  -->  ...code...  <!-- @@@@ end @@@@ -->
+  <!-- @@@@ IRRIGATION_COMPONENT @@@@ -->  ...code...  <!-- @@@@ end @@@@ -->
+  <!-- @@@@ APISERVICE_COMPONENT @@@@ -->  ...code...  <!-- @@@@ end @@@@ -->
+
+ROLES:
+  Steve = Solution Architect (design, decisions, GOFORIT)
+  Claude = Programmer (code, test, extract, insert)
+
+================================================================================
+
+NEXT STEPS
+----------
+[1] ⏳ Add @@@@ markers to v1.1.html (if missing)
+[2] ⏳ Code IRRIGATION_COMPONENT tools in harness
+[3] ⏳ Test harness works
+[4] ⏳ Extract to IrrigationServer.js
+[5] ⏳ Verify MCP tools work
+
+================================================================================
+
+IRRIGATIONSERVER SPEC
+---------------------
+SOURCE: Copy from DASHBOARD_COMPONENT in v1.1.html
+  - create_next_irrigation   ← from testCreateNext()
+  - reset_table              ← from resetTable()
+  - read_meter               ← from testReadMeter()
+  - update_record            ← from updateRecord()
+
+NEW: Built with JSON tools
+  - save_display             ← NEW: saves displayRecords to JSON
+  - retrieve_display         ← NEW: loads displayRecords from JSON
+
+REFERENCE FILE:
+  JsonCrudAPI.js = reference only (past working code)
+  Claude implements tools correctly in IrrigationServer.js
+
+RULES:
+  - No DOM references (no document.getElementById)
+  - No UI calls (no logToChat, no showResult)
+  - Pure data in, data out
+  - Function names MCP tokens call MUST STAY THE SAME
+
+================================================================================
+
+MCP SERVERS
+-----------
+IrrigationServer (port 3100)     APIServer (port 3101) ✅
+  - create_next_irrigation         - get_token
+  - reset_table                    - get_ranches
+  - read_meter                     - get_plantings
+  - update_record                  - get_irrigation_details
+  - save_display                   - load_into_displayRecords
+  - retrieve_display               - post_new_irrigation
+                                   - update_irrigation
+                                   - batch_post_queue
+
+================================================================================
+
+STATUS
+------
+[✅] APIServer connected and working (8 tools)
+[⏳] IrrigationServer - build next
+[✅] Dashboard - stays in app as-is
+[✅] v1.1 HTML - works, don't touch until markers added
+
+================================================================================

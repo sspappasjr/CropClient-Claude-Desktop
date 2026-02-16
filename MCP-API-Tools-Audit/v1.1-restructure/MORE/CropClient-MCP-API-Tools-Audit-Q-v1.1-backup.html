@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CropClient Water Tools - Email Teaser</title>
+    <style>
+        :root {
+            --left-width: 60%;
+            --right-width: 40%;
+            --top-height: 50%;
+            --bottom-height: 50%;
+            --header-padding: 8px 20px;
+            --header-h1: 1.6em;
+            --section-h3: 1.1em;
+            --base-font: 0.95em;
+            --small-font: 0.85em;
+            --grid-gap: 15px;
+            --section-padding: 20px;
+        }
+        
+        tr.selected {
+            background-color: #e3f2fd !important;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            padding: 10px;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border-bottom: 2px solid #e0e0e0;
+            overflow: hidden;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+        }
+        header {
+            background: linear-gradient(135deg, #2e7d32 0%, #4caf50 100%);
+            color: white;
+            padding: var(--header-padding);
+            text-align: center;
+            flex-shrink: 0;
+        }
+        header h1 {
+            font-size: var(--header-h1);
+            margin-bottom: 3px;
+        }
+        header p {
+            font-size: var(--base-font);
+            opacity: 0.9;
+        }
+        .main-content {
+            padding: 10px;
+            flex: 1;
+            display: grid;
+            grid-template-rows: var(--top-height) var(--bottom-height);
+            gap: 10px;
+            overflow: hidden;
+        }
+        .grid-container {
+            display: grid;
+            grid-template-columns: var(--left-width) var(--right-width);
+            gap: var(--grid-gap);
+            padding: 10px;
+            height: 100%;
+            overflow: hidden;
+        }
+        .grid-section {
+            background: #fafafa;
+            padding: var(--section-padding);
+            border-radius: 8px;
+            border: 2px solid #e0e0e0;
+            overflow: auto;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+        .grid-section h3, .grid-section h2 {
+            color: #2e7d32;
+            margin-bottom: 8px;
+            font-size: var(--section-h3);
+            flex-shrink: 0;
+        }
+        .data-grid {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            overflow: auto;
+            flex: 1;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th {
+            background: #2e7d32;
+            color: white;
+            padding: 10px 8px;
+            text-align: left;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            font-size: var(--small-font);
+            white-space: nowrap;
+        }
+        td {
+            padding: 8px;
+            border-bottom: 1px solid #eee;
+            font-size: var(--small-font);
+        }
+        tr:hover {
+            background: #f5f5f5;
+            cursor: pointer;
+        }
+        tr.selected {
+            background: #C8E6C9;
+        }
+        .details-section {
+            background: white;
+            padding: 8px 10px;
+            border-radius: 8px;
+            border: 2px solid #e0e0e0;
+            overflow-y: auto;
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+        .details-section h3 {
+            color: #2e7d32;
+            margin-bottom: 3px;
+            font-size: var(--section-h3);
+        }
+
+        /* Form content area - scrollable */
+        .details-section > div:first-child {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0 4px 0 0;
+        }
+
+        /* CRUD Footer Component - Always visible at bottom */
+        .crud-footer {
+            flex-shrink: 0;
+            padding-top: 4px;
+            border-top: 1px solid #e0e0e0;
+            background: white;
+            margin-top: 2px;
+        }
+
+        .field-group {
+            margin-bottom: 2px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        .field-group label {
+            font-weight: 600;
+            color: #555;
+            font-size: var(--small-font);
+        }
+        .field-group input {
+            padding: 4px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: var(--base-font);
+        }
+        .field-group input:focus {
+            outline: none;
+            border-color: #4caf50;
+        }
+        
+        /* CRUD Button Styles */
+        .crud-buttons {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+        }
+        .crud-btn {
+            flex: 1;
+            min-width: 70px;
+            padding: 10px 6px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: var(--small-font);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .crud-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        .crud-btn:active {
+            transform: translateY(0);
+        }
+        .crud-btn.create {
+            background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
+            color: white;
+        }
+        .crud-btn.reset {
+            background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+            color: white;
+        }
+        .crud-btn.meter {
+            background: linear-gradient(135deg, #9c27b0 0%, #7b1fa2 100%);
+            color: white;
+        }
+        .crud-btn.update {
+            background: linear-gradient(135deg, #4caf50 0%, #388e3c 100%);
+            color: white;
+        }
+        
+        .record-count {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2e7d32;
+        }
+        .info-icon {
+            cursor: help;
+            color: #666;
+        }
+
+        .send-button {
+            background: linear-gradient(135deg, #2e7d32 0%, #4caf50 100%);
+            color: white;
+            padding: 8px 16px;
+            font-size: var(--small-font);
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: transform 0.2s;
+            white-space: nowrap;
+        }
+        .send-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(46, 125, 50, 0.3);
+        }
+
+        /* Tools table */
+        .tools-grid {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            overflow: auto;
+            max-height: none;
+            flex: 1;
+            margin-bottom: 8px;
+        }
+
+        /* Big recommendation box */
+        .rec-box {
+            background: linear-gradient(135deg, #4CAF50 0%, #2E7D32 100%);
+            color: white;
+            padding: 3px 3px;
+            border-radius: 6px;
+            text-align: center;
+            margin: 2px auto 2px auto;
+            box-shadow: 0 2px 6px rgba(76, 175, 80, 0.3);
+            width: 45%;
+        }
+        .rec-box .rec-label {
+            font-size: 0.65em;
+            opacity: 0.9;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 1px;
+        }
+        .rec-box .rec-value {
+            font-size: 18px;
+            font-weight: bold;
+            line-height: 1;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.2);
+        }
+
+        /* Chat log */
+        .chat-log {
+            background: #f5f5f5;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            padding: 8px;
+            flex: 1;
+            min-height: 80px;
+            overflow-y: auto;
+            margin-bottom: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 1.1em;
+        }
+
+        @media screen and (min-width: 1367px) {
+            .field-group {
+                margin-bottom: 10px;
+                gap: 6px;
+            }
+            .field-group input {
+                padding: 12px;
+                font-size: 1.3em;
+                max-width: 150px;
+            }
+            .field-group label {
+                font-size: 1.1em;
+            }
+            .field-grid-row {
+                gap: 12px !important;
+                margin-bottom: 6px !important;
+                justify-items: center;
+            }
+            .rec-box {
+                width: 60%;
+                padding: 12px 8px;
+                margin: 10px auto 12px;
+            }
+            .rec-box .rec-label {
+                font-size: 0.85em;
+                margin-bottom: 5px;
+            }
+            .rec-box .rec-value {
+                font-size: 42px;
+            }
+            .details-section h3 {
+                margin-bottom: 12px;
+                font-size: 1.2em;
+            }
+            .crud-footer {
+                padding-top: 8px;
+                margin-top: 6px;
+            }
+        }
+
+        @media screen and (max-width: 1366px) {
+            :root {
+                --left-width: 58%;
+                --right-width: 42%;
+                --header-padding: 6px 15px;
+                --header-h1: 1.4em;
+                --section-h3: 1em;
+                --base-font: 0.9em;
+                --small-font: 0.8em;
+                --grid-gap: 10px;
+                --section-padding: 15px;
+            }
+            body { padding: 8px; }
+            .main-content { padding: 8px; gap: 8px; }
+            .grid-container { padding: 8px; }
+            th { padding: 8px 6px; }
+            td { padding: 6px; }
+            .tools-grid { max-height: 165px; }
+            .rec-box { padding: 10px 6px; }
+            .rec-box .rec-value { font-size: 32px; }
+            .crud-btn { padding: 8px 4px; min-width: 60px; }
+        }
+
+        @media screen and (max-width: 1024px) {
+            :root {
+                --left-width: 55%;
+                --right-width: 45%;
+                --top-height: 45%;
+                --bottom-height: 55%;
+                --header-padding: 5px 12px;
+                --header-h1: 1.2em;
+                --section-h3: 0.95em;
+                --base-font: 0.85em;
+                --small-font: 0.75em;
+                --grid-gap: 8px;
+                --section-padding: 12px;
+            }
+            body { padding: 5px; }
+            .main-content { padding: 5px; gap: 5px; }
+            .grid-container { padding: 5px; gap: 8px; }
+            header p { display: none; }
+            th { padding: 6px 4px; font-size: 0.7em; }
+            td { padding: 5px 4px; font-size: 0.75em; }
+            .tools-grid { max-height: 150px; }
+            .rec-box { width: 60%; padding: 8px 5px; }
+            .rec-box .rec-label { font-size: 0.65em; }
+            .rec-box .rec-value { font-size: 28px; }
+            .chat-log { font-size: 0.95em; min-height: 60px; }
+            .crud-btn { padding: 8px 3px; min-width: 55px; font-size: 0.7em; }
+            .field-group input { padding: 5px; }
+        }
+
+        @media screen and (max-width: 768px) {
+            :root {
+                --top-height: 40%;
+                --bottom-height: 60%;
+            }
+            .grid-container {
+                grid-template-columns: 1fr;
+                grid-template-rows: 1fr 1fr;
+                overflow-y: auto;
+            }
+            .rec-box { width: 40%; }
+            .rec-box .rec-value { font-size: 24px; }
+            .crud-btn { min-width: 50px; padding: 6px 2px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🌾 CropClient MCP Water Tools</h1>
+            <p>Natural Language Field Water Reporting</p>
+        </header>
+
+        <div class="main-content">
+            <div class="grid-container">
+                <div id="Section-S1" class="grid-section">
+                    <h2>🔐 Crop Manage API Audit</h2>
+                    
+                    <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 10px;">
+                        <label style="font-weight: 600; color: #333; width: 90px; font-size: var(--small-font);">Credentials</label>
+                        <input type="text" id="credentialsInput" style="flex: 1; padding: 5px; font-size: var(--small-font); border: 2px solid #ddd; border-radius: 6px;" placeholder="username/password" readonly value="stevep@sspnet.com">
+                        <label style="font-weight: 600; color: #333; width: 60px; font-size: var(--small-font); text-align: right;">Token</label>
+                        <input type="text" id="tokenDisplay" style="flex: 2; padding: 5px; font-size: var(--small-font); border: 2px solid #ddd; border-radius: 6px; background: #f5f5f5;" readonly placeholder="Token will appear here...">
+                    </div>
+                    
+                    <hr style="border: none; border-top: 2px solid #e0e0e0; margin: 6px 0;">
+                    
+                    <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 3px;">
+                        <select id="scriptDropdown" style="width: 200px; padding: 5px; font-size: var(--small-font); border: 2px solid #ddd; border-radius: 6px;" onchange="selectScript()">
+                            <option value="">Choose an Agent</option>
+                            <optgroup label="CropManage API">
+                                <option value="token">🔐 Get Token</option>
+                                <option value="ranches">🏠 Get Ranches</option>
+                                <option value="plantings">🌱 Get Plantings</option>
+                                <option value="irrigation_details">💧 Get Irrigation Details</option>
+                                <option value="post_irrigation">📤 Post Irrigation</option>
+                                <option value="update_record">🔄 Update Record</option>
+                            </optgroup>
+                        </select>
+                        <textarea id="scriptUrl" rows="1" style="flex: 1; padding: 5px; font-size: var(--small-font); border: 2px solid #ddd; border-radius: 6px; background: #f5f5f5; resize: vertical; font-family: monospace;" placeholder="API endpoint URL will appear here..." readonly></textarea>
+                        <button class="send-button" onclick="runScript()">Send</button>
+                    </div>
+                    
+                    <div id="scriptDescription" style="padding: 8px; background: #f5f5f5; border-radius: 4px; margin-bottom: 3px; font-size: var(--small-font); color: #666; min-height: 40px;">
+                        <div style="color: #999; font-style: italic;">Select a script to see description...</div>
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 2fr; gap: 8px; margin-bottom: 10px; height: 100px; min-height: 100px; max-height: 100px; flex-shrink: 0;">
+                        <div style="border: 1px solid #ddd; border-radius: 6px; overflow: hidden; display: flex; flex-direction: column;">
+                            <div id="ranchesGrid" style="flex: 1; overflow: auto; padding: 4px;">
+                                <div style="color: #999; text-align: center; padding: 20px; font-size: var(--small-font);">No data</div>
+                            </div>
+                        </div>
+                        <div style="border: 1px solid #ddd; border-radius: 6px; overflow: hidden; display: flex; flex-direction: column;">
+                            <div id="plantingsGrid" style="flex: 1; overflow: auto; padding: 4px;">
+                                <div style="color: #999; text-align: center; padding: 20px; font-size: var(--small-font);">No data</div>
+                            </div>
+                        </div>
+                        <div style="border: 1px solid #ddd; border-radius: 6px; overflow: hidden; display: flex; flex-direction: column;">
+                            <div id="recommendationsGrid" style="flex: 1; overflow: auto; padding: 4px;">
+                                <div style="color: #999; text-align: center; padding: 20px; font-size: var(--small-font);">No data</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="border: 1px solid #ddd; border-radius: 6px; overflow: hidden; display: flex; flex-direction: column; height: 150px; min-height: 150px; max-height: 150px; flex-shrink: 0; margin-bottom: 10px;">
+                        <div style="background: #f5f5f5; padding: 4px 8px; font-weight: 600; font-size: var(--small-font); border-bottom: 1px solid #ddd; flex-shrink: 0;">Irrigation Details</div>
+                        <div id="irrigationDetailsGrid" style="flex: 1; overflow-y: scroll; overflow-x: auto;">
+                            <table style="width: 100%; font-size: var(--small-font); border-collapse: collapse;">
+                                <thead>
+                                    <tr style="background: #f5f5f5; position: sticky; top: 0; z-index: 1;">
+                                        <th style="padding: 4px;">Ranch</th>
+                                        <th style="padding: 4px;">Planting</th>
+                                        <th style="padding: 4px;">Date</th>
+                                        <th style="padding: 4px;">RecHrs</th>
+                                        <th style="padding: 4px;">Interval</th>
+                                        <th style="padding: 4px;">MgrHrs</th>
+                                        <th style="padding: 4px;">Applied</th>
+                                        <th style="padding: 4px;">RanchID</th>
+                                        <th style="padding: 4px;">PlantingID</th>
+                                        <th style="padding: 4px;">ID</th>
+                                        <th style="padding: 4px;">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="irrigationDetailsBody">
+                                    <tr><td colspan="11" style="text-align: center; color: #999; padding: 20px;">No data</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <input type="hidden" id="promptInput" value="">
+                    <div id="toolDescription" style="display: none;"></div>
+                    <table style="display: none;"><tbody id="toolsTableBody"></tbody></table>
+                    
+                    <div style="padding: 8px; margin-top: 8px; border-top: 2px solid #e0e0e0; display: flex; gap: 6px;">
+                        <button onclick="refreshSelectedIrrigations()" style="flex: 1; padding: 6px 8px; font-size: var(--small-font); background: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600;">Refresh Selected Irrigations</button>
+                        <button onclick="updateRecordToCropManage()" style="flex: 1; padding: 6px 8px; font-size: var(--small-font); background: #2196F3; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600;">Update Record</button>
+                        <button onclick="showPostModal()" style="flex: 1; padding: 6px 8px; font-size: var(--small-font); background: #FF9800; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600;">Post to CropManage</button>
+                    </div>
+                </div>
+
+                <div class="details-section">
+                    <h3>💬 Chat Log</h3>
+                    <div id="chatLog" class="chat-log">
+                        <div style="color: #666;">System ready. Send a command to begin...</div>
+                    </div>
+                    <div style="display: flex; gap: 6px; align-items: center;">
+                        <input type="text" id="chatPromptInput" placeholder="Type command here..." style="flex: 1; padding: 6px; border: 2px solid #ddd; border-radius: 6px; font-size: var(--small-font);" onkeypress="if(event.key === 'Enter') sendChatPrompt()">
+                        <button onclick="sendChatPrompt()" class="send-button">🚀 Send</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid-container">
+                <div class="grid-section">
+                    <div class="record-count" style="display: flex; justify-content: space-between; align-items: center;">
+                        <h3 style="margin: 0;">📊 <strong>Irrigation Records</strong> (<span id="recordCount">0</span>)</h3>
+                        <h3 style="margin: 0; cursor: pointer;" onclick="toggleWaitQueue()">
+                            <span id="waitQueueToggle" style="color: #666;"><strong>Records Changed</strong></span> (<span id="waitQueueCount">0</span>)
+                        </h3>
+                    </div>
+                    <div class="data-grid">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Ranch</th>
+                                    <th>Planting</th>
+                                    <th>Date</th>
+                                    <th>RecHrs</th>
+                                    <th>Interval</th>
+                                    <th>MgrHrs</th>
+                                    <th>Applied</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="grid-section">
+                    <div class="details-section" style="display: flex; flex-direction: column; overflow: hidden;">
+                        <h3>💧 Selected Field Details</h3>
+                    
+                    <div class="field-grid-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-bottom: 2px;">
+                        <div class="field-group">
+                            <label>Date:</label>
+                            <input type="text" id="formDate" style="text-align: center;">
+                        </div>
+                        <div class="field-group">
+                            <label>Interval:</label>
+                            <input type="text" id="formInterval" style="text-align: center;">
+                        </div>
+                    </div>
+                    
+                    <div class="rec-box">
+                        <div class="rec-label">Recommended Hours</div>
+                        <div id="formRecommendationBig" class="rec-value">-</div>
+                        <input type="hidden" id="formRecommendation">
+                    </div>
+                    
+                    <div class="field-grid-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-bottom: 2px;">
+                        <div class="field-group">
+                            <label>MgrHrs:</label>
+                            <input type="number" id="formManagerHours" step="0.1" style="text-align: center;">
+                        </div>
+                        <div class="field-group">
+                            <label>Applied:</label>
+                            <input type="number" id="formWaterApplied" step="0.1" style="text-align: center;">
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="crud-footer">
+                    <div class="crud-buttons">
+                        <button class="crud-btn create" onclick="setPromptAndSend('Create next irrigation for the selected field')">➕ Create</button>
+                        <button class="crud-btn reset" onclick="setPromptAndSend('Reset table to show all irrigation records')">🔄 Reset</button>
+                        <button class="crud-btn meter" onclick="setPromptAndSend('Apply water to the selected planting')">📊 Apply</button>
+                        <button class="crud-btn update" onclick="setPromptAndSend('Update water applied for selected record')">💾 Update</button>
+                    </div>
+                </div>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+</body>
+
+<!-- IRRIGATION_COMPONENT and DASHBOARD_COMPONENT and APISERVICE_COMPONENT scripts would go here -->
+<!-- This is a backup - see main file for full script content -->
+
+</html>

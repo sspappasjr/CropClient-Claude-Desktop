@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Server Tester - APIServer1.2.js</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        header {
+            background: linear-gradient(135deg, #2e7d32 0%, #4caf50 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        header h1 {
+            font-size: 1.8em;
+            margin-bottom: 5px;
+        }
+        header p {
+            opacity: 0.9;
+            font-size: 0.95em;
+        }
+        .main-content {
+            padding: 20px;
+        }
+        .test-section {
+            background: #fafafa;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .test-section h2 {
+            color: #2e7d32;
+            font-size: 1.3em;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #4caf50;
+            padding-bottom: 8px;
+        }
+        .button-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+        .test-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9em;
+            transition: transform 0.2s, box-shadow 0.2s;
+            color: white;
+        }
+        .test-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        .test-btn:active {
+            transform: translateY(0);
+        }
+        .test-btn.json {
+            background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
+        }
+        .test-btn.api {
+            background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%);
+        }
+        .test-btn.send {
+            background: linear-gradient(135deg, #4caf50 0%, #388e3c 100%);
+            font-size: 1.1em;
+            padding: 15px 40px;
+        }
+        .test-btn.clear {
+            background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
+        }
+        .server-info {
+            background: #e8f5e9;
+            border-left: 4px solid #4caf50;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+        .server-info strong {
+            color: #2e7d32;
+        }
+        .credentials {
+            background: #fff3e0;
+            border-left: 4px solid #ff9800;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 4px;
+        }
+        .credentials input {
+            padding: 8px;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            margin: 5px 10px 5px 0;
+            width: 250px;
+        }
+        .field-group {
+            margin-bottom: 15px;
+        }
+        .field-group label {
+            display: block;
+            font-weight: 600;
+            color: #2e7d32;
+            margin-bottom: 5px;
+            font-size: 0.95em;
+        }
+        .field-group input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+        .field-group input[type="text"]:focus {
+            outline: none;
+            border-color: #4caf50;
+        }
+        .field-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            min-height: 120px;
+            resize: vertical;
+        }
+        .field-group textarea:focus {
+            outline: none;
+            border-color: #4caf50;
+        }
+        .results-area {
+            background: #263238;
+            color: #aed581;
+            font-family: 'Courier New', monospace;
+            padding: 15px;
+            border-radius: 6px;
+            min-height: 200px;
+            max-height: 400px;
+            overflow-y: auto;
+            font-size: 0.85em;
+            line-height: 1.5;
+        }
+        .results-area .success {
+            color: #81c784;
+        }
+        .results-area .error {
+            color: #ef5350;
+        }
+        .results-area .info {
+            color: #64b5f6;
+        }
+        .interactive-panel {
+            background: #fff3e0;
+            border: 3px solid #ff9800;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .interactive-panel h3 {
+            color: #f57c00;
+            margin-bottom: 15px;
+        }
+        .send-row {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-top: 15px;
+        }
+        .send-row button {
+            flex: 0 0 auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🧪 API Server Interactive Tester</h1>
+            <p>Test APIServer1.2.js - 15 MCP Tools - Edit & Send Custom Calls</p>
+        </header>
+
+        <div class="main-content">
+            <div class="server-info">
+                <strong>Data Directory:</strong> C:\AICode\crop-client-services\api-server\data\
+            </div>
+
+            <!-- INTERACTIVE COMMAND PANEL -->
+            <div class="interactive-panel">
+                <h3>⚡ Interactive Command Panel</h3>
+                
+                <div class="field-group">
+                    <label>Server URL:</label>
+                    <input type="text" id="serverUrl" value="http://localhost:3101" placeholder="http://localhost:3101 or https://crop-client-services.com">
+                </div>
+
+                <div class="field-group">
+                    <label>Tool Name:</label>
+                    <input type="text" id="toolName" value="json_write" placeholder="json_write, get_token, data_operation, etc.">
+                </div>
+
+                <div class="field-group">
+                    <label>JSON Data (edit as needed):</label>
+                    <textarea id="jsonData">{
+  "filepath": "test.json",
+  "data": {
+    "testName": "API Server Test",
+    "timestamp": "2026-02-13T20:00:00Z",
+    "values": [1, 2, 3]
+  }
+}</textarea>
+                </div>
+
+                <div class="send-row">
+                    <button class="test-btn send" onclick="sendCustomCall()">📤 SEND</button>
+                    <button class="test-btn clear" onclick="clearFields()">Clear Fields</button>
+                    <button class="test-btn clear" onclick="clearResults()">Clear Results</button>
+                </div>
+            </div>
+
+            <!-- RESULTS -->
+            <div class="test-section">
+                <h2>📊 Response</h2>
+                <div class="results-area" id="results">
+                    <span class="info">Click buttons below to populate fields, or edit manually and click SEND...</span>
+                </div>
+            </div>
+
+            <!-- JSON FILE SERVICE TESTS -->
+            <div class="test-section">
+                <h2>📁 JSON File Service (7 tools)</h2>
+                <div class="button-group">
+                    <button class="test-btn json" onclick="loadJsonWrite()">json_write</button>
+                    <button class="test-btn json" onclick="loadJsonRead()">json_read</button>
+                    <button class="test-btn json" onclick="loadJsonUpdate()">json_update</button>
+                    <button class="test-btn json" onclick="loadJsonDelete()">json_delete</button>
+                    <button class="test-btn json" onclick="loadJsonExists()">json_exists</button>
+                    <button class="test-btn json" onclick="loadJsonList()">json_list</button>
+                    <button class="test-btn json" onclick="loadDataOperation()">data_operation</button>
+                </div>
+            </div>
+
+            <!-- API SERVICE TESTS -->
+            <div class="test-section">
+                <h2>🌐 CropManage API (8 tools)</h2>
+                <div class="credentials">
+                    <strong>CropManage Credentials:</strong><br>
+                    <input type="text" id="username" placeholder="Username" value="stevep@sspnet.com">
+                    <input type="password" id="password" placeholder="Password" value="gosteve1!">
+                </div>
+                <div class="button-group">
+                    <button class="test-btn api" onclick="loadGetToken()">get_token</button>
+                    <button class="test-btn api" onclick="loadGetRanches()">get_ranches</button>
+                    <button class="test-btn api" onclick="loadGetPlantings()">get_plantings</button>
+                    <button class="test-btn api" onclick="loadGetIrrigationDetails()">get_irrigation_details</button>
+                    <button class="test-btn api" onclick="loadDisplayRecords()">load_into_displayRecords</button>
+                    <button class="test-btn api" onclick="loadPostIrrigation()">post_new_irrigation</button>
+                    <button class="test-btn api" onclick="loadUpdateIrrigation()">update_irrigation</button>
+                    <button class="test-btn api" onclick="loadBatchPost()">batch_post_queue</button>
+                </div>
+            </div>
+
+            <!-- QUICK PRESETS -->
+            <div class="test-section">
+                <h2>⚡ Quick Server Presets</h2>
+                <div class="button-group">
+                    <button class="test-btn json" onclick="setServerLocal()">📍 Localhost (3101)</button>
+                    <button class="test-btn api" onclick="setServerProduction()">🌐 Production Server</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let ranchGuid = null;
+        let plantingId = null;
+
+        // Utility: Log to results area
+        function log(text, type = 'info') {
+            const area = document.getElementById('results');
+            const span = document.createElement('div');
+            span.className = type;
+            span.textContent = text;
+            area.appendChild(span);
+            area.scrollTop = area.scrollHeight;
+        }
+
+        // Set fields
+        function setFields(toolName, data) {
+            document.getElementById('toolName').value = toolName;
+            document.getElementById('jsonData').value = JSON.stringify(data, null, 2);
+        }
+
+        // Send custom call
+        async function sendCustomCall() {
+            const serverUrl = document.getElementById('serverUrl').value.trim();
+            const toolName = document.getElementById('toolName').value.trim();
+            const jsonText = document.getElementById('jsonData').value.trim();
+
+            if (!serverUrl || !toolName) {
+                log('❌ Server URL and Tool Name required!', 'error');
+                return;
+            }
+
+            let args = {};
+            if (jsonText) {
+                try {
+                    args = JSON.parse(jsonText);
+                } catch (e) {
+                    log(`❌ Invalid JSON: ${e.message}`, 'error');
+                    return;
+                }
+            }
+
+            try {
+                log(`→ Calling ${toolName} on ${serverUrl}...`, 'info');
+                log(`→ Args: ${JSON.stringify(args)}`, 'info');
+                
+                const response = await fetch(`${serverUrl}/tools/${toolName}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(args)
+                });
+
+                const result = await response.json();
+
+                if (result.success || response.ok) {
+                    log(`✅ ${toolName}: SUCCESS`, 'success');
+                    log(JSON.stringify(result, null, 2), 'info');
+                    
+                    // If it's a read operation, populate JSON field with returned data
+                    if (result.data && (toolName.includes('read') || toolName === 'data_operation')) {
+                        document.getElementById('jsonData').value = JSON.stringify(result.data, null, 2);
+                    }
+
+                    // Store ranch/planting IDs for API calls
+                    if (toolName === 'get_ranches' && result.ranches && result.ranches.length > 0) {
+                        ranchGuid = result.ranches[0].Ranch_External_GUID;
+                        log(`📌 Saved Ranch GUID: ${ranchGuid}`, 'success');
+                    }
+                    if (toolName === 'get_plantings' && result.plantings && result.plantings.length > 0) {
+                        plantingId = result.plantings[0].Id;
+                        log(`📌 Saved Planting ID: ${plantingId}`, 'success');
+                    }
+                } else {
+                    log(`❌ ${toolName}: FAILED - ${result.error || result.message}`, 'error');
+                }
+            } catch (error) {
+                log(`❌ ERROR: ${error.message}`, 'error');
+            }
+        }
+
+        // Clear fields
+        function clearFields() {
+            document.getElementById('toolName').value = '';
+            document.getElementById('jsonData').value = '{}';
+        }
+
+        function clearResults() {
+            document.getElementById('results').innerHTML = '<span class="info">Results cleared.</span>';
+        }
+
+        // Server presets
+        function setServerLocal() {
+            document.getElementById('serverUrl').value = 'http://localhost:3101';
+            log('📍 Server set to localhost:3101', 'success');
+        }
+
+        function setServerProduction() {
+            document.getElementById('serverUrl').value = 'https://crop-client-services.com';
+            log('🌐 Server set to production', 'success');
+        }
+
+        // JSON Tool Loaders
+        function loadJsonWrite() {
+            setFields('json_write', {
+                filepath: 'test.json',
+                data: {
+                    testName: 'API Server Test',
+                    timestamp: new Date().toISOString(),
+                    version: '1.2',
+                    values: [1, 2, 3]
+                }
+            });
+        }
+
+        function loadJsonRead() {
+            setFields('json_read', {
+                filepath: 'test.json'
+            });
+        }
+
+        function loadJsonUpdate() {
+            setFields('json_update', {
+                filepath: 'test.json',
+                updates: {
+                    updated: true,
+                    lastModified: new Date().toISOString()
+                }
+            });
+        }
+
+        function loadJsonDelete() {
+            setFields('json_delete', {
+                filepath: 'test.json'
+            });
+        }
+
+        function loadJsonExists() {
+            setFields('json_exists', {
+                filepath: 'test.json'
+            });
+        }
+
+        function loadJsonList() {
+            setFields('json_list', {
+                directory: '.'
+            });
+        }
+
+        function loadDataOperation() {
+            setFields('data_operation', {
+                action: 'read',
+                table: 'test'
+            });
+        }
+
+        // API Tool Loaders
+        function loadGetToken() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            setFields('get_token', {
+                username: username,
+                password: password
+            });
+        }
+
+        function loadGetRanches() {
+            setFields('get_ranches', {});
+        }
+
+        function loadGetPlantings() {
+            if (!ranchGuid) {
+                log('⚠️ No Ranch GUID stored. Run get_ranches first or enter manually.', 'error');
+            }
+            setFields('get_plantings', {
+                ranchGuid: ranchGuid || 'ENTER_RANCH_GUID_HERE'
+            });
+        }
+
+        function loadGetIrrigationDetails() {
+            if (!plantingId) {
+                log('⚠️ No Planting ID stored. Run get_plantings first or enter manually.', 'error');
+            }
+            setFields('get_irrigation_details', {
+                plantingId: plantingId || 'ENTER_PLANTING_ID_HERE'
+            });
+        }
+
+        function loadDisplayRecords() {
+            if (!plantingId) {
+                log('⚠️ No Planting ID stored. Run get_plantings first or enter manually.', 'error');
+            }
+            setFields('load_into_displayRecords', {
+                plantingId: plantingId || 'ENTER_PLANTING_ID_HERE'
+            });
+        }
+
+        function loadPostIrrigation() {
+            if (!plantingId) {
+                log('⚠️ No Planting ID stored. Run get_plantings first or enter manually.', 'error');
+            }
+            setFields('post_new_irrigation', {
+                plantingId: plantingId || 'ENTER_PLANTING_ID_HERE',
+                scheduledDate: '12/28/24',
+                recommendedInches: 1.5,
+                appliedHours: 5.0,
+                irrigationMethod: 'Sprinkler'
+            });
+        }
+
+        function loadUpdateIrrigation() {
+            setFields('update_irrigation', {
+                eventId: 'ENTER_EVENT_ID_HERE',
+                appliedHours: 6.0,
+                mgrHours: 5.5
+            });
+        }
+
+        function loadBatchPost() {
+            setFields('batch_post_queue', {
+                records: [
+                    {
+                        id: 1,
+                        plantingId: plantingId || 'ENTER_PLANTING_ID',
+                        scheduledDate: '12/28/24',
+                        hours: 5.0,
+                        status: -1,
+                        isNew: true
+                    }
+                ]
+            });
+        }
+
+        // On load
+        window.addEventListener('DOMContentLoaded', () => {
+            log('✅ API Server Tester Ready!', 'success');
+            log('📍 Default: localhost:3101', 'info');
+            log('', 'info');
+            log('Instructions:', 'info');
+            log('1. Click any button to populate fields', 'info');
+            log('2. Edit Server URL, Tool Name, or JSON as needed', 'info');
+            log('3. Click SEND to execute', 'info');
+            log('4. For reads: result data appears in JSON field', 'info');
+            log('', 'info');
+            log('Ready to test!', 'success');
+        });
+    </script>
+</body>
+</html>

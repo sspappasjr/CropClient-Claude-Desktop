@@ -1,0 +1,14 @@
+C:\AICode\hello-world-system\
+  ├── pages/                    # Your HTML apps (already exists)
+  └── mcp-server/               # Add MCP files HERE
+      ├── server.js             # ADD
+      ├── package.json          # ADD
+      ├── README.md             # ADD
+      ├── lib/                  # ADD folder
+      │   ├── date-utils.js
+      │   ├── irrigation-core.js
+      │   └── prompt-router.js
+      └── data/                 # Already exists!
+          ├── prompts.json      # KEEP (already there)
+          ├── tasks.json        # KEEP (already there)
+          └── irrigation.json   # ADD

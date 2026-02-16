@@ -1,0 +1,1289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CropClient - GitHub Butler</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100vh;
+            overflow: hidden;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #4CAF50 0%, #2E7D32 100%);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: #2E7D32;
+            color: white;
+            padding: 8px 15px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #1B5E20;
+        }
+
+        .header h1 {
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+        }
+
+        .header h1::before {
+            content: "🐙";
+            font-size: 1.3rem;
+        }
+
+        .header-right {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .version {
+            opacity: 0.7;
+            font-size: 0.75rem;
+        }
+
+        .toolbar {
+            background: #f5f5f5;
+            padding: 8px 15px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .toolbar select {
+            flex: 1;
+            padding: 6px 10px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            font-size: 0.9rem;
+            max-width: 350px;
+            background: white;
+        }
+
+        .toolbar button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 6px 14px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: background 0.2s ease;
+        }
+
+        .toolbar button:hover {
+            background: #45a049;
+        }
+
+        .main-container {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+            background: #fafafa;
+        }
+
+        .sidebar {
+            width: 220px;
+            background: white;
+            border-right: 1px solid #e0e0e0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-header {
+            padding: 8px 12px;
+            background: #f5f5f5;
+            border-bottom: 1px solid #e0e0e0;
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: #555;
+        }
+
+        .sidebar-content {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .tree-item {
+            padding: 6px 12px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            border-bottom: 1px solid #f5f5f5;
+            display: grid;
+            grid-template-columns: 20px 1fr;
+            gap: 8px;
+            align-items: center;
+            transition: background 0.15s ease;
+        }
+
+        .tree-item:hover {
+            background: #f5f5f5;
+        }
+
+        .tree-item.selected {
+            background: #E8F5E9;
+            color: #2E7D32;
+            font-weight: 500;
+        }
+
+        .content-area {
+            flex: 1;
+            background: white;
+            margin: 10px;
+            border: 1px solid #e0e0e0;
+            border-radius: 3px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .content-header {
+            padding: 12px 15px;
+            border-bottom: 1px solid #e0e0e0;
+            background: #fafafa;
+        }
+
+        .content-header h2 {
+            color: #333;
+            margin-bottom: 5px;
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        .content-header .repo-url {
+            font-family: 'Courier New', monospace;
+            background: white;
+            padding: 4px 8px;
+            border: 1px solid #e0e0e0;
+            border-radius: 3px;
+            font-size: 0.8rem;
+            color: #666;
+            display: inline-block;
+        }
+
+        .file-output-header {
+            padding: 8px 15px;
+            border-bottom: 1px solid #e0e0e0;
+            background: #f5f5f5;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .file-output-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .view-options {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            font-size: 0.85rem;
+        }
+
+        .view-options label {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+        }
+
+        .view-options input[type="radio"] {
+            cursor: pointer;
+        }
+
+        .content-body {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .file-list {
+            width: 100%;
+        }
+
+        .file-list-item {
+            display: grid;
+            grid-template-columns: 30px 1fr 120px;
+            gap: 10px;
+            padding: 8px 15px;
+            border-bottom: 1px solid #f5f5f5;
+            font-size: 0.85rem;
+            transition: background 0.15s ease;
+            align-items: center;
+        }
+
+        .file-list-item:hover {
+            background: #fafafa;
+        }
+
+        .file-type {
+            text-align: center;
+            font-size: 1.1rem;
+        }
+
+        .file-details {
+            color: #999;
+            font-size: 0.8rem;
+        }
+
+        .actions-bar {
+            display: flex;
+            gap: 8px;
+            padding: 10px 15px;
+            background: #f5f5f5;
+            border-top: 1px solid #e0e0e0;
+            align-items: center;
+        }
+
+        .actions-bar .status-message {
+            flex: 1;
+            padding: 6px 12px;
+            background: #E3F2FD;
+            color: #1976D2;
+            border-left: 3px solid #2196F3;
+            font-size: 0.8rem;
+            margin: 0;
+        }
+
+        .action-btn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 6px 14px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: background 0.2s ease;
+        }
+
+        .action-btn:hover {
+            background: #45a049;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 30px;
+            color: #999;
+            font-size: 0.85rem;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #999;
+            font-size: 0.85rem;
+        }
+
+        .empty-state::before {
+            content: "📂";
+            font-size: 2rem;
+            display: block;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>GitHub Butler</h1>
+        <div class="header-right">
+            <div class="version">v2.0</div>
+        </div>
+    </div>
+
+    <div class="toolbar">
+        <select id="repoSelect" onchange="loadRepo()">
+            <option value="">Loading repositories...</option>
+        </select>
+        <button onclick="loginGitHub()">🔐 Login</button>
+        <button onclick="createNewRepo()">+ Create New Repo</button>
+        <button onclick="refreshRepos()">🔄 Refresh</button>
+    </div>
+
+    <div class="main-container">
+        <div class="sidebar">
+            <div class="sidebar-header">Repository Contents</div>
+            <div class="sidebar-content" id="sidebarContent">
+                <div class="loading">Select a repository</div>
+            </div>
+        </div>
+
+        <div class="content-area">
+            <div class="content-header">
+                <h2 id="contentTitle">Welcome to GitHub Butler</h2>
+                <div class="repo-url" id="repoUrl">Select a repository to get started</div>
+            </div>
+            <div class="file-output-header" id="fileOutputHeader" style="display: none;">
+                <div class="file-output-title" id="fileOutputTitle">Files</div>
+                <div class="view-options">
+                    <label>
+                        <input type="radio" name="viewType" value="grid" checked onchange="changeViewType('grid')">
+                        Grid
+                    </label>
+                    <label>
+                        <input type="radio" name="viewType" value="list" onchange="changeViewType('list')">
+                        List
+                    </label>
+                </div>
+            </div>
+            <div class="content-body" id="contentBody">
+            </div>
+            <div class="actions-bar">
+                <div class="status-message" id="statusMessage">Ready</div>
+                <button class="action-btn" onclick="pullChanges()">⬇️ Pull</button>
+                <button class="action-btn" onclick="pushChanges()">⬆️ Push</button>
+                <button class="action-btn" onclick="syncRepo()">🔄 Sync</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration variables
+        let currentRepo = null;
+        let repos = [];
+        let viewType = 'grid';
+
+        window.onload = function() {
+            loadGitHubRepos();
+        };
+
+        function loadGitHubRepos() {
+            repos = [
+                { name: 'CropClient-Services', url: 'https://github.com/username/CropClient-Services' },
+                { name: 'Demo-Repository', url: 'https://github.com/username/Demo-Repository' }
+            ];
+
+            const select = document.getElementById('repoSelect');
+            select.innerHTML = '<option value="">-- Select Repository --</option>';
+            
+            repos.forEach((repo, index) => {
+                const option = document.createElement('option');
+                option.value = index;
+                option.textContent = repo.name;
+                select.appendChild(option);
+            });
+        }
+
+        function loadRepo() {
+            const select = document.getElementById('repoSelect');
+            const index = select.value;
+            
+            if (!index) return;
+            
+            currentRepo = repos[index];
+            
+            document.getElementById('contentTitle').textContent = currentRepo.name;
+            document.getElementById('repoUrl').textContent = currentRepo.url;
+            
+            loadRepoFiles();
+        }
+
+        function changeViewType(type) {
+            viewType = type;
+            if (currentRepo) {
+                loadRepoFiles();
+            }
+        }
+
+        async function loadRepoFiles() {
+            const sidebar = document.getElementById('sidebarContent');
+            const content = document.getElementById('contentBody');
+            const fileOutputHeader = document.getElementById('fileOutputHeader');
+            const statusMessage = document.getElementById('statusMessage');
+            
+            sidebar.innerHTML = '<div class="loading">Loading files...</div>';
+            statusMessage.textContent = 'Loading repository files...';
+            
+            try {
+                const files = [
+                    { name: 'README.md', type: 'file', size: '2.4 KB', icon: '📄' },
+                    { name: 'package.json', type: 'file', size: '1.2 KB', icon: '📄' },
+                    { name: 'index.html', type: 'file', size: '4.8 KB', icon: '📄' },
+                    { name: 'styles.css', type: 'file', size: '3.1 KB', icon: '📄' },
+                    { name: 'app.js', type: 'file', size: '5.6 KB', icon: '📄' },
+                    { name: 'data.json', type: 'file', size: '892 B', icon: '📄' },
+                    { name: 'src/', type: 'folder', size: '--', icon: '📁' },
+                    { name: 'docs/', type: 'folder', size: '--', icon: '📁' }
+                ];
+                
+                fileOutputHeader.style.display = 'flex';
+                document.getElementById('fileOutputTitle').textContent = 'Files';
+                
+                sidebar.innerHTML = '';
+                files.forEach(file => {
+                    const item = document.createElement('div');
+                    item.className = 'tree-item';
+                    item.innerHTML = `
+                        <span>${file.icon}</span>
+                        <span>${file.name}</span>
+                    `;
+                    item.onclick = () => {
+                        if (file.type === 'file') {
+                            selectFile(item, file.name);
+                        } else {
+                            selectFolder(item, file.name);
+                        }
+                    };
+                    sidebar.appendChild(item);
+                });
+                
+                // Show empty output area
+                content.innerHTML = '';
+                
+                statusMessage.textContent = `Repository loaded: ${files.length} items`;
+                
+            } catch (error) {
+                sidebar.innerHTML = '<div class="loading">Error loading files</div>';
+                content.innerHTML = `<div class="empty-state"><p>Could not load repository files</p></div>`;
+                statusMessage.textContent = 'Error loading repository';
+            }
+        }
+
+        function getFileType(filename) {
+            const ext = filename.split('.').pop().toLowerCase();
+            const types = {
+                'json': 'JSON',
+                'md': 'Markdown',
+                'html': 'HTML',
+                'css': 'Stylesheet',
+                'js': 'JavaScript',
+                'txt': 'Text'
+            };
+            return types[ext] || 'File';
+        }
+
+        function viewFile(filename, type) {
+            if (type === 'folder') {
+                selectFolder(null, filename);
+                return;
+            }
+            
+            const content = document.getElementById('contentBody');
+            const fileOutputTitle = document.getElementById('fileOutputTitle');
+            const statusMessage = document.getElementById('statusMessage');
+            
+            fileOutputTitle.textContent = filename;
+            statusMessage.textContent = `Viewing: ${filename}`;
+            
+            content.innerHTML = `
+                <div style="padding: 15px;">
+                    <div style="background: #fafafa; border: 1px solid #e0e0e0; border-radius: 3px; padding: 15px; font-family: 'Courier New', monospace; font-size: 0.85rem; max-height: 500px; overflow-y: auto;">
+                        ${getFilePreview(filename)}
+                    </div>
+                </div>
+            `;
+        }
+
+        function getFilePreview(filename) {
+            const ext = filename.split('.').pop().toLowerCase();
+            
+            if (ext === 'json') {
+                return `<pre style="margin: 0;">{
+  "name": "${currentRepo.name}",
+  "version": "1.0.0",
+  "description": "CropClient application",
+  "main": "index.html",
+  "scripts": {
+    "start": "node server.js"
+  }
+}</pre>`;
+            }
+            
+            if (ext === 'md') {
+                return `<pre style="margin: 0;"># ${currentRepo.name}
+
+Agricultural irrigation management platform
+
+## Features
+- Role-based access control
+- Irrigation scheduling
+- SGMA compliance reporting
+
+## Installation
+1. Clone the repository
+2. Open index.html in browser
+3. Configure your ranch settings</pre>`;
+            }
+            
+            if (ext === 'html') {
+                return `<pre style="margin: 0;">&lt;!DOCTYPE html&gt;
+&lt;html lang="en"&gt;
+&lt;head&gt;
+    &lt;meta charset="UTF-8"&gt;
+    &lt;title&gt;CropClient&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;h1&gt;Welcome to CropClient&lt;/h1&gt;
+&lt;/body&gt;
+&lt;/html&gt;</pre>`;
+            }
+            
+            if (ext === 'css') {
+                return `<pre style="margin: 0;">body {
+    font-family: 'Segoe UI', sans-serif;
+    background: #f5f5f5;
+    margin: 0;
+    padding: 0;
+}
+
+.header {
+    background: #2E7D32;
+    color: white;
+    padding: 15px;
+}</pre>`;
+            }
+            
+            if (ext === 'js') {
+                return `<pre style="margin: 0;">// CropClient Application
+const app = {
+    init: function() {
+        console.log('CropClient initialized');
+        this.loadData();
+    },
+    
+    loadData: function() {
+        fetch('/api/irrigations')
+            .then(response => response.json())
+            .then(data => this.render(data));
+    }
+};</pre>`;
+            }
+            
+            return `<pre style="margin: 0;">File contents: ${filename}
+
+This is a preview of the file.
+In the full version, actual file contents will be displayed here.</pre>`;
+        }
+
+        function selectFolder(element, folder) {
+            if (element) {
+                document.querySelectorAll('.tree-item').forEach(item => {
+                    item.classList.remove('selected');
+                });
+                element.classList.add('selected');
+            }
+            
+            const content = document.getElementById('contentBody');
+            const fileOutputTitle = document.getElementById('fileOutputTitle');
+            const statusMessage = document.getElementById('statusMessage');
+            
+            fileOutputTitle.textContent = folder;
+            statusMessage.textContent = `Viewing folder: ${folder}`;
+            
+            content.innerHTML = `
+                <div class="empty-state">
+                    <p>Folder contents will appear here</p>
+                </div>
+            `;
+        }
+
+        function selectFile(element, filename) {
+            if (element) {
+                document.querySelectorAll('.tree-item').forEach(item => {
+                    item.classList.remove('selected');
+                });
+                element.classList.add('selected');
+            }
+            
+            viewFile(filename, 'file');
+        }
+
+        function loginGitHub() {
+            const statusMessage = document.getElementById('statusMessage');
+            const username = 'sspappasjr';
+            const password = '032348';
+            
+            statusMessage.textContent = 'Logging into GitHub as sspappasjr...';
+            
+            // Attempt GitHub authentication with username/password
+            fetch('https://api.github.com/user', {
+                headers: {
+                    'Authorization': 'Basic ' + btoa(username + ':' + password),
+                    'Accept': 'application/vnd.github.v3+json'
+                }
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                } else {
+                    throw new Error('Authentication failed: ' + response.status);
+                }
+            })
+            .then(user => {
+                statusMessage.textContent = `✅ Logged in as ${user.login}`;
+                alert('Successfully logged into GitHub!\n\nUser: ' + user.login);
+                loadRealGitHubRepos();
+            })
+            .catch(error => {
+                statusMessage.textContent = '❌ Login failed';
+                console.error('Login error:', error);
+                alert('GitHub login failed.\n\nNote: GitHub API requires a Personal Access Token, not password.\nYour PIN works for git commands but not API calls.');
+            });
+        }
+
+        function createNewRepo() {
+            const repoName = prompt('Enter new repository name:', 'CropClient-Services');
+            if (repoName) {
+                alert('Creating repository: ' + repoName + '\n\nThis will execute:\ngit init\ngit remote add origin...\ngit push');
+            }
+        }
+
+        function refreshRepos() {
+            loadGitHubRepos();
+            alert('Refreshing repository list from GitHub...');
+        }
+
+        function pullChanges() {
+            if (!currentRepo) {
+                alert('Please select a repository first');
+                return;
+            }
+            alert('Pulling changes from: ' + currentRepo.name + '\n\nExecuting: git pull origin main');
+        }
+
+        function pushChanges() {
+            if (!currentRepo) {
+                alert('Please select a repository first');
+                return;
+            }
+            alert('Pushing changes to: ' + currentRepo.name + '\n\nExecuting:\ngit add .\ngit commit -m "Update"\ngit push origin main');
+        }
+
+        function syncRepo() {
+            if (!currentRepo) {
+                alert('Please select a repository first');
+                return;
+            }
+            alert('Syncing repository: ' + currentRepo.name + '\n\nExecuting:\ngit pull\ngit add .\ngit commit -m "Sync"\ngit push');
+        }
+    </script>
+
+    <!-- MCP IRRIGATION TOOL PACKAGE -->
+ <script>
+        // ========================================
+        // BEGIN PACKAGE - MCP READY IRRIGATION TOOLS 
+        //                    v1 SSP 11/17/2025
+        // ========================================
+        // 
+        // HIGH-LEVEL CONTENTS:
+        // 
+        // DATA CONTAINERS:
+        //   - IRRIGATION_DATA: filestorage (12 original records, read-only)
+        //   - displayRecords: working memory (gets modified during session)
+        //   - selectedRecord: currently selected record for operations
+        //
+        // UTILITY FUNCTIONS:
+        //   - parseEventDate(dateStr): Converts "M/D/YY" string → Date object
+        //   - formatDate(date): Converts Date object → "M/D/YY" string
+        //
+        // CORE TOOL FUNCTIONS:
+        //   - testCreateNext(): Creates next irrigation based on selected record
+        //     * Finds last record for same ranch/planting
+        //     * Calculates next date using interval
+        //     * Creates new record with sequential ID (13, 14, 15...)
+        //     * Sorts by ranch → planting → date
+        //     * Re-selects new record after sort
+        //
+        //   - testReadMeter(): Prepares meter reading for selected field
+        //     * Uses selected record to identify ranch/planting
+        //     * Finds LAST (most recent) record for that field
+        //     * Selects it in grid
+        //     * Clears Water Applied field for meter entry
+        //
+        // SUPPORTING FUNCTIONS:
+        //   - loadData(): Copies IRRIGATION_DATA → displayRecords with transform
+        //   - renderTable(): Displays displayRecords in grid
+        //   - selectRecord(id): Highlights row and populates form
+        //   - handleReset(): Clears working memory and reloads from filestorage
+        //
+        // DATA FLOW:
+        //   STARTUP: IRRIGATION_DATA → displayRecords (12 records with IDs 1-12)
+        //   RESET: Clear displayRecords → reload from IRRIGATION_DATA
+        //   CREATE: Add new record (ID 13+) → sort → re-render
+        //   METER: Find last record → select → populate form
+        //
+        // ID SYSTEM:
+        //   Original records: Simple integers 1-12
+        //   New records: Sequential integers 13, 14, 15...
+        //   IDs are stable across sorts and operations
+        //
+        // ========================================
+
+        // ========================================
+        // EMBEDDED IRRIGATION DATA (filestorage)
+        // ========================================
+        const IRRIGATION_DATA = [
+  {
+    "Ranch": "MobileFrame Ranch 1",
+    "Planting": "Planting 1A",
+    "Eventdate": "9/15/25",
+    "IrrigationMethod": "Germination Sprinkler",
+    "WaterApplied": "0",
+    "ManagerAmount": "0",
+    "RecommendedInches": "0",
+    "RecommendedHours": "0",
+    "RecommendedInterval": "0",
+    "LastUpdatedDate": "9/16/25 22:25",
+    "UpdatedBy": "Robert Rossilli"
+  },
+  {
+    "Ranch": "MobileFrame Ranch 1",
+    "Planting": "Planting 1A",
+    "Eventdate": "9/20/25",
+    "IrrigationMethod": "Germination Sprinkler",
+    "WaterApplied": "2",
+    "ManagerAmount": "2",
+    "RecommendedInches": "0.5",
+    "RecommendedHours": "1.7",
+    "RecommendedInterval": "2.6",
+    "LastUpdatedDate": "9/16/25 22:36",
+    "UpdatedBy": "Robert Rossilli"
+  },
+  {
+    "Ranch": "MobileFrame Ranch 1",
+    "Planting": "Planting 1A",
+    "Eventdate": "9/23/25",
+    "IrrigationMethod": "Germination Sprinkler",
+    "WaterApplied": "0",
+    "ManagerAmount": "0",
+    "RecommendedInches": "0.6",
+    "RecommendedHours": "2.1",
+    "RecommendedInterval": "1.2",
+    "LastUpdatedDate": "9/16/25 22:37",
+    "UpdatedBy": "Robert Rossilli"
+  },
+  {
+    "Ranch": "MobileFrame Ranch 1",
+    "Planting": "Planting 1B",
+    "Eventdate": "9/15/25",
+    "IrrigationMethod": "Sprinkler",
+    "WaterApplied": "0.56",
+    "ManagerAmount": "0.28",
+    "RecommendedInches": "0",
+    "RecommendedHours": "0",
+    "RecommendedInterval": "0",
+    "LastUpdatedDate": "9/16/25 22:30",
+    "UpdatedBy": "Robert Rossilli"
+  },
+  {
+    "Ranch": "MobileFrame Ranch 1",
+    "Planting": "Planting 1B",
+    "Eventdate": "9/18/25",
+    "IrrigationMethod": "Sprinkler",
+    "WaterApplied": "0",
+    "ManagerAmount": "0",
+    "RecommendedInches": "0.3",
+    "RecommendedHours": "0.9",
+    "RecommendedInterval": "3",
+    "LastUpdatedDate": "9/16/25 22:29",
+    "UpdatedBy": "Robert Rossilli"
+  },
+  {
+    "Ranch": "MobileFrame Ranch 1",
+    "Planting": "Planting 1B",
+    "Eventdate": "9/21/25",
+    "IrrigationMethod": "Sprinkler",
+    "WaterApplied": "0",
+    "ManagerAmount": "0",
+    "RecommendedInches": "0.2",
+    "RecommendedHours": "0.9",
+    "RecommendedInterval": "3",
+    "LastUpdatedDate": "9/16/25 22:32",
+    "UpdatedBy": "Robert Rossilli"
+  },
+  {
+    "Ranch": "MobileFrame Ranch 2",
+    "Planting": "Planting 2A",
+    "Eventdate": "9/15/25",
+    "IrrigationMethod": "Sprinkler",
+    "WaterApplied": "0.54",
+    "ManagerAmount": "0",
+    "RecommendedInches": "0",
+    "RecommendedHours": "0",
+    "RecommendedInterval": "0",
+    "LastUpdatedDate": "9/16/25 23:50",
+    "UpdatedBy": "Robert Rossilli"
+  },
+  {
+    "Ranch": "MobileFrame Ranch 2",
+    "Planting": "Planting 2A",
+    "Eventdate": "9/18/25",
+    "IrrigationMethod": "Sprinkler",
+    "WaterApplied": "0",
+    "ManagerAmount": "0",
+    "RecommendedInches": "0.6",
+    "RecommendedHours": "2",
+    "RecommendedInterval": "1.1",
+    "LastUpdatedDate": "9/16/25 23:50",
+    "UpdatedBy": "Robert Rossilli"
+  },
+  {
+    "Ranch": "MobileFrame Ranch 2",
+    "Planting": "Planting 2A",
+    "Eventdate": "9/23/25",
+    "IrrigationMethod": "Sprinkler",
+    "WaterApplied": "0",
+    "ManagerAmount": "0",
+    "RecommendedInches": "0.6",
+    "RecommendedHours": "1.9",
+    "RecommendedInterval": "1.9",
+    "LastUpdatedDate": "9/16/25 23:44",
+    "UpdatedBy": "CropManage "
+  },
+  {
+    "Ranch": "MobileFrame Ranch 2",
+    "Planting": "Planting 2B",
+    "Eventdate": "9/15/25",
+    "IrrigationMethod": "Germination Sprinkler",
+    "WaterApplied": "0",
+    "ManagerAmount": "0",
+    "RecommendedInches": "0",
+    "RecommendedHours": "0",
+    "RecommendedInterval": "0",
+    "LastUpdatedDate": "9/16/25 23:46",
+    "UpdatedBy": "CropManage "
+  },
+  {
+    "Ranch": "MobileFrame Ranch 2",
+    "Planting": "Planting 2B",
+    "Eventdate": "9/18/25",
+    "IrrigationMethod": "Germination Sprinkler",
+    "WaterApplied": "0",
+    "ManagerAmount": "0",
+    "RecommendedInches": "0.7",
+    "RecommendedHours": "2.3",
+    "RecommendedInterval": "1.1",
+    "LastUpdatedDate": "9/16/25 23:51",
+    "UpdatedBy": "Robert Rossilli"
+  },
+  {
+    "Ranch": "MobileFrame Ranch 2",
+    "Planting": "Planting 2B",
+    "Eventdate": "9/23/25",
+    "IrrigationMethod": "Germination Sprinkler",
+    "WaterApplied": "0",
+    "ManagerAmount": "0",
+    "RecommendedInches": "0.7",
+    "RecommendedHours": "2.2",
+    "RecommendedInterval": "1.9",
+    "LastUpdatedDate": "9/16/25 23:51",
+    "UpdatedBy": "Robert Rossilli"
+  }
+];
+
+        // Working data array (localstorage)
+        let displayRecords = [];
+        let selectedRecord = null;
+
+        // ========================================
+        // DATE UTILITY FUNCTIONS
+        // ========================================
+
+        function parseEventDate(dateStr) {
+            const parts = dateStr.split('/');
+            const month = parseInt(parts[0]) - 1;
+            const day = parseInt(parts[1]);
+            let year = parseInt(parts[2]);
+            if (year < 100) year += 2000;
+            return new Date(year, month, day);
+        }
+
+        function formatDate(date) {
+            const month = date.getMonth() + 1;
+            const day = date.getDate();
+            const year = date.getFullYear() % 100;
+            return `${month}/${day}/${year}`;
+        }
+
+        // ========================================
+        // DATA LOADING & GRID RENDERING
+        // ========================================
+
+        function loadData() {
+            displayRecords = IRRIGATION_DATA.map((record, index) => ({
+                id: index + 1,
+                ranch: record.Ranch,
+                planting: record.Planting,
+                scheduledDate: record.Eventdate,
+                irrigationMethod: record.IrrigationMethod,
+                appliedHours: record.WaterApplied,
+                mgrHours: record.ManagerAmount,
+                recInches: record.RecommendedInches,
+                recHours: record.RecommendedHours,
+                recInterval: record.RecommendedInterval,
+                lastUpdatedDate: record.LastUpdatedDate,
+                updatedBy: record.UpdatedBy
+            }));
+            renderTable();
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('irrigationTableBody');
+            if (!tbody) return;
+            
+            tbody.innerHTML = '';
+            displayRecords.forEach(record => {
+                const row = document.createElement('tr');
+                row.onclick = () => selectRecord(record.id);
+                row.innerHTML = `
+                    <td>${record.id}</td>
+                    <td>${record.ranch}</td>
+                    <td>${record.planting}</td>
+                    <td>${record.scheduledDate}</td>
+                    <td>${record.irrigationMethod}</td>
+                    <td>${record.appliedHours}</td>
+                    <td>${record.mgrHours}</td>
+                    <td>${record.recInches}</td>
+                    <td>${record.recHours}</td>
+                    <td>${record.recInterval}</td>
+                    <td>${record.lastUpdatedDate}</td>
+                    <td>${record.updatedBy}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function selectRecord(id) {
+            selectedRecord = displayRecords.find(r => r.id === id);
+            if (!selectedRecord) return;
+
+            document.querySelectorAll('#irrigationTableBody tr').forEach(row => {
+                row.classList.remove('selected');
+            });
+            const selectedRow = document.querySelector(`#irrigationTableBody tr:nth-child(${displayRecords.indexOf(selectedRecord) + 1})`);
+            if (selectedRow) {
+                selectedRow.classList.add('selected');
+            }
+
+            const form = {
+                id: document.getElementById('formRecordId'),
+                ranch: document.getElementById('formRanch'),
+                planting: document.getElementById('formPlanting'),
+                date: document.getElementById('formDate'),
+                method: document.getElementById('formMethod'),
+                mgrHours: document.getElementById('formManagerHours'),
+                waterApplied: document.getElementById('formWaterApplied')
+            };
+
+            if (form.id) form.id.value = selectedRecord.id;
+            if (form.ranch) form.ranch.value = selectedRecord.ranch;
+            if (form.planting) form.planting.value = selectedRecord.planting;
+            if (form.date) form.date.value = selectedRecord.scheduledDate;
+            if (form.method) form.method.value = selectedRecord.irrigationMethod;
+            if (form.mgrHours) form.mgrHours.value = selectedRecord.mgrHours;
+            if (form.waterApplied) form.waterApplied.value = selectedRecord.appliedHours;
+        }
+
+        function handleReset() {
+            displayRecords = [];
+            selectedRecord = null;
+            loadData();
+            showResult('✅ Reset complete. 12 original records restored.');
+        }
+
+        // ========================================
+        // CREATE NEXT IRRIGATION (CORE TOOL)
+        // ========================================
+
+        function testCreateNext() {
+            if (!selectedRecord) {
+                showResult('ERROR: No record selected. Click a row first.');
+                return;
+            }
+            
+            const targetRanch = selectedRecord.ranch;
+            const targetPlanting = selectedRecord.planting;
+            
+            const matchingRecords = displayRecords.filter(r => 
+                r.ranch === targetRanch && 
+                r.planting === targetPlanting
+            );
+            
+            if (matchingRecords.length === 0) {
+                showResult(`❌ No records found for ${targetRanch} ${targetPlanting}`);
+                return;
+            }
+            
+            matchingRecords.sort((a, b) => {
+                const dateA = parseEventDate(a.scheduledDate);
+                const dateB = parseEventDate(b.scheduledDate);
+                return dateA - dateB;
+            });
+            
+            const lastRecord = matchingRecords[matchingRecords.length - 1];
+            
+            const lastDate = parseEventDate(lastRecord.scheduledDate);
+            const interval = parseFloat(lastRecord.recInterval);
+            const roundedInterval = Math.ceil(interval);
+            
+            const nextDate = new Date(lastDate);
+            nextDate.setDate(nextDate.getDate() + roundedInterval);
+            const nextDateStr = formatDate(nextDate);
+            
+            const newRecHours = lastRecord.recHours;
+            const newMgrHours = lastRecord.mgrHours;
+            
+            const nextId = Math.max(...displayRecords.map(r => r.id)) + 1;
+            
+            const newRecord = {
+                id: nextId,
+                ranch: lastRecord.ranch,
+                planting: lastRecord.planting,
+                scheduledDate: nextDateStr,
+                irrigationMethod: lastRecord.irrigationMethod,
+                appliedHours: 0,
+                mgrHours: newMgrHours,
+                recInches: lastRecord.recInches,
+                recHours: newRecHours,
+                recInterval: lastRecord.recInterval,
+                lastUpdatedDate: new Date().toLocaleString(),
+                updatedBy: "Package System",
+                isNew: true
+            };
+            
+            displayRecords.push(newRecord);
+            
+            const newRecordId = newRecord.id;
+            
+            displayRecords.sort((a, b) => {
+                if (a.ranch < b.ranch) return -1;
+                if (a.ranch > b.ranch) return 1;
+                if (a.planting < b.planting) return -1;
+                if (a.planting > b.planting) return 1;
+                const dateA = parseEventDate(a.scheduledDate);
+                const dateB = parseEventDate(b.scheduledDate);
+                return dateA - dateB;
+            });
+            
+            renderTable();
+            selectRecord(newRecordId);
+            
+            showResult(`✅ Created irrigation #${newRecordId}
+Ranch: ${newRecord.ranch}
+Planting: ${newRecord.planting}
+Date: ${lastRecord.scheduledDate} + ${roundedInterval} days = ${nextDateStr}
+Hours: ${newRecHours}
+Manager Hours: ${newMgrHours}`);
+        }
+
+        // ========================================
+        // READ METER (CORE TOOL)
+        // ========================================
+
+        function testReadMeter() {
+            if (!selectedRecord) {
+                showResult('ERROR: No record selected. Click a row first.');
+                return;
+            }
+            
+            const targetRanch = selectedRecord.ranch;
+            const targetPlanting = selectedRecord.planting;
+            
+            const matchingRecords = displayRecords.filter(r => 
+                r.ranch === targetRanch && 
+                r.planting === targetPlanting
+            );
+            
+            if (matchingRecords.length === 0) {
+                showResult(`❌ No records found for ${targetRanch} ${targetPlanting}`);
+                return;
+            }
+            
+            matchingRecords.sort((a, b) => {
+                const dateA = parseEventDate(a.scheduledDate);
+                const dateB = parseEventDate(b.scheduledDate);
+                return dateA - dateB;
+            });
+            
+            const lastRecord = matchingRecords[matchingRecords.length - 1];
+            
+            selectRecord(lastRecord.id);
+            
+            const waterAppliedField = document.getElementById('formWaterApplied');
+            if (waterAppliedField) {
+                waterAppliedField.value = '';
+                waterAppliedField.focus();
+            }
+            Updateid = lastRecord.id 
+            
+            showResult(`✅ Ready for meter reading
+Ranch: ${lastRecord.ranch}
+Planting: ${lastRecord.planting}
+RecordID: ${lastRecord.id}
+UpdateID: ${Updateid}
+Date: ${lastRecord.scheduledDate}
+Current Water Applied: ${lastRecord.appliedHours}
+
+→ Enter new meter reading in Water Applied field`);
+        }
+
+        // ========================================
+        // NATURAL LANGUAGE PROMPT HANDLER
+        // ========================================
+        
+        function toggleInfo() {
+            const infoPanel = document.getElementById('infoPanel');
+            if (infoPanel) {
+                infoPanel.style.display = infoPanel.style.display === 'none' ? 'block' : 'none';
+            }
+        }
+        
+        function fillPrompt(text) {
+            const promptInput = document.getElementById('promptInput');
+            if (promptInput) {
+                promptInput.value = text;
+                promptInput.focus();
+            }
+        }
+        
+        function sendPrompt() {
+            const promptInput = document.getElementById('promptInput');
+            if (!promptInput) return;
+            
+            const prompt = promptInput.value.trim();
+            const lowerPrompt = prompt.toLowerCase();
+            
+            if (!prompt) {
+                showResult('ERROR: Please enter a prompt');
+                return;
+            }
+            
+            if ((lowerPrompt.includes('create') && lowerPrompt.includes('next')) ||
+                lowerPrompt.includes('create_next')) {
+                
+                testCreateNext();
+                
+                const result = {
+                    success: true,
+                    tool: "create_next",
+                    prompt: prompt
+                };
+                
+                return result;
+                
+            } else if ((lowerPrompt.includes('read') && lowerPrompt.includes('meter')) ||
+                lowerPrompt.includes('read_meter')) {
+                
+                testReadMeter();
+                
+                const result = {
+                    success: true,
+                    tool: "read_meter",
+                    prompt: prompt
+                };
+                
+                return result;
+                
+            } else if ((lowerPrompt.includes('update') && lowerPrompt.includes('selected')) ||
+                lowerPrompt.includes('update_irrigation_record')) {
+                
+                testUpdateSelected();
+                
+                const result = {
+                    success: true,
+                    tool: "update_irrigation_record",
+                    prompt: prompt
+                };
+                
+                return result;
+                
+            } else {
+                showResult('❌ Unrecognized prompt\n\nTry:\n- "create next"\n- "read meter"');
+            }
+        }
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            const promptInput = document.getElementById('promptInput');
+            if (promptInput) {
+                promptInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        sendPrompt();
+                    }
+                });
+            }
+        });
+
+        // ========================================
+        // UPDATE SELECTED RECORD (CORE TOOL)
+        // ========================================
+
+        function testUpdateSelected() {
+            if (!selectedRecord) {
+                showResult('ERROR: No record selected. Click a row first.');
+                return;
+            }
+            
+            const mgrHoursField = document.getElementById('formManagerHours');
+            const waterAppliedField = document.getElementById('formWaterApplied');
+            
+            const mgrHours = mgrHoursField ? parseFloat(mgrHoursField.value) : NaN;
+            const waterApplied = waterAppliedField ? parseFloat(waterAppliedField.value) : NaN;
+            
+            selectedRecord.mgrHours = isNaN(mgrHours) ? selectedRecord.mgrHours : mgrHours;
+            selectedRecord.appliedHours = isNaN(waterApplied) ? selectedRecord.appliedHours : waterApplied;
+            selectedRecord.lastUpdatedDate = new Date().toLocaleString();
+            selectedRecord.updatedBy = "Package System";
+            selectedRecord.isUpdated = true;
+            Updateid = selectedRecord.id
+            
+            const index = displayRecords.findIndex(r => r.id === selectedRecord.id);
+            if (index !== -1) {
+                displayRecords[index] = selectedRecord;
+            }
+            
+            renderTable();
+            selectRecord(Updateid);
+            
+            showResult(`✅ Updated irrigation #${selectedRecord.id}
+Ranch: ${selectedRecord.ranch}
+Planting: ${selectedRecord.planting}
+UpdateID: ${Updateid} 
+Manager Hours: ${selectedRecord.mgrHours}
+Water Applied: ${selectedRecord.appliedHours}`);
+        }
+
+        // ========================================
+        // END PACKAGE - MCP READY IRRIGATION TOOLS
+        // ========================================
+
+        // Helper function to show results
+        function showResult(message) {
+            const resultDiv = document.getElementById('result');
+            if (resultDiv) {
+                resultDiv.textContent = message;
+                resultDiv.style.display = 'block';
+            }
+        }
+
+        // Initialize on load - only if irrigation elements exist
+        if (document.getElementById('irrigationTableBody')) {
+            window.addEventListener('load', function() {
+                loadData();
+                showResult('Package loaded. 12 original records ready.\nSelect a record and test the tools.');
+            });
+        }
+    </script>
+
+</body>
+</html>
