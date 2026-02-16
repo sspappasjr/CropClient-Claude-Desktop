@@ -1,7 +1,8 @@
 # GitHub Processes — Token Definitions for Butler Agents
 **Date:** February 16, 2026
-**By:** Claude Desktop (GitHub expertise) for Steve's review
-**Purpose:** Define the reusable tokens that chain into agents
+**Updated:** After first real use — pushed 2 repos to GitHub
+**By:** Claude Desktop + Steve Pappas
+**Purpose:** Define the reusable tokens that chain into agents — DOCUMENTED FROM REAL USE
 
 ---
 
@@ -17,91 +18,153 @@ Butler's skill grid shows agents. Each agent is made of tokens.
 ## CORE TOKENS (The Building Blocks)
 
 These are the atomic actions. Every agent is built from these.
+**Tested = actually used in a real operation today**
 
-### Token: INIT
+### Token: INIT ✅ Tested
 **What:** Initialize a folder as a git repo
 **From:** Local folder (not yet tracked)
 **To:** Same folder (now tracked by git)
 **When:** First time only — new project setup
-**Git:** `git init`
+**Command:** `git init`
+**Real use:** `cd C:\AICode\CropClient-Claude-Desktop && git init`
 
-### Token: STAGE
+### Token: GITIGNORE ✅ Tested
+**What:** Create .gitignore to exclude files from tracking
+**From:** Nothing
+**To:** .gitignore file in repo root
+**When:** Before first commit — keep node_modules, .env, logs out
+**Command:** Create file with exclusion rules
+**Real use:** Created `.gitignore` with `node_modules/`, `.env`, `*.log`, `nul`
+
+### Token: CONFIG ✅ Tested
+**What:** Set git user identity for commits
+**From:** No identity
+**To:** Name + email configured
+**When:** First time on a machine
+**Command:** `git config user.email "email"` + `git config user.name "name"`
+**Real use:** `git config user.email "stevep@sspnet.com"` + `git config user.name "Steve Pappas"`
+
+### Token: STAGE ✅ Tested
 **What:** Mark files as ready to save
 **From:** Changed files in working folder
 **To:** Git staging area
-**Git:** `git add .` or `git add <specific files>`
+**Command:** `git add .` or `git add <specific files>`
+**Real use:** `git add .` (staged 127 files for crop-client-services)
 
-### Token: COMMIT
+### Token: COMMIT ✅ Tested
 **What:** Save a snapshot with a message
 **From:** Staged files
 **To:** Local git history
-**Git:** `git commit -m "message"`
+**Command:** `git commit -m "message"`
+**Real use:** `git commit -m "Initial commit - CropClient MCP services alpha"`
 
-### Token: PUSH
+### Token: CREATE-REPO ✅ Tested
+**What:** Create a new repo on GitHub
+**From:** Nothing (new)
+**To:** GitHub remote repo
+**Command:** `gh repo create <name> --public --description "desc"`
+**Real use:** `gh repo create CropClient-Claude-Desktop --public --description "Butler app, MCP API tools audit, design docs"`
+**Note:** Requires `gh` CLI installed and authenticated
+
+### Token: ADD-REMOTE ✅ Tested
+**What:** Connect local repo to GitHub remote
+**From:** Local repo (no remote)
+**To:** Local repo → linked to GitHub
+**Command:** `git remote add origin https://github.com/<user>/<repo>.git`
+**Real use:** `git remote add origin https://github.com/sspappasjr/crop-client-services.git`
+
+### Token: PUSH ✅ Tested
 **What:** Send local commits to GitHub (filing cabinet)
 **From:** Local git repo
 **To:** GitHub remote
-**Git:** `git push origin <branch>`
+**Command:** `git push -u origin main`
+**Real use:** Pushed both repos. First push uses `-u` to set tracking.
+**Note:** If remote has existing content, may need `--force` (see ARCHIVE first)
+
+### Token: ARCHIVE ✅ Tested
+**What:** Save existing remote branch before overwriting
+**From:** GitHub branch (e.g., old main)
+**To:** New archive branch (e.g., archive/v0)
+**Command:** `git push origin origin/main:refs/heads/archive/v0`
+**When:** Remote has placeholder/old content you want to preserve before force push
+**Real use:** Archived old crop-client-services main to `archive/v0` before pushing real alpha
+
+### Token: FORCE-PUSH ✅ Tested
+**What:** Overwrite remote with local (after archiving old content)
+**From:** Local repo
+**To:** GitHub remote (replaces what was there)
+**Command:** `git push --force origin main`
+**When:** After ARCHIVE — replacing placeholder with real content
+**Real use:** Force pushed real alpha to crop-client-services after archiving v0
+
+### Token: FETCH ✅ Tested
+**What:** Download remote info without changing local files
+**From:** GitHub remote
+**To:** Local tracking refs
+**Command:** `git fetch origin`
+**When:** Check what's on remote before merging or force pushing
+**Real use:** `git fetch origin` to see what was in placeholder repo
+
+### Token: RENAME-BRANCH ✅ Tested
+**What:** Rename local branch (e.g., master → main)
+**From:** Old branch name
+**To:** New branch name
+**Command:** `git branch -m <old> <new>`
+**Real use:** `git branch -m master main`
 
 ### Token: PULL
 **What:** Get latest from GitHub to local
 **From:** GitHub remote
 **To:** Local git repo
-**Git:** `git pull origin <branch>`
+**Command:** `git pull origin <branch>`
 
 ### Token: CLONE
 **What:** Copy entire repo from GitHub to a new location
 **From:** GitHub remote
 **To:** New local folder
-**Git:** `git clone <url>`
+**Command:** `git clone <url>`
 
 ### Token: BRANCH-CREATE
 **What:** Create a new working branch (like alpha, release, feature)
 **From:** Current branch
 **To:** New branch name
-**Git:** `git checkout -b <branch-name>`
+**Command:** `git checkout -b <branch-name>`
 
 ### Token: BRANCH-SWITCH
 **What:** Switch to a different branch
 **From:** Current branch
 **To:** Target branch
-**Git:** `git checkout <branch-name>`
+**Command:** `git checkout <branch-name>`
 
 ### Token: MERGE
 **What:** Combine one branch into another
 **From:** Source branch (e.g., alpha)
 **To:** Target branch (e.g., main/production)
-**Git:** `git merge <source-branch>`
+**Command:** `git merge <source-branch>`
 
 ### Token: TAG
 **What:** Mark a commit as a release version
 **From:** Current commit
 **To:** Named tag (e.g., v1.0-alpha)
-**Git:** `git tag -a v1.0-alpha -m "Alpha release"`
+**Command:** `git tag -a v1.0-alpha -m "Alpha release"`
 
 ### Token: STATUS
 **What:** Check what's changed, what's staged, what's clean
 **From:** Local repo
 **To:** Status report
-**Git:** `git status`
+**Command:** `git status`
 
 ### Token: DIFF
 **What:** See exactly what changed in files
 **From:** Local changes
 **To:** Comparison report
-**Git:** `git diff`
+**Command:** `git diff`
 
 ### Token: LOG
 **What:** See history of commits
 **From:** Git history
 **To:** Activity report
-**Git:** `git log --oneline`
-
-### Token: CREATE-REPO
-**What:** Create a new repo on GitHub
-**From:** Nothing (new)
-**To:** GitHub remote repo
-**API:** `POST /user/repos`
+**Command:** `git log --oneline`
 
 ### Token: NOTIFY
 **What:** Send a message to a person or team
@@ -109,23 +172,48 @@ These are the atomic actions. Every agent is built from these.
 **To:** Person, team, or partner
 **Method:** Status message, email, webhook, etc.
 
+### Token: GH-AUTH ✅ Tested
+**What:** Authenticate GitHub CLI for command line operations
+**From:** Unauthenticated machine
+**To:** Authenticated — can create repos, push, pull
+**Command:** `gh auth login --web -p https`
+**When:** First time on a machine
+**Real use:** Installed `gh` CLI via winget, authenticated via browser device code
+
 ---
 
 ## AGENTS (Token Chains = Workflows)
 
 Each agent is a sequence of tokens. Butler shows these as skill cards.
+**Tested agents marked with what actually happened.**
 
 ---
 
-### Agent: NEW PROJECT SETUP
+### Agent: NEW PROJECT SETUP ✅ TESTED (both repos)
 **Purpose:** Take a local folder and get it on GitHub for the first time
-**Tokens:**
-1. INIT — make it a git repo
-2. STAGE — add all files
-3. COMMIT — "Initial commit"
-4. CREATE-REPO — make the repo on GitHub
-5. PUSH — send it up to the filing cabinet
-6. NOTIFY — "New project created on GitHub"
+**Actual tokens used (crop-client-services):**
+1. GITIGNORE — created .gitignore (node_modules, .env, *.log)
+2. CONFIG — set user.email + user.name
+3. ADD-REMOTE — connected to existing GitHub repo
+4. STAGE — `git add .` (127 files)
+5. RENAME-BRANCH — master → main
+6. COMMIT — "Initial commit - CropClient MCP services alpha"
+7. FETCH — checked what was on remote
+8. ARCHIVE — saved old main as archive/v0
+9. FORCE-PUSH — pushed real alpha to main
+
+**Actual tokens used (CropClient-Claude-Desktop):**
+1. GITIGNORE — created .gitignore
+2. INIT — `git init`
+3. CONFIG — set user.email + user.name
+4. RENAME-BRANCH — master → main
+5. STAGE — `git add .` (93 files)
+6. COMMIT — "Initial commit - CropClient Claude Desktop workspace"
+7. CREATE-REPO — `gh repo create` (repo didn't exist yet)
+8. ADD-REMOTE — connected to new GitHub repo
+9. PUSH — `git push -u origin main`
+
+**Lesson:** Two variations of same agent — one with existing repo (needs ARCHIVE), one creating new repo. Agent needs to handle both.
 
 **Butler card:** ⚡ New Project
 
@@ -226,9 +314,19 @@ Each agent is a sequence of tokens. Butler shows these as skill cards.
 
 ---
 
+## MACHINE SETUP (One-time per location)
+
+Before any agent can run on a new machine, these tokens run once:
+1. Install git
+2. Install `gh` CLI (`winget install --id GitHub.cli`)
+3. GH-AUTH — `gh auth login --web -p https` (browser device code)
+4. CONFIG — `git config user.email` + `git config user.name`
+
+---
+
 ## BRANCH STRATEGY (Simple)
 
-We don't need complicated. Three branches:
+Three branches:
 
 | Branch | Purpose | Who uses it |
 |--------|---------|-------------|
@@ -238,22 +336,6 @@ We don't need complicated. Three branches:
 
 Flow: **dev** → alpha → main
 Each promotion is an agent run.
-
----
-
-## HOW IT MAPS TO BUTLER
-
-| Butler Skill Card | Agent | When you use it |
-|-------------------|-------|-----------------|
-| ⚡ New Project | NEW PROJECT SETUP | Once per project |
-| 💾 Save Work | SAVE WORK | Daily — check in your code |
-| ⬇️ Get Latest | GET LATEST | Start of day — get fresh code |
-| 📦 Fresh Install | FRESH INSTALL | New machine or server setup |
-| 🚀 Alpha Release | ALPHA RELEASE | Dev done, ready for testing |
-| 🖥️ Server Pull | SERVER PULL | Install alpha on server |
-| 🏁 Go Live | PRODUCTION PUSH | Testing passed, go to prod |
-| 🔍 Sync Check | SYNC CHECK | Anytime — am I up to date? |
-| 🤝 Partner Notify | PARTNER NOTIFY | Release ready for partners |
 
 ---
 
@@ -271,10 +353,22 @@ Status comes back to Butler's status bar.
 
 ---
 
-## NEXT STEP
+## REAL EXECUTION LOG
 
-Turn these agents into Butler skill cards with a test bed.
-Each card click shows its tokens and lets you run/test them.
-This becomes the working prototype.
+### Feb 16, 2026 — First Real GitHub Push
 
-Steve decides what's right, what's wrong, what's missing.
+**crop-client-services:**
+- Local: C:\AICode\crop-client-services
+- Remote: https://github.com/sspappasjr/Crop-Client-Services
+- Status: 127 files, main branch, archive/v0 preserves old placeholder
+- Agent used: NEW PROJECT SETUP (with ARCHIVE variant)
+
+**CropClient-Claude-Desktop:**
+- Local: C:\AICode\CropClient-Claude-Desktop
+- Remote: https://github.com/sspappasjr/CropClient-Claude-Desktop
+- Status: 93 files, main branch, fresh repo
+- Agent used: NEW PROJECT SETUP (with CREATE-REPO variant)
+
+**Tools installed:**
+- gh CLI v2.86.0 (via winget)
+- Authenticated as sspappasjr
