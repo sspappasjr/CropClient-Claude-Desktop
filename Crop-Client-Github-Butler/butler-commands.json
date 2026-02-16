@@ -1,0 +1,17 @@
+{
+  "command": null,
+  "agent": null,
+  "tokens": [],
+  "params": {
+    "repo": null,
+    "repoUrl": null,
+    "localPath": null,
+    "branch": "main",
+    "commitMessage": null,
+    "location": null
+  },
+  "status": "idle",
+  "result": null,
+  "timestamp": null,
+  "log": []
+}
