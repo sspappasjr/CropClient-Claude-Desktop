@@ -1,0 +1,1095 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CropClient Live Chat</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        html, body {
+            height: 100vh;
+            overflow: hidden;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+        }
+        
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            gap: 20px;
+            height: 100vh;
+            padding: 20px;
+        }
+        
+        .section {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 20px;
+            overflow-y: auto;
+            position: relative;
+        }
+        
+        .section-s1 {
+            grid-row: 1;
+            grid-column: 1;
+            border-top: 4px solid #4CAF50;
+        }
+        
+        .section-s2 {
+            grid-row: 1;
+            grid-column: 2;
+            border-top: 4px solid #9c27b0;
+        }
+        
+        .section-s3 {
+            grid-row: 2;
+            grid-column: 1;
+            border-top: 4px solid #2196F3;
+        }
+        
+        .section-s4 {
+            grid-row: 2;
+            grid-column: 2;
+            border-top: 4px solid #ff9800;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- S1: Top-Left Section -->
+        <div class="section section-s1">
+            <!-- @@@@@@ INJECT: S1 @@@@@@ -->
+
+
+  //Section 1  Injection 
+  <div class="s1-irrigation-functions">
+    <h3 style="color: #2a5298; margin-bottom: 15px;">🌾 Irrigation Functions</h3>
+    
+    <div class="function-buttons">
+         <button 
+            class="irrigation-btn"
+            onclick="loadData()">
+            📊Load  Irrigations Data in Grid 
+        </button>
+        <button 
+            class="irrigation-btn"
+            onclick="readMeterForRanch1Planting1A()">
+            📊 Read Meter for Ranch 1 Planting 1A
+        </button>
+        
+        <button 
+            class="irrigation-btn blue"
+            onclick="createNextIrrigationForRanch1Planting1A()">
+            ➕ Create Next Irrigation for Ranch 1 Planting 1A
+        </button>
+    </div>
+ 
+<!-- @@@@@@ END INJECT: S1 @@@@@@ -->
+        </div>
+        
+        <!-- S2: Top-Right Section -->
+        <div class="section section-s2">
+            <!-- @@@@@@ INJECT: S2 @@@@@@ -->
+<!-- S2: Command Output Section -->
+<!-- This section displays messages and command results -->
+
+<div style="padding: 15px;">
+    <h3 style="color: #9c27b0; margin-bottom: 15px;">💬 Command Output</h3>
+    
+    <!-- Output area -->
+    <div id="s2-output" style="
+        background: #f5f5f5; 
+        border: 1px solid #ddd; 
+        border-radius: 4px; 
+        padding: 10px; 
+        height: 150px; 
+        overflow-y: auto; 
+        font-family: monospace; 
+        font-size: 12px;
+        margin-bottom: 15px;">
+        <div style="color: #666;">System ready...</div>
+    </div>
+    
+    <!-- Input area -->
+    <div style="display: flex; gap: 10px;">
+        <input 
+            type="text" 
+            id="s2-input" 
+            placeholder="Enter command (e.g., 'filter ranch 2')"
+            onkeypress="if(event.key === 'Enter') executeCommand()"
+            style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+        <button 
+            onclick="executeCommand()"
+            style="padding: 8px 20px; background: #9c27b0; color: white; border: none; border-radius: 4px; cursor: pointer;">
+            Send
+        </button>
+    </div>
+    
+    <!-- Quick commands -->
+    <div style="margin-top: 10px;">
+        <button onclick="executeCommand('show all')" style="margin: 2px; padding: 4px 8px; background: #e1bee7; border: none; border-radius: 3px; cursor: pointer; font-size: 11px;">Show All</button>
+        <button onclick="executeCommand('ranch 1 only')" style="margin: 2px; padding: 4px 8px; background: #e1bee7; border: none; border-radius: 3px; cursor: pointer; font-size: 11px;">Ranch 1 Only</button>
+        <button onclick="executeCommand('ranch 2 only')" style="margin: 2px; padding: 4px 8px; background: #e1bee7; border: none; border-radius: 3px; cursor: pointer; font-size: 11px;">Ranch 2 Only</button>
+    </div>
+</div>
+
+<script>
+// S2 Command execution
+function executeCommand(cmd) {
+    const input = document.getElementById('s2-input');
+    const output = document.getElementById('s2-output');
+    const timestamp = new Date().toLocaleTimeString();
+    
+    // Get command from parameter or input field
+    const command = cmd || input.value.trim();
+    if (!command) return;
+    
+    // Add command to output
+    output.innerHTML += 
+        '<div style="color: #9c27b0; font-weight: bold; margin-top: 10px;">' +
+        '[' + timestamp + '] > ' + command +
+        '</div>';
+    
+    // Process command
+    const lowerCmd = command.toLowerCase();
+    let result = '';
+    
+    if (lowerCmd.includes('ranch 1') || lowerCmd.includes('filter ranch 1')) {
+        // Filter to Ranch 1
+        const ranch1Data = window.irrigationFileStored.filter(r => 
+            r.Ranch && r.Ranch.includes('Ranch 1')
+        );
+        window.irrigationLocalStorage = ranch1Data;
+        window.irrigationData = window.irrigationLocalStorage;
+        if (typeof sortAndRefreshGrid === 'function') {
+            sortAndRefreshGrid();
+        }
+        result = 'Filtered to Ranch 1: ' + ranch1Data.length + ' records';
+        
+    } else if (lowerCmd.includes('ranch 2') || lowerCmd.includes('filter ranch 2')) {
+        // Filter to Ranch 2
+        const ranch2Data = window.irrigationFileStored.filter(r => 
+            r.Ranch && r.Ranch.includes('Ranch 2')
+        );
+        window.irrigationLocalStorage = ranch2Data;
+        window.irrigationData = window.irrigationLocalStorage;
+        if (typeof sortAndRefreshGrid === 'function') {
+            sortAndRefreshGrid();
+        }
+        result = 'Filtered to Ranch 2: ' + ranch2Data.length + ' records';
+        
+    } else if (lowerCmd.includes('show all') || lowerCmd === 'reset' || lowerCmd === 'all') {
+        // Show all records
+        window.irrigationLocalStorage = JSON.parse(JSON.stringify(window.irrigationFileStored));
+        window.irrigationData = window.irrigationLocalStorage;
+        if (typeof sortAndRefreshGrid === 'function') {
+            sortAndRefreshGrid();
+        }
+        result = 'Showing all ' + window.irrigationLocalStorage.length + ' records';
+        
+    } else if (lowerCmd.includes('count')) {
+        // Count records
+        result = 'Total records: ' + window.irrigationLocalStorage.length;
+        
+    } else if (lowerCmd.includes('help')) {
+        // Show help
+        result = 'Commands: ranch 1 only, ranch 2 only, show all, count, help';
+        
+    } else {
+        result = 'Unknown command: "' + command + '". Try: help';
+    }
+    
+    // Add result to output
+    output.innerHTML += 
+        '<div style="color: #666; margin-left: 20px;">' +
+        '→ ' + result +
+        '</div>';
+    
+    // Clear input
+    if (!cmd) input.value = '';
+    
+    // Scroll to bottom
+    output.scrollTop = output.scrollHeight;
+}
+
+// Initialize S2 on load
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function() {
+        const s2Output = document.getElementById('s2-output');
+        if (s2Output) {
+            const timestamp = new Date().toLocaleTimeString();
+            s2Output.innerHTML = 
+                '<div style="color: #9c27b0;">[' + timestamp + '] S2 Command System Ready</div>' +
+                '<div style="color: #666;">Type "help" for available commands</div>';
+        }
+    });
+} else {
+    // Already loaded
+    const s2Output = document.getElementById('s2-output');
+    if (s2Output) {
+        const timestamp = new Date().toLocaleTimeString();
+        s2Output.innerHTML = 
+            '<div style="color: #9c27b0;">[' + timestamp + '] S2 Command System Ready</div>' +
+            '<div style="color: #666;">Type "help" for available commands</div>';
+    }
+}
+</script>
+
+<!-- @@@@@@ END INJECT: S2 @@@@@@ -->
+        </div>
+        
+        <!-- S3: Bottom-Left Section -->
+        <div class="section section-s3">
+            <!-- @@@@@@ INJECT: S3 @@@@@@ -->
+<!-- S3: Data Grid Section -->
+<!-- This section displays irrigation records in a sortable table -->
+
+<div class="s3-data-grid">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+        <h3 style="color: #2a5298; margin: 0;">📊 Irrigation Data Grid</h3>
+        <button 
+            onclick="resetIrrigationData()"
+            style="background: #ff9800; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 600;">
+            🔄 Reset Data
+        </button>
+    </div>
+    
+    <div id="recordCount" style="margin-bottom: 10px; color: #666; font-size: 14px;">
+        Loading records...
+    </div>
+    
+    <div style="overflow-x: auto; max-height: 300px; overflow-y: auto;">
+        <table id="irrigationGrid" style="width: 100%; border-collapse: collapse; font-size: 12px;">
+            <thead>
+                <tr style="background: #2a5298; color: white; position: sticky; top: 0;">
+                    <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Ranch</th>
+                    <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Planting</th>
+                    <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Date</th>
+                    <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Rec Hrs</th>
+                    <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Mgr Hrs</th>
+                    <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Interval</th>
+                    <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Applied</th>
+                </tr>
+            </thead>
+            <tbody id="gridBody">
+                <!-- Data rows will be inserted here -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<style>
+/* Grid selection styles */
+#gridBody tr:hover {
+    background: #f5f5f5 !important;
+    cursor: pointer;
+}
+
+#gridBody tr.selected {
+    background: #E3F2FD !important;
+    border-left: 4px solid #2196F3;
+}
+</style>
+
+<script>
+// S3 Grid Functions
+function loadIrrigationGrid() {
+    const tbody = document.getElementById('gridBody');
+    const count = document.getElementById('recordCount');
+    
+    if (!tbody) return;
+    
+    tbody.innerHTML = '';
+    const data = window.irrigationLocalStorage || [];
+    
+    data.forEach((record, index) => {
+        const row = document.createElement('tr');
+        row.dataset.recordId = 'record_' + index;
+        row.onclick = function() { selectGridRow('record_' + index); };
+        
+        row.innerHTML = 
+            '<td style="padding: 6px 8px; border-bottom: 1px solid #ddd;">' + (record.Ranch || '') + '</td>' +
+            '<td style="padding: 6px 8px; border-bottom: 1px solid #ddd;">' + (record.Planting || '') + '</td>' +
+            '<td style="padding: 6px 8px; border-bottom: 1px solid #ddd;">' + (record.Eventdate || '') + '</td>' +
+            '<td style="padding: 6px 8px; border-bottom: 1px solid #ddd; text-align: center;">' + (record.RecommendedHours || '0') + '</td>' +
+            '<td style="padding: 6px 8px; border-bottom: 1px solid #ddd; text-align: center;">' + (record.ManagerAmount || '0') + '</td>' +
+            '<td style="padding: 6px 8px; border-bottom: 1px solid #ddd; text-align: center;">' + (parseFloat(record.RecommendedInterval) || 0) + ' days</td>' +
+            '<td style="padding: 6px 8px; border-bottom: 1px solid #ddd; text-align: center; font-weight: ' + 
+            (record.WaterApplied > 0 ? 'bold' : 'normal') + '; color: ' + 
+            (record.WaterApplied > 0 ? '#4CAF50' : '#999') + ';">' + (record.WaterApplied || '0') + '</td>';
+        
+        tbody.appendChild(row);
+    });
+    
+    if (count) {
+        count.textContent = 'Showing ' + data.length + ' irrigation records';
+    }
+}
+
+function selectGridRow(recordId) {
+    // Remove previous selection styling
+    const allRows = document.querySelectorAll('#gridBody tr');
+    allRows.forEach(row => {
+        row.classList.remove('selected');
+        row.style.background = '';
+        row.style.borderLeft = '';
+    });
+    
+    // Add selection to clicked row
+    const selectedRow = document.querySelector('[data-record-id="' + recordId + '"]');
+    if (selectedRow) {
+        selectedRow.classList.add('selected');
+        selectedRow.style.background = '#E3F2FD';
+        selectedRow.style.borderLeft = '4px solid #2196F3';
+        
+        // Update global selected record
+        const index = parseInt(recordId.replace('record_', ''));
+        window.selectedRecord = window.irrigationLocalStorage[index];
+        
+        console.log('Selected:', window.selectedRecord);
+    }
+}
+
+function resetIrrigationData() {
+    // Reset to original data
+    window.irrigationLocalStorage = JSON.parse(JSON.stringify(window.irrigationFileStored));
+    window.irrigationData = window.irrigationLocalStorage;
+    
+    // Sort after reset
+    sortAndRefreshGrid();
+    
+    const s1Output = document.getElementById('s1-output');
+    if (s1Output) {
+        const timestamp = new Date().toLocaleTimeString();
+        s1Output.innerHTML = 
+            '<div style="color: #ff9800; font-weight: bold;">[' + timestamp + '] DATA RESET</div>' +
+            '<div style="margin-left: 20px;">Grid reset to original ' + window.irrigationFileStored.length + ' records</div>' +
+            '<div style="margin-left: 20px;">Sorted by Ranch → Planting → Date</div>';
+    }
+    
+    // Auto-select first Ranch 1 Planting 1A record after reset
+    setTimeout(() => {
+        const data = window.irrigationLocalStorage;
+        const ranch1Index = data.findIndex(r => 
+            r.Ranch && r.Ranch.includes('Ranch 1') && 
+            r.Planting && r.Planting.includes('1A')
+        );
+        
+        if (ranch1Index >= 0) {
+            selectGridRow('record_' + ranch1Index);
+        }
+    }, 100);
+}
+
+function sortAndRefreshGrid() {
+    // Sort by Ranch → Planting → Date (oldest first)
+    window.irrigationLocalStorage.sort((a, b) => {
+        // First by Ranch
+        if (a.Ranch < b.Ranch) return -1;
+        if (a.Ranch > b.Ranch) return 1;
+        
+        // Then by Planting  
+        if (a.Planting < b.Planting) return -1;
+        if (a.Planting > b.Planting) return 1;
+        
+        // Finally by Date (ascending - oldest first)
+        const dateA = new Date(a.Eventdate);
+        const dateB = new Date(b.Eventdate);
+        return dateA - dateB;
+    });
+    
+    // Refresh the grid with sorted data
+    loadIrrigationGrid();
+}
+
+window.refreshDataGrid = function() {
+    loadIrrigationGrid();
+};
+
+// Initialize on load
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function() {
+        sortAndRefreshGrid();
+        
+        setTimeout(() => {
+            const data = window.irrigationLocalStorage;
+            const ranch1Index = data.findIndex(r => 
+                r.Ranch && r.Ranch.includes('Ranch 1') && 
+                r.Planting && r.Planting.includes('1A')
+            );
+            
+            if (ranch1Index >= 0) {
+                selectGridRow('record_' + ranch1Index);
+            }
+        }, 200);
+    });
+} else {
+    // Already loaded
+    sortAndRefreshGrid();
+    
+    setTimeout(() => {
+        const data = window.irrigationLocalStorage;
+        const ranch1Index = data.findIndex(r => 
+            r.Ranch && r.Ranch.includes('Ranch 1') && 
+            r.Planting && r.Planting.includes('1A')
+        );
+        
+        if (ranch1Index >= 0) {
+            selectGridRow('record_' + ranch1Index);
+        }
+    }, 200);
+}
+</script>
+
+<!-- @@@@@@ END INJECT: S3 @@@@@@ -->
+        </div>
+        
+        <!-- S4: Bottom-Right Section -->
+        <div class="section section-s4">
+            <!-- @@@@@@ INJECT: S4 @@@@@@ -->
+<!-- S4: Form Editor Section -->
+<!-- This section will provide form editing for selected records -->
+
+<div class="placeholder">
+    <h3>Section S4 - Form Editor</h3>
+    <p>Form editor coming soon</p>
+    <p style="color: #999; font-size: 14px; margin-top: 20px;">
+        Will display selected record for editing
+    </p>
+</div>
+
+<style>
+.placeholder {
+    color: #999;
+    text-align: center;
+    padding: 40px;
+}
+</style>
+
+<script>
+// S4 Form Editor functions will go here
+// Future: Display window.selectedRecord in editable form
+</script>
+
+<!-- @@@@@@ END INJECT: S4 @@@@@@ -->
+        </div>
+    </div>
+</body>
+
+<!-- @@@@@@ INJECT: SCRIPT @@@@@@ -->
+ <script>
+        // ========================================
+        // BEGIN PACKAGE - MCP READY IRRIGATION TOOLS
+        // ========================================
+        // 
+        // HIGH-LEVEL CONTENTS:
+        // 
+        // DATA CONTAINERS:
+        //   - IRRIGATION_DATA: filestorage (12 original records, read-only)
+        //   - displayRecords: working memory (gets modified during session)
+        //   - selectedRecord: currently selected record for operations
+        //
+        // UTILITY FUNCTIONS:
+        //   - parseEventDate(dateStr): Converts "M/D/YY" string → Date object
+        //   - formatDate(date): Converts Date object → "M/D/YY" string
+        //
+        // CORE TOOL FUNCTIONS:
+        //   - testCreateNext(): Creates next irrigation based on selected record
+        //     * Finds last record for same ranch/planting
+        //     * Calculates next date using interval
+        //     * Creates new record with sequential ID (13, 14, 15...)
+        //     * Sorts by ranch → planting → date
+        //     * Re-selects new record after sort
+        //
+        //   - testReadMeter(): Prepares meter reading for selected field
+        //     * Uses selected record to identify ranch/planting
+        //     * Finds LAST (most recent) record for that field
+        //     * Selects it in grid
+        //     * Clears Water Applied field for meter entry
+        //
+        // SUPPORTING FUNCTIONS:
+        //   - loadData(): Copies IRRIGATION_DATA → displayRecords with transform
+        //   - renderTable(): Displays displayRecords in grid
+        //   - selectRecord(id): Highlights row and populates form
+        //   - handleReset(): Clears working memory and reloads from filestorage
+        //
+        // DATA FLOW:
+        //   STARTUP: IRRIGATION_DATA → displayRecords (12 records with IDs 1-12)
+        //   RESET: Clear displayRecords → reload from IRRIGATION_DATA
+        //   CREATE: Add new record (ID 13+) → sort → re-render
+        //   METER: Find last record → select → populate form
+        //
+        // ID SYSTEM:
+        //   Original records: Simple integers 1-12
+        //   New records: Sequential integers 13, 14, 15...
+        //   IDs are stable across sorts and operations
+        //
+        // ========================================
+
+        // ========================================
+        // EMBEDDED IRRIGATION DATA (filestorage)
+        // ========================================
+        const IRRIGATION_DATA = [
+  {
+    "Ranch": "MobileFrame Ranch 1",
+    "Planting": "Planting 1A",
+    "Eventdate": "9/15/25",
+    "IrrigationMethod": "Germination Sprinkler",
+    "WaterApplied": "0",
+    "ManagerAmount": "0",
+    "RecommendedInches": "0",
+    "RecommendedHours": "0",
+    "RecommendedInterval": "0",
+    "LastUpdatedDate": "9/16/25 22:25",
+    "UpdatedBy": "Robert Rossilli"
+  },
+  {
+    "Ranch": "MobileFrame Ranch 1",
+    "Planting": "Planting 1A",
+    "Eventdate": "9/20/25",
+    "IrrigationMethod": "Germination Sprinkler",
+    "WaterApplied": "2",
+    "ManagerAmount": "2",
+    "RecommendedInches": "0.5",
+    "RecommendedHours": "1.7",
+    "RecommendedInterval": "2.6",
+    "LastUpdatedDate": "9/16/25 22:36",
+    "UpdatedBy": "Robert Rossilli"
+  },
+  {
+    "Ranch": "MobileFrame Ranch 1",
+    "Planting": "Planting 1A",
+    "Eventdate": "9/23/25",
+    "IrrigationMethod": "Germination Sprinkler",
+    "WaterApplied": "0",
+    "ManagerAmount": "0",
+    "RecommendedInches": "0.6",
+    "RecommendedHours": "2.1",
+    "RecommendedInterval": "1.2",
+    "LastUpdatedDate": "9/16/25 22:37",
+    "UpdatedBy": "Robert Rossilli"
+  },
+  {
+    "Ranch": "MobileFrame Ranch 1",
+    "Planting": "Planting 1B",
+    "Eventdate": "9/15/25",
+    "IrrigationMethod": "Sprinkler",
+    "WaterApplied": "0.56",
+    "ManagerAmount": "0.28",
+    "RecommendedInches": "0",
+    "RecommendedHours": "0",
+    "RecommendedInterval": "0",
+    "LastUpdatedDate": "9/16/25 22:30",
+    "UpdatedBy": "Robert Rossilli"
+  },
+  {
+    "Ranch": "MobileFrame Ranch 1",
+    "Planting": "Planting 1B",
+    "Eventdate": "9/18/25",
+    "IrrigationMethod": "Sprinkler",
+    "WaterApplied": "0",
+    "ManagerAmount": "0",
+    "RecommendedInches": "0.3",
+    "RecommendedHours": "0.9",
+    "RecommendedInterval": "3",
+    "LastUpdatedDate": "9/16/25 22:29",
+    "UpdatedBy": "Robert Rossilli"
+  },
+  {
+    "Ranch": "MobileFrame Ranch 1",
+    "Planting": "Planting 1B",
+    "Eventdate": "9/21/25",
+    "IrrigationMethod": "Sprinkler",
+    "WaterApplied": "0",
+    "ManagerAmount": "0",
+    "RecommendedInches": "0.2",
+    "RecommendedHours": "0.9",
+    "RecommendedInterval": "3",
+    "LastUpdatedDate": "9/16/25 22:32",
+    "UpdatedBy": "Robert Rossilli"
+  },
+  {
+    "Ranch": "MobileFrame Ranch 2",
+    "Planting": "Planting 2A",
+    "Eventdate": "9/15/25",
+    "IrrigationMethod": "Sprinkler",
+    "WaterApplied": "0.54",
+    "ManagerAmount": "0",
+    "RecommendedInches": "0",
+    "RecommendedHours": "0",
+    "RecommendedInterval": "0",
+    "LastUpdatedDate": "9/16/25 23:50",
+    "UpdatedBy": "Robert Rossilli"
+  },
+  {
+    "Ranch": "MobileFrame Ranch 2",
+    "Planting": "Planting 2A",
+    "Eventdate": "9/18/25",
+    "IrrigationMethod": "Sprinkler",
+    "WaterApplied": "0",
+    "ManagerAmount": "0",
+    "RecommendedInches": "0.6",
+    "RecommendedHours": "2",
+    "RecommendedInterval": "1.1",
+    "LastUpdatedDate": "9/16/25 23:50",
+    "UpdatedBy": "Robert Rossilli"
+  },
+  {
+    "Ranch": "MobileFrame Ranch 2",
+    "Planting": "Planting 2A",
+    "Eventdate": "9/23/25",
+    "IrrigationMethod": "Sprinkler",
+    "WaterApplied": "0",
+    "ManagerAmount": "0",
+    "RecommendedInches": "0.6",
+    "RecommendedHours": "1.9",
+    "RecommendedInterval": "1.9",
+    "LastUpdatedDate": "9/16/25 23:44",
+    "UpdatedBy": "CropManage "
+  },
+  {
+    "Ranch": "MobileFrame Ranch 2",
+    "Planting": "Planting 2B",
+    "Eventdate": "9/15/25",
+    "IrrigationMethod": "Germination Sprinkler",
+    "WaterApplied": "0",
+    "ManagerAmount": "0",
+    "RecommendedInches": "0",
+    "RecommendedHours": "0",
+    "RecommendedInterval": "0",
+    "LastUpdatedDate": "9/16/25 23:46",
+    "UpdatedBy": "CropManage "
+  },
+  {
+    "Ranch": "MobileFrame Ranch 2",
+    "Planting": "Planting 2B",
+    "Eventdate": "9/18/25",
+    "IrrigationMethod": "Germination Sprinkler",
+    "WaterApplied": "0",
+    "ManagerAmount": "0",
+    "RecommendedInches": "0.7",
+    "RecommendedHours": "2.3",
+    "RecommendedInterval": "1.1",
+    "LastUpdatedDate": "9/16/25 23:51",
+    "UpdatedBy": "Robert Rossilli"
+  },
+  {
+    "Ranch": "MobileFrame Ranch 2",
+    "Planting": "Planting 2B",
+    "Eventdate": "9/23/25",
+    "IrrigationMethod": "Germination Sprinkler",
+    "WaterApplied": "0",
+    "ManagerAmount": "0",
+    "RecommendedInches": "0.7",
+    "RecommendedHours": "2.2",
+    "RecommendedInterval": "1.9",
+    "LastUpdatedDate": "9/16/25 23:51",
+    "UpdatedBy": "Robert Rossilli"
+  }
+];
+
+        // Working data array (localstorage)
+        let displayRecords = [];
+        let selectedRecord = null;
+
+        // ========================================
+        // DATE UTILITY FUNCTIONS
+        // ========================================
+
+        // Parse date in M/D/YY format to proper Date object
+        function parseEventDate(dateStr) {
+            const parts = dateStr.split('/');
+            const month = parseInt(parts[0]);
+            const day = parseInt(parts[1]);
+            const year = 2000 + parseInt(parts[2]);
+            return new Date(year, month - 1, day);
+        }
+
+        // Format Date object to M/D/YY
+        function formatDate(date) {
+            const year = String(date.getFullYear()).slice(-2);
+            const month = date.getMonth() + 1;
+            const day = date.getDate();
+            return `${month}/${day}/${year}`;
+        }
+
+        // ========================================
+        // DATA LOADING
+        // ========================================
+
+        function loadData() {
+            displayRecords = [];
+            
+            IRRIGATION_DATA.forEach((record, index) => {
+                const eventDate = parseEventDate(record.Eventdate);
+                
+                displayRecords.push({
+                    id: index + 1,  // Simple integers: 1, 2, 3...12
+                    ranch: record.Ranch,
+                    planting: record.Planting,
+                    hours: parseFloat(record.RecommendedHours) || 0,
+                    mgrHours: parseFloat(record.ManagerAmount) || 0,
+                    appliedHours: parseFloat(record.WaterApplied) || 0,
+                    interval: parseFloat(record.RecommendedInterval) || 0,
+                    scheduledDate: formatDate(eventDate),
+                    irrigationMethod: record.IrrigationMethod,
+                    recommendedInches: record.RecommendedInches,
+                    lastUpdatedDate: record.LastUpdatedDate,
+                    updatedBy: record.UpdatedBy,
+                    isOriginal: true,
+                    isNew: false,
+                    isUpdated: false
+                });
+            });
+            
+            renderTable();
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+            
+            displayRecords.forEach(record => {
+                const row = tbody.insertRow();
+                row.dataset.recordId = record.id;
+                row.onclick = () => selectRecord(record.id);
+                
+                row.insertCell(0).textContent = record.ranch;
+                row.insertCell(1).textContent = record.planting;
+                row.insertCell(2).textContent = record.scheduledDate;
+                row.insertCell(3).textContent = record.hours;
+                row.insertCell(4).textContent = record.mgrHours;
+                row.insertCell(5).textContent = record.interval + ' days';
+                row.insertCell(6).textContent = record.appliedHours;
+            });
+            
+            document.getElementById('recordCount').textContent = 
+                `${displayRecords.length} Records`;
+                
+            // Auto-select first record
+            if (displayRecords.length > 0) {
+                selectRecord(displayRecords[0].id);
+            }
+        }
+
+        function selectRecord(recordId) {
+            selectedRecord = displayRecords.find(r => r.id === recordId);
+            
+            if (!selectedRecord) return;
+            
+            // Update form title with Ranch/Planting
+            document.getElementById('formTitle').textContent = 
+                `Ranch ${selectedRecord.ranch} - Planting ${selectedRecord.planting}`;
+            
+            // Highlight row
+            document.querySelectorAll('#tableBody tr').forEach(row => {
+                if (parseInt(row.dataset.recordId) === recordId) {
+                    row.classList.add('selected');
+                } else {
+                    row.classList.remove('selected');
+                }
+            });
+            
+            // Populate form
+            document.getElementById('formDate').value = selectedRecord.scheduledDate;
+            document.getElementById('formInterval').value = selectedRecord.interval + ' days';
+            document.getElementById('formRecommendation').value = selectedRecord.hours;
+            document.getElementById('formManagerHours').value = selectedRecord.mgrHours;
+            document.getElementById('formWaterApplied').value = selectedRecord.appliedHours;
+        }
+
+        function handleReset() {
+            displayRecords = [];
+            selectedRecord = null;
+            loadData();
+            showResult('Data reset to original 12 records');
+        }
+
+        // ========================================
+        // CREATE NEXT IRRIGATION (CORE TOOL)
+        // ========================================
+
+        function testCreateNext() {
+            if (!selectedRecord) {
+                showResult('ERROR: No record selected. Click a row first.');
+                return;
+            }
+            
+            // Find all records for this ranch/planting
+            const sameFieldRecords = displayRecords.filter(r => 
+                r.ranch === selectedRecord.ranch && 
+                r.planting === selectedRecord.planting
+            );
+            
+            // Sort by date to get most recent
+            sameFieldRecords.sort((a, b) => {
+                const dateA = parseEventDate(a.scheduledDate);
+                const dateB = parseEventDate(b.scheduledDate);
+                return dateA - dateB;
+            });
+            
+            const lastRecord = sameFieldRecords[sameFieldRecords.length - 1];
+            
+            // Calculate next date
+            const currentDate = parseEventDate(lastRecord.scheduledDate);
+            const nextDate = new Date(currentDate);
+            const intervalDays = parseFloat(lastRecord.interval) || 1;
+            const roundedInterval = Math.round(intervalDays);
+            
+            nextDate.setDate(nextDate.getDate() + roundedInterval);
+            const nextDateStr = formatDate(nextDate);
+            
+            // Calculate new hours
+            const tinyAdjust = (Math.random() * 0.2 + 0.1);
+            const newRecHours = Math.max(0.1, parseFloat((lastRecord.hours + tinyAdjust).toFixed(1)));
+            const newMgrHours = parseFloat((lastRecord.mgrHours + 0.1).toFixed(1));
+            
+            // Create new record with next integer ID
+            const maxId = Math.max(...displayRecords.map(r => r.id));
+            
+            const newRecord = {
+                id: maxId + 1,  // Simple integer: 13, 14, 15...
+                ranch: lastRecord.ranch,
+                planting: lastRecord.planting,
+                hours: newRecHours,
+                mgrHours: newMgrHours,
+                appliedHours: 0,
+                interval: lastRecord.interval,
+                scheduledDate: nextDateStr,
+                irrigationMethod: lastRecord.irrigationMethod,
+                recommendedInches: lastRecord.recommendedInches,
+                lastUpdatedDate: new Date().toLocaleString(),
+                updatedBy: "Test System",
+                isNew: true,
+                isOriginal: false,
+                isUpdated: false
+            };
+            
+            displayRecords.push(newRecord);
+            
+            // Save the new record ID before sorting
+            const newRecordId = newRecord.id;
+            
+            // Sort by ranch → planting → date (ascending)
+            displayRecords.sort((a, b) => {
+                if (a.ranch < b.ranch) return -1;
+                if (a.ranch > b.ranch) return 1;
+                if (a.planting < b.planting) return -1;
+                if (a.planting > b.planting) return 1;
+                const dateA = parseEventDate(a.scheduledDate);
+                const dateB = parseEventDate(b.scheduledDate);
+                return dateA - dateB;
+            });
+            
+            renderTable();
+            selectRecord(newRecordId);
+            
+            showResult(`✅ Created irrigation #${newRecordId}
+Ranch: ${newRecord.ranch}
+Planting: ${newRecord.planting}
+Date: ${lastRecord.scheduledDate} + ${roundedInterval} days = ${nextDateStr}
+Hours: ${newRecHours}
+Manager Hours: ${newMgrHours}`);
+        }
+
+        // ========================================
+        // READ METER (CORE TOOL)
+        // ========================================
+
+        function testReadMeter() {
+            if (!selectedRecord) {
+                showResult('ERROR: No record selected. Click a row first.');
+                return;
+            }
+            
+            // Use selected record's ranch and planting
+            const targetRanch = selectedRecord.ranch;
+            const targetPlanting = selectedRecord.planting;
+            
+            // Find all records for this ranch/planting
+            const matchingRecords = displayRecords.filter(r => 
+                r.ranch === targetRanch && 
+                r.planting === targetPlanting
+            );
+            
+            if (matchingRecords.length === 0) {
+                showResult(`❌ No records found for ${targetRanch} ${targetPlanting}`);
+                return;
+            }
+            
+            // Sort by date to get most recent (last)
+            matchingRecords.sort((a, b) => {
+                const dateA = parseEventDate(a.scheduledDate);
+                const dateB = parseEventDate(b.scheduledDate);
+                return dateA - dateB;
+            });
+            
+            const lastRecord = matchingRecords[matchingRecords.length - 1];
+            
+            // Select this record in the grid
+            selectRecord(lastRecord.id);
+            
+            // Clear Water Applied field for meter reading entry
+            document.getElementById('formWaterApplied').value = '';
+            document.getElementById('formWaterApplied').focus();
+            Updateid = lastRecord.id 
+            
+            showResult(`✅ Ready for meter reading
+Ranch: ${lastRecord.ranch}
+Planting: ${lastRecord.planting}
+RecordID: ${lastRecord.id}
+UpdateID: ${Updateid}
+Date: ${lastRecord.scheduledDate}
+Current Water Applied: ${lastRecord.appliedHours}
+
+→ Enter new meter reading in Water Applied field`);
+        }
+
+        // ========================================
+        // NATURAL LANGUAGE PROMPT HANDLER
+        // ========================================
+        
+        function toggleInfo() {
+            const infoPanel = document.getElementById('infoPanel');
+            infoPanel.style.display = infoPanel.style.display === 'none' ? 'block' : 'none';
+        }
+        
+        function fillPrompt(text) {
+            document.getElementById('promptInput').value = text;
+            document.getElementById('promptInput').focus();
+        }
+        
+        function sendPrompt() {
+            const promptInput = document.getElementById('promptInput');
+            const prompt = promptInput.value.trim();
+            const lowerPrompt = prompt.toLowerCase();
+            
+            if (!prompt) {
+                showResult('ERROR: Please enter a prompt');
+                return;
+            }
+            
+            // Intent classifier - recognize natural language
+            
+            // 4. CREATE + NEXT - Irrigation operation
+            if ((lowerPrompt.includes('create') && lowerPrompt.includes('next')) ||
+                lowerPrompt.includes('create_next')) {
+                
+                testCreateNext();
+                
+                const result = {
+                    success: true,
+                    tool: "create_next",
+                    prompt: prompt
+                };
+                
+                return result;
+                
+            } else if ((lowerPrompt.includes('read') && lowerPrompt.includes('meter')) ||
+                lowerPrompt.includes('read_meter')) {
+                
+                testReadMeter();
+                
+                const result = {
+                    success: true,
+                    tool: "read_meter",
+                    prompt: prompt
+                };
+                
+                return result;
+                
+            } else if ((lowerPrompt.includes('update') && lowerPrompt.includes('selected')) ||
+                lowerPrompt.includes('update_irrigation_record')) {
+                
+                testUpdateSelected();
+                
+                const result = {
+                    success: true,
+                    tool: "update_irrigation_record",
+                    prompt: prompt
+                };
+                
+                return result;
+                
+            } else {
+                showResult('❌ Unrecognized prompt\n\nTry:\n- "create next"\n- "read meter"');
+            }
+        }
+        
+        // Allow Enter key to send prompt
+        document.addEventListener('DOMContentLoaded', function() {
+            const promptInput = document.getElementById('promptInput');
+            if (promptInput) {
+                promptInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        sendPrompt();
+                    }
+                });
+            }
+        });
+
+        // ========================================
+        // UPDATE SELECTED RECORD (CORE TOOL)
+        // ========================================
+
+        function testUpdateSelected() {
+            if (!selectedRecord) {
+                showResult('ERROR: No record selected. Click a row first.');
+                return;
+            }
+            
+            // Get values from form
+            const mgrHours = parseFloat(document.getElementById('formManagerHours').value);
+            const waterApplied = parseFloat(document.getElementById('formWaterApplied').value);
+            
+            // Update the selected record
+            selectedRecord.mgrHours = isNaN(mgrHours) ? selectedRecord.mgrHours : mgrHours;
+            selectedRecord.appliedHours = isNaN(waterApplied) ? selectedRecord.appliedHours : waterApplied;
+            selectedRecord.lastUpdatedDate = new Date().toLocaleString();
+            selectedRecord.updatedBy = "Package System";
+            selectedRecord.isUpdated = true;
+                            Updateid = selectedRecord.id
+            // Find and update in displayRecords
+            const index = displayRecords.findIndex(r => r.id === selectedRecord.id);
+            if (index !== -1) {
+                displayRecords[index] = selectedRecord;
+            }
+            
+            renderTable();
+            selectRecord(Updateid);
+            
+            showResult(`✅ Updated irrigation #${selectedRecord.id}
+                          Ranch: ${selectedRecord.ranch}
+                          Planting: ${selectedRecord.planting}
+                          UpdateID: ${Updateid} 
+                          Manager Hours: ${selectedRecord.mgrHours}
+                          Water Applied: ${selectedRecord.appliedHours}`);
+        }
+
+        // ========================================
+        // END PACKAGE - MCP READY IRRIGATION TOOLS
+        // ========================================
+
+        // Helper function to show results
+        function showResult(message) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.textContent = message;
+            resultDiv.style.display = 'block';
+        }
+
+        // Initialize on load
+        window.onload = function() {
+            loadData();
+            showResult('Package loaded. 12 original records ready.\nSelect a record and test the tools.');
+        };
+    </script>
+<!-- @@@@@@ END INJECT: SCRIPT @@@@@@ -->
+
+</html>

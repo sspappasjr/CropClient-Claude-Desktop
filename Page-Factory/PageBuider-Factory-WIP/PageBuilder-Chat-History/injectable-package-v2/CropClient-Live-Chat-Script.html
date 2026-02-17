@@ -1,0 +1,606 @@
+ <script>
+        // ========================================
+        // BEGIN PACKAGE - MCP READY IRRIGATION TOOLS
+        // ========================================
+        // 
+        // HIGH-LEVEL CONTENTS:
+        // 
+        // DATA CONTAINERS:
+        //   - IRRIGATION_DATA: filestorage (12 original records, read-only)
+        //   - displayRecords: working memory (gets modified during session)
+        //   - selectedRecord: currently selected record for operations
+        //
+        // UTILITY FUNCTIONS:
+        //   - parseEventDate(dateStr): Converts "M/D/YY" string → Date object
+        //   - formatDate(date): Converts Date object → "M/D/YY" string
+        //
+        // CORE TOOL FUNCTIONS:
+        //   - testCreateNext(): Creates next irrigation based on selected record
+        //     * Finds last record for same ranch/planting
+        //     * Calculates next date using interval
+        //     * Creates new record with sequential ID (13, 14, 15...)
+        //     * Sorts by ranch → planting → date
+        //     * Re-selects new record after sort
+        //
+        //   - testReadMeter(): Prepares meter reading for selected field
+        //     * Uses selected record to identify ranch/planting
+        //     * Finds LAST (most recent) record for that field
+        //     * Selects it in grid
+        //     * Clears Water Applied field for meter entry
+        //
+        // SUPPORTING FUNCTIONS:
+        //   - loadData(): Copies IRRIGATION_DATA → displayRecords with transform
+        //   - renderTable(): Displays displayRecords in grid
+        //   - selectRecord(id): Highlights row and populates form
+        //   - handleReset(): Clears working memory and reloads from filestorage
+        //
+        // DATA FLOW:
+        //   STARTUP: IRRIGATION_DATA → displayRecords (12 records with IDs 1-12)
+        //   RESET: Clear displayRecords → reload from IRRIGATION_DATA
+        //   CREATE: Add new record (ID 13+) → sort → re-render
+        //   METER: Find last record → select → populate form
+        //
+        // ID SYSTEM:
+        //   Original records: Simple integers 1-12
+        //   New records: Sequential integers 13, 14, 15...
+        //   IDs are stable across sorts and operations
+        //
+        // ========================================
+
+        // ========================================
+        // EMBEDDED IRRIGATION DATA (filestorage)
+        // ========================================
+        const IRRIGATION_DATA = [
+  {
+    "Ranch": "MobileFrame Ranch 1",
+    "Planting": "Planting 1A",
+    "Eventdate": "9/15/25",
+    "IrrigationMethod": "Germination Sprinkler",
+    "WaterApplied": "0",
+    "ManagerAmount": "0",
+    "RecommendedInches": "0",
+    "RecommendedHours": "0",
+    "RecommendedInterval": "0",
+    "LastUpdatedDate": "9/16/25 22:25",
+    "UpdatedBy": "Robert Rossilli"
+  },
+  {
+    "Ranch": "MobileFrame Ranch 1",
+    "Planting": "Planting 1A",
+    "Eventdate": "9/20/25",
+    "IrrigationMethod": "Germination Sprinkler",
+    "WaterApplied": "2",
+    "ManagerAmount": "2",
+    "RecommendedInches": "0.5",
+    "RecommendedHours": "1.7",
+    "RecommendedInterval": "2.6",
+    "LastUpdatedDate": "9/16/25 22:36",
+    "UpdatedBy": "Robert Rossilli"
+  },
+  {
+    "Ranch": "MobileFrame Ranch 1",
+    "Planting": "Planting 1A",
+    "Eventdate": "9/23/25",
+    "IrrigationMethod": "Germination Sprinkler",
+    "WaterApplied": "0",
+    "ManagerAmount": "0",
+    "RecommendedInches": "0.6",
+    "RecommendedHours": "2.1",
+    "RecommendedInterval": "1.2",
+    "LastUpdatedDate": "9/16/25 22:37",
+    "UpdatedBy": "Robert Rossilli"
+  },
+  {
+    "Ranch": "MobileFrame Ranch 1",
+    "Planting": "Planting 1B",
+    "Eventdate": "9/15/25",
+    "IrrigationMethod": "Sprinkler",
+    "WaterApplied": "0.56",
+    "ManagerAmount": "0.28",
+    "RecommendedInches": "0",
+    "RecommendedHours": "0",
+    "RecommendedInterval": "0",
+    "LastUpdatedDate": "9/16/25 22:30",
+    "UpdatedBy": "Robert Rossilli"
+  },
+  {
+    "Ranch": "MobileFrame Ranch 1",
+    "Planting": "Planting 1B",
+    "Eventdate": "9/18/25",
+    "IrrigationMethod": "Sprinkler",
+    "WaterApplied": "0",
+    "ManagerAmount": "0",
+    "RecommendedInches": "0.3",
+    "RecommendedHours": "0.9",
+    "RecommendedInterval": "3",
+    "LastUpdatedDate": "9/16/25 22:29",
+    "UpdatedBy": "Robert Rossilli"
+  },
+  {
+    "Ranch": "MobileFrame Ranch 1",
+    "Planting": "Planting 1B",
+    "Eventdate": "9/21/25",
+    "IrrigationMethod": "Sprinkler",
+    "WaterApplied": "0",
+    "ManagerAmount": "0",
+    "RecommendedInches": "0.2",
+    "RecommendedHours": "0.9",
+    "RecommendedInterval": "3",
+    "LastUpdatedDate": "9/16/25 22:32",
+    "UpdatedBy": "Robert Rossilli"
+  },
+  {
+    "Ranch": "MobileFrame Ranch 2",
+    "Planting": "Planting 2A",
+    "Eventdate": "9/15/25",
+    "IrrigationMethod": "Sprinkler",
+    "WaterApplied": "0.54",
+    "ManagerAmount": "0",
+    "RecommendedInches": "0",
+    "RecommendedHours": "0",
+    "RecommendedInterval": "0",
+    "LastUpdatedDate": "9/16/25 23:50",
+    "UpdatedBy": "Robert Rossilli"
+  },
+  {
+    "Ranch": "MobileFrame Ranch 2",
+    "Planting": "Planting 2A",
+    "Eventdate": "9/18/25",
+    "IrrigationMethod": "Sprinkler",
+    "WaterApplied": "0",
+    "ManagerAmount": "0",
+    "RecommendedInches": "0.6",
+    "RecommendedHours": "2",
+    "RecommendedInterval": "1.1",
+    "LastUpdatedDate": "9/16/25 23:50",
+    "UpdatedBy": "Robert Rossilli"
+  },
+  {
+    "Ranch": "MobileFrame Ranch 2",
+    "Planting": "Planting 2A",
+    "Eventdate": "9/23/25",
+    "IrrigationMethod": "Sprinkler",
+    "WaterApplied": "0",
+    "ManagerAmount": "0",
+    "RecommendedInches": "0.6",
+    "RecommendedHours": "1.9",
+    "RecommendedInterval": "1.9",
+    "LastUpdatedDate": "9/16/25 23:44",
+    "UpdatedBy": "CropManage "
+  },
+  {
+    "Ranch": "MobileFrame Ranch 2",
+    "Planting": "Planting 2B",
+    "Eventdate": "9/15/25",
+    "IrrigationMethod": "Germination Sprinkler",
+    "WaterApplied": "0",
+    "ManagerAmount": "0",
+    "RecommendedInches": "0",
+    "RecommendedHours": "0",
+    "RecommendedInterval": "0",
+    "LastUpdatedDate": "9/16/25 23:46",
+    "UpdatedBy": "CropManage "
+  },
+  {
+    "Ranch": "MobileFrame Ranch 2",
+    "Planting": "Planting 2B",
+    "Eventdate": "9/18/25",
+    "IrrigationMethod": "Germination Sprinkler",
+    "WaterApplied": "0",
+    "ManagerAmount": "0",
+    "RecommendedInches": "0.7",
+    "RecommendedHours": "2.3",
+    "RecommendedInterval": "1.1",
+    "LastUpdatedDate": "9/16/25 23:51",
+    "UpdatedBy": "Robert Rossilli"
+  },
+  {
+    "Ranch": "MobileFrame Ranch 2",
+    "Planting": "Planting 2B",
+    "Eventdate": "9/23/25",
+    "IrrigationMethod": "Germination Sprinkler",
+    "WaterApplied": "0",
+    "ManagerAmount": "0",
+    "RecommendedInches": "0.7",
+    "RecommendedHours": "2.2",
+    "RecommendedInterval": "1.9",
+    "LastUpdatedDate": "9/16/25 23:51",
+    "UpdatedBy": "Robert Rossilli"
+  }
+];
+
+        // Working data array (localstorage)
+        let displayRecords = [];
+        let selectedRecord = null;
+
+        // ========================================
+        // DATE UTILITY FUNCTIONS
+        // ========================================
+
+        // Parse date in M/D/YY format to proper Date object
+        function parseEventDate(dateStr) {
+            const parts = dateStr.split('/');
+            const month = parseInt(parts[0]);
+            const day = parseInt(parts[1]);
+            const year = 2000 + parseInt(parts[2]);
+            return new Date(year, month - 1, day);
+        }
+
+        // Format Date object to M/D/YY
+        function formatDate(date) {
+            const year = String(date.getFullYear()).slice(-2);
+            const month = date.getMonth() + 1;
+            const day = date.getDate();
+            return `${month}/${day}/${year}`;
+        }
+
+        // ========================================
+        // DATA LOADING
+        // ========================================
+
+        function loadData() {
+            displayRecords = [];
+            
+            IRRIGATION_DATA.forEach((record, index) => {
+                const eventDate = parseEventDate(record.Eventdate);
+                
+                displayRecords.push({
+                    id: index + 1,  // Simple integers: 1, 2, 3...12
+                    ranch: record.Ranch,
+                    planting: record.Planting,
+                    hours: parseFloat(record.RecommendedHours) || 0,
+                    mgrHours: parseFloat(record.ManagerAmount) || 0,
+                    appliedHours: parseFloat(record.WaterApplied) || 0,
+                    interval: parseFloat(record.RecommendedInterval) || 0,
+                    scheduledDate: formatDate(eventDate),
+                    irrigationMethod: record.IrrigationMethod,
+                    recommendedInches: record.RecommendedInches,
+                    lastUpdatedDate: record.LastUpdatedDate,
+                    updatedBy: record.UpdatedBy,
+                    isOriginal: true,
+                    isNew: false,
+                    isUpdated: false
+                });
+            });
+            
+            renderTable();
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+            
+            displayRecords.forEach(record => {
+                const row = tbody.insertRow();
+                row.dataset.recordId = record.id;
+                row.onclick = () => selectRecord(record.id);
+                
+                row.insertCell(0).textContent = record.ranch;
+                row.insertCell(1).textContent = record.planting;
+                row.insertCell(2).textContent = record.scheduledDate;
+                row.insertCell(3).textContent = record.hours;
+                row.insertCell(4).textContent = record.mgrHours;
+                row.insertCell(5).textContent = record.interval + ' days';
+                row.insertCell(6).textContent = record.appliedHours;
+            });
+            
+            document.getElementById('recordCount').textContent = 
+                `${displayRecords.length} Records`;
+                
+            // Auto-select first record
+            if (displayRecords.length > 0) {
+                selectRecord(displayRecords[0].id);
+            }
+        }
+
+        function selectRecord(recordId) {
+            selectedRecord = displayRecords.find(r => r.id === recordId);
+            
+            if (!selectedRecord) return;
+            
+            // Update form title with Ranch/Planting
+            document.getElementById('formTitle').textContent = 
+                `Ranch ${selectedRecord.ranch} - Planting ${selectedRecord.planting}`;
+            
+            // Highlight row
+            document.querySelectorAll('#tableBody tr').forEach(row => {
+                if (parseInt(row.dataset.recordId) === recordId) {
+                    row.classList.add('selected');
+                } else {
+                    row.classList.remove('selected');
+                }
+            });
+            
+            // Populate form
+            document.getElementById('formDate').value = selectedRecord.scheduledDate;
+            document.getElementById('formInterval').value = selectedRecord.interval + ' days';
+            document.getElementById('formRecommendation').value = selectedRecord.hours;
+            document.getElementById('formManagerHours').value = selectedRecord.mgrHours;
+            document.getElementById('formWaterApplied').value = selectedRecord.appliedHours;
+        }
+
+        function handleReset() {
+            displayRecords = [];
+            selectedRecord = null;
+            loadData();
+            showResult('Data reset to original 12 records');
+        }
+
+        // ========================================
+        // CREATE NEXT IRRIGATION (CORE TOOL)
+        // ========================================
+
+        function testCreateNext() {
+            if (!selectedRecord) {
+                showResult('ERROR: No record selected. Click a row first.');
+                return;
+            }
+            
+            // Find all records for this ranch/planting
+            const sameFieldRecords = displayRecords.filter(r => 
+                r.ranch === selectedRecord.ranch && 
+                r.planting === selectedRecord.planting
+            );
+            
+            // Sort by date to get most recent
+            sameFieldRecords.sort((a, b) => {
+                const dateA = parseEventDate(a.scheduledDate);
+                const dateB = parseEventDate(b.scheduledDate);
+                return dateA - dateB;
+            });
+            
+            const lastRecord = sameFieldRecords[sameFieldRecords.length - 1];
+            
+            // Calculate next date
+            const currentDate = parseEventDate(lastRecord.scheduledDate);
+            const nextDate = new Date(currentDate);
+            const intervalDays = parseFloat(lastRecord.interval) || 1;
+            const roundedInterval = Math.round(intervalDays);
+            
+            nextDate.setDate(nextDate.getDate() + roundedInterval);
+            const nextDateStr = formatDate(nextDate);
+            
+            // Calculate new hours
+            const tinyAdjust = (Math.random() * 0.2 + 0.1);
+            const newRecHours = Math.max(0.1, parseFloat((lastRecord.hours + tinyAdjust).toFixed(1)));
+            const newMgrHours = parseFloat((lastRecord.mgrHours + 0.1).toFixed(1));
+            
+            // Create new record with next integer ID
+            const maxId = Math.max(...displayRecords.map(r => r.id));
+            
+            const newRecord = {
+                id: maxId + 1,  // Simple integer: 13, 14, 15...
+                ranch: lastRecord.ranch,
+                planting: lastRecord.planting,
+                hours: newRecHours,
+                mgrHours: newMgrHours,
+                appliedHours: 0,
+                interval: lastRecord.interval,
+                scheduledDate: nextDateStr,
+                irrigationMethod: lastRecord.irrigationMethod,
+                recommendedInches: lastRecord.recommendedInches,
+                lastUpdatedDate: new Date().toLocaleString(),
+                updatedBy: "Test System",
+                isNew: true,
+                isOriginal: false,
+                isUpdated: false
+            };
+            
+            displayRecords.push(newRecord);
+            
+            // Save the new record ID before sorting
+            const newRecordId = newRecord.id;
+            
+            // Sort by ranch → planting → date (ascending)
+            displayRecords.sort((a, b) => {
+                if (a.ranch < b.ranch) return -1;
+                if (a.ranch > b.ranch) return 1;
+                if (a.planting < b.planting) return -1;
+                if (a.planting > b.planting) return 1;
+                const dateA = parseEventDate(a.scheduledDate);
+                const dateB = parseEventDate(b.scheduledDate);
+                return dateA - dateB;
+            });
+            
+            renderTable();
+            selectRecord(newRecordId);
+            
+            showResult(`✅ Created irrigation #${newRecordId}
+Ranch: ${newRecord.ranch}
+Planting: ${newRecord.planting}
+Date: ${lastRecord.scheduledDate} + ${roundedInterval} days = ${nextDateStr}
+Hours: ${newRecHours}
+Manager Hours: ${newMgrHours}`);
+        }
+
+        // ========================================
+        // READ METER (CORE TOOL)
+        // ========================================
+
+        function testReadMeter() {
+            if (!selectedRecord) {
+                showResult('ERROR: No record selected. Click a row first.');
+                return;
+            }
+            
+            // Use selected record's ranch and planting
+            const targetRanch = selectedRecord.ranch;
+            const targetPlanting = selectedRecord.planting;
+            
+            // Find all records for this ranch/planting
+            const matchingRecords = displayRecords.filter(r => 
+                r.ranch === targetRanch && 
+                r.planting === targetPlanting
+            );
+            
+            if (matchingRecords.length === 0) {
+                showResult(`❌ No records found for ${targetRanch} ${targetPlanting}`);
+                return;
+            }
+            
+            // Sort by date to get most recent (last)
+            matchingRecords.sort((a, b) => {
+                const dateA = parseEventDate(a.scheduledDate);
+                const dateB = parseEventDate(b.scheduledDate);
+                return dateA - dateB;
+            });
+            
+            const lastRecord = matchingRecords[matchingRecords.length - 1];
+            
+            // Select this record in the grid
+            selectRecord(lastRecord.id);
+            
+            // Clear Water Applied field for meter reading entry
+            document.getElementById('formWaterApplied').value = '';
+            document.getElementById('formWaterApplied').focus();
+            Updateid = lastRecord.id 
+            
+            showResult(`✅ Ready for meter reading
+Ranch: ${lastRecord.ranch}
+Planting: ${lastRecord.planting}
+RecordID: ${lastRecord.id}
+UpdateID: ${Updateid}
+Date: ${lastRecord.scheduledDate}
+Current Water Applied: ${lastRecord.appliedHours}
+
+→ Enter new meter reading in Water Applied field`);
+        }
+
+        // ========================================
+        // NATURAL LANGUAGE PROMPT HANDLER
+        // ========================================
+        
+        function toggleInfo() {
+            const infoPanel = document.getElementById('infoPanel');
+            infoPanel.style.display = infoPanel.style.display === 'none' ? 'block' : 'none';
+        }
+        
+        function fillPrompt(text) {
+            document.getElementById('promptInput').value = text;
+            document.getElementById('promptInput').focus();
+        }
+        
+        function sendPrompt() {
+            const promptInput = document.getElementById('promptInput');
+            const prompt = promptInput.value.trim();
+            const lowerPrompt = prompt.toLowerCase();
+            
+            if (!prompt) {
+                showResult('ERROR: Please enter a prompt');
+                return;
+            }
+            
+            // Intent classifier - recognize natural language
+            
+            // 4. CREATE + NEXT - Irrigation operation
+            if ((lowerPrompt.includes('create') && lowerPrompt.includes('next')) ||
+                lowerPrompt.includes('create_next')) {
+                
+                testCreateNext();
+                
+                const result = {
+                    success: true,
+                    tool: "create_next",
+                    prompt: prompt
+                };
+                
+                return result;
+                
+            } else if ((lowerPrompt.includes('read') && lowerPrompt.includes('meter')) ||
+                lowerPrompt.includes('read_meter')) {
+                
+                testReadMeter();
+                
+                const result = {
+                    success: true,
+                    tool: "read_meter",
+                    prompt: prompt
+                };
+                
+                return result;
+                
+            } else if ((lowerPrompt.includes('update') && lowerPrompt.includes('selected')) ||
+                lowerPrompt.includes('update_irrigation_record')) {
+                
+                testUpdateSelected();
+                
+                const result = {
+                    success: true,
+                    tool: "update_irrigation_record",
+                    prompt: prompt
+                };
+                
+                return result;
+                
+            } else {
+                showResult('❌ Unrecognized prompt\n\nTry:\n- "create next"\n- "read meter"');
+            }
+        }
+        
+        // Allow Enter key to send prompt
+        document.addEventListener('DOMContentLoaded', function() {
+            const promptInput = document.getElementById('promptInput');
+            if (promptInput) {
+                promptInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        sendPrompt();
+                    }
+                });
+            }
+        });
+
+        // ========================================
+        // UPDATE SELECTED RECORD (CORE TOOL)
+        // ========================================
+
+        function testUpdateSelected() {
+            if (!selectedRecord) {
+                showResult('ERROR: No record selected. Click a row first.');
+                return;
+            }
+            
+            // Get values from form
+            const mgrHours = parseFloat(document.getElementById('formManagerHours').value);
+            const waterApplied = parseFloat(document.getElementById('formWaterApplied').value);
+            
+            // Update the selected record
+            selectedRecord.mgrHours = isNaN(mgrHours) ? selectedRecord.mgrHours : mgrHours;
+            selectedRecord.appliedHours = isNaN(waterApplied) ? selectedRecord.appliedHours : waterApplied;
+            selectedRecord.lastUpdatedDate = new Date().toLocaleString();
+            selectedRecord.updatedBy = "Package System";
+            selectedRecord.isUpdated = true;
+                            Updateid = selectedRecord.id
+            // Find and update in displayRecords
+            const index = displayRecords.findIndex(r => r.id === selectedRecord.id);
+            if (index !== -1) {
+                displayRecords[index] = selectedRecord;
+            }
+            
+            renderTable();
+            selectRecord(Updateid);
+            
+            showResult(`✅ Updated irrigation #${selectedRecord.id}
+                          Ranch: ${selectedRecord.ranch}
+                          Planting: ${selectedRecord.planting}
+                          UpdateID: ${Updateid} 
+                          Manager Hours: ${selectedRecord.mgrHours}
+                          Water Applied: ${selectedRecord.appliedHours}`);
+        }
+
+        // ========================================
+        // END PACKAGE - MCP READY IRRIGATION TOOLS
+        // ========================================
+
+        // Helper function to show results
+        function showResult(message) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.textContent = message;
+            resultDiv.style.display = 'block';
+        }
+
+        // Initialize on load
+        window.onload = function() {
+            loadData();
+            showResult('Package loaded. 12 original records ready.\nSelect a record and test the tools.');
+        };
+    </script>

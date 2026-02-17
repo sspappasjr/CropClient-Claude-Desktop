@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PageBuilder - Template Injector</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #2E7D32 0%, #4CAF50 100%);
+            padding: 20px;
+            height: 100vh;
+            overflow: hidden;
+        }
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            height: calc(100vh - 40px);
+            display: flex;
+            flex-direction: column;
+        }
+        .header {
+            background: #2E7D32;
+            color: white;
+            padding: 20px;
+            border-radius: 8px 8px 0 0;
+        }
+        .header h1 {
+            margin: 0 0 10px 0;
+        }
+        .building-name {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .building-name label {
+            font-size: 1.1rem;
+            font-weight: bold;
+        }
+        .building-name input {
+            padding: 8px 15px;
+            border: 2px solid white;
+            border-radius: 5px;
+            font-size: 1rem;
+            background: rgba(255,255,255,0.9);
+            min-width: 300px;
+        }
+        .content {
+            display: grid;
+            grid-template-columns: 600px 1fr;
+            gap: 20px;
+            padding: 20px;
+            flex: 1;
+            overflow: hidden;
+        }
+        .control-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            overflow: auto;
+        }
+        .upload-template {
+            padding: 15px;
+            background: #e3f2fd;
+            border-radius: 5px;
+            border: 2px solid #2196F3;
+        }
+        .upload-template h2 {
+            color: #1976d2;
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+        }
+        .file-input {
+            width: 100%;
+            padding: 10px;
+            border: 2px dashed #ccc;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .grid-container {
+            flex: 1;
+            overflow: auto;
+        }
+        .component-grid {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+        .component-grid th {
+            background: #4CAF50;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: bold;
+            position: sticky;
+            top: 0;
+        }
+        .component-grid td {
+            padding: 12px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .component-grid tr:hover {
+            background: #f5f5f5;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: bold;
+        }
+        .status-found {
+            background: #e8f5e9;
+            color: #2E7D32;
+        }
+        .status-waiting {
+            background: #fff3e0;
+            color: #f57c00;
+        }
+        .status-loaded {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+        .upload-btn {
+            padding: 6px 15px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+        .upload-btn:hover {
+            background: #45a049;
+        }
+        .upload-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .delete-btn {
+            padding: 6px 15px;
+            background: #f44336;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            margin-left: 5px;
+        }
+        .delete-btn:hover {
+            background: #d32f2f;
+        }
+        .save-as-section {
+            padding: 15px;
+            background: #e8f5e9;
+            border-radius: 5px;
+            border: 2px solid #4CAF50;
+        }
+        .save-as-section label {
+            display: block;
+            font-weight: bold;
+            color: #2E7D32;
+            margin-bottom: 5px;
+        }
+        .save-as-section input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #4CAF50;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        .btn {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            border-radius: 5px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .btn-primary {
+            background: #4CAF50;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #45a049;
+        }
+        .btn-primary:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .btn-success {
+            background: #2196F3;
+            color: white;
+        }
+        .btn-success:hover {
+            background: #1976d2;
+        }
+        .preview-panel {
+            border: 2px solid #e0e0e0;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        .hidden-upload {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>PageBuilder - Template Injector</h1>
+            <div class="building-name">
+                <label>Building:</label>
+                <input type="text" id="appName" placeholder="Enter application name">
+            </div>
+        </div>
+
+        <div class="content">
+            <div class="control-panel">
+                <div class="upload-template">
+                    <h2>Load Template</h2>
+                    <input type="file" class="file-input" id="templateUpload" accept=".html">
+                </div>
+
+                <div class="grid-container">
+                    <table class="component-grid" id="componentGrid">
+                        <thead>
+                            <tr>
+                                <th>Name/Type</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="gridBody">
+                            <tr>
+                                <td colspan="3" style="text-align: center; color: #999; padding: 40px;">
+                                    Load a template to begin...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="save-as-section">
+                    <label>Save As:</label>
+                    <input type="text" id="saveAsName" placeholder="filename.html">
+                </div>
+
+                <div class="action-buttons">
+                    <button class="btn btn-primary" id="injectBtn" disabled>Inject All</button>
+                    <button class="btn btn-success" id="saveBtn" disabled>Save As</button>
+                </div>
+            </div>
+
+            <div class="preview-panel">
+                <iframe id="previewFrame"></iframe>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // State tracking - tracks everything we find
+        const state = {
+            templateName: '',
+            templateContent: '',
+            css: { found: false, content: '', position: -1 },
+            script: { found: false, content: '', position: -1 },
+            markers: []
+        };
+
+        const components = {};
+        let finalHTML = '';
+
+        const templateUpload = document.getElementById('templateUpload');
+        const appNameInput = document.getElementById('appName');
+        const saveAsInput = document.getElementById('saveAsName');
+        const gridBody = document.getElementById('gridBody');
+        const injectBtn = document.getElementById('injectBtn');
+        const saveBtn = document.getElementById('saveBtn');
+        const previewFrame = document.getElementById('previewFrame');
+
+        templateUpload.addEventListener('change', handleTemplateUpload);
+        injectBtn.addEventListener('click', injectComponents);
+        saveBtn.addEventListener('click', saveAsFile);
+
+        function handleTemplateUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            state.templateName = file.name;
+            
+            // Extract name without extension
+            const baseName = file.name.replace(/\.[^/.]+$/, "");
+            appNameInput.value = baseName;
+            saveAsInput.value = file.name;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                state.templateContent = e.target.result;
+                followMarkers();
+            };
+            reader.readAsText(file);
+        }
+
+        function followMarkers() {
+            // Find CSS marker (not the existing style block)
+            const cssMarkerMatch = state.templateContent.match(/<!-- @@@@@@ INJECT: CSS @@@@@@ -->/);
+            if (cssMarkerMatch) {
+                state.css.found = false; // Marker exists but needs upload
+                state.css.position = cssMarkerMatch.index;
+            }
+
+            // Find injection markers
+            const regex = /<!-- @@@@@@ INJECT: (\w+) @@@@@@ -->/g;
+            let match;
+            state.markers = [];
+
+            while ((match = regex.exec(state.templateContent)) !== null) {
+                state.markers.push({
+                    name: match[1],
+                    marker: match[0],
+                    position: match.index,
+                    loaded: false
+                });
+            }
+
+            buildGrid();
+            
+            // Enable Inject button if markers found
+            if (state.markers.length > 0) {
+                injectBtn.disabled = false;
+            }
+        }
+
+        function buildGrid() {
+            gridBody.innerHTML = '';
+
+            // Template row
+            addGridRow('Template', state.templateName, 'found', null);
+
+            // CSS row
+            addGridRow('CSS Section', state.css.found ? 'Found' : 'Not Found', 
+                state.css.found ? 'found' : 'waiting', null);
+
+            // Marker rows
+            state.markers.forEach((marker, index) => {
+                addGridRow(`${marker.name} Component`, marker.loaded ? 'Loaded' : 'Waiting', 
+                    marker.loaded ? 'loaded' : 'waiting', 
+                    createUploadButton(marker.name, index));
+            });
+
+            // Script row
+            addGridRow('Script Section', state.script.found ? 'Found' : 'Not Found',
+                state.script.found ? 'found' : 'waiting', null);
+        }
+
+        function addGridRow(name, status, statusClass, actionFn) {
+            const row = document.createElement('tr');
+            
+            const nameCell = document.createElement('td');
+            nameCell.textContent = name;
+            nameCell.style.fontWeight = 'bold';
+
+            const statusCell = document.createElement('td');
+            const badge = document.createElement('span');
+            badge.className = `status-badge status-${statusClass}`;
+            badge.textContent = status;
+            statusCell.appendChild(badge);
+
+            const actionCell = document.createElement('td');
+            if (actionFn) {
+                actionFn(actionCell);
+            }
+
+            row.appendChild(nameCell);
+            row.appendChild(statusCell);
+            row.appendChild(actionCell);
+            gridBody.appendChild(row);
+        }
+
+        function createUploadButton(markerName, index) {
+            return (cell) => {
+                const btn = document.createElement('button');
+                btn.className = 'upload-btn';
+                btn.textContent = state.markers[index].loaded ? 'Replace' : 'Upload';
+                cell.appendChild(btn);
+
+                // Add delete button if loaded
+                if (state.markers[index].loaded) {
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.className = 'delete-btn';
+                    deleteBtn.textContent = 'Delete';
+                    deleteBtn.onclick = () => deleteComponent(markerName, index);
+                    cell.appendChild(deleteBtn);
+                }
+
+                const hiddenInput = document.createElement('input');
+                hiddenInput.type = 'file';
+                hiddenInput.className = 'hidden-upload';
+                hiddenInput.accept = '.html';
+                hiddenInput.onchange = (e) => handleComponentUpload(e, markerName, index);
+                cell.appendChild(hiddenInput);
+                
+                // Make button click trigger the input
+                btn.onclick = () => hiddenInput.click();
+            };
+        }
+
+        function handleComponentUpload(event, markerName, index) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                components[markerName] = e.target.result;
+                state.markers[index].loaded = true;
+                buildGrid();
+                checkReady();
+            };
+            reader.readAsText(file);
+        }
+
+        function deleteComponent(markerName, index) {
+            delete components[markerName];
+            state.markers[index].loaded = false;
+            buildGrid();
+            checkReady();
+        }
+
+        function checkReady() {
+            // Enable Save As after at least 1 upload
+            const anyLoaded = state.markers.some(m => m.loaded);
+            saveBtn.disabled = !anyLoaded;
+            
+            // Disable Inject if all markers injected
+            const allInjected = state.markers.every(m => m.loaded);
+            injectBtn.disabled = allInjected ? false : (state.markers.length === 0);
+        }
+
+        function injectComponents() {
+            finalHTML = state.templateContent;
+
+            // MARKER-PRESERVING INJECTION
+            // Wraps injected content with BEGIN/END markers for audit trail and re-injection
+            state.markers.forEach(marker => {
+                const componentContent = components[marker.name] || '<p>Component not loaded</p>';
+                
+                // Define the end marker for this injection point
+                const endMarker = `<!-- @@@@@@ END INJECT: ${marker.name} @@@@@@ -->`;
+                
+                // Check if this marker was already injected (has END marker)
+                const alreadyInjected = finalHTML.includes(endMarker);
+                
+                if (alreadyInjected) {
+                    // RE-INJECTION: Replace entire block (BEGIN marker + old content + END marker)
+                    // This preserves markers for future updates
+                    const escapedBeginMarker = marker.marker.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                    const escapedEndMarker = endMarker.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                    const blockRegex = new RegExp(
+                        `${escapedBeginMarker}[\\s\\S]*?${escapedEndMarker}`,
+                        'g'
+                    );
+                    const replacement = `${marker.marker}\n${componentContent}\n${endMarker}`;
+                    finalHTML = finalHTML.replace(blockRegex, replacement);
+                } else {
+                    // FIRST INJECTION: Wrap component with BEGIN/END markers
+                    // Creates audit trail and enables future re-injection
+                    const replacement = `${marker.marker}\n${componentContent}\n${endMarker}`;
+                    finalHTML = finalHTML.replace(marker.marker, replacement);
+                }
+            });
+
+            // Preview
+            const blob = new Blob([finalHTML], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            previewFrame.src = url;
+
+            saveBtn.disabled = false;
+        }
+
+        function saveAsFile() {
+            const blob = new Blob([finalHTML], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            
+            const link = document.createElement('a');
+            link.href = url;
+            // Use the Save As input value
+            link.download = saveAsInput.value || state.templateName;
+            link.click();
+        }
+    </script>
+</body>
+</html>

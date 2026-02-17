@@ -1,0 +1,65 @@
+<!-- S2: Command Output Section -->
+<!-- This section displays messages and command results -->
+
+<div style="padding: 15px;">
+    <h3 style="color: #9c27b0; margin-bottom: 15px;">💬 Command Output</h3>
+    
+    <!-- Output area -->
+    <div id="s2-output" style="
+        background: #f5f5f5; 
+        border: 1px solid #ddd; 
+        border-radius: 4px; 
+        padding: 10px; 
+        height: 150px; 
+        overflow-y: auto; 
+        font-family: monospace; 
+        font-size: 12px;
+        margin-bottom: 15px;">
+        <div style="color: #666;">System ready...</div>
+    </div>
+    
+    <!-- Input area -->
+    <div style="display: flex; gap: 10px;">
+        <input 
+            type="text" 
+            id="s2-input" 
+            placeholder="Enter command (e.g., 'filter ranch 2')"
+            onkeypress="if(event.key === 'Enter') executeCommand()"
+            style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+        <button 
+            onclick="executeCommand()"
+            style="padding: 8px 20px; background: #9c27b0; color: white; border: none; border-radius: 4px; cursor: pointer;">
+            Send
+        </button>
+    </div>
+    
+    <!-- Quick commands -->
+    <div style="margin-top: 10px;">
+        <button onclick="executeCommand('show all')" style="margin: 2px; padding: 4px 8px; background: #e1bee7; border: none; border-radius: 3px; cursor: pointer; font-size: 11px;">Show All</button>
+        <button onclick="executeCommand('ranch 1 only')" style="margin: 2px; padding: 4px 8px; background: #e1bee7; border: none; border-radius: 3px; cursor: pointer; font-size: 11px;">Ranch 1 Only</button>
+        <button onclick="executeCommand('ranch 2 only')" style="margin: 2px; padding: 4px 8px; background: #e1bee7; border: none; border-radius: 3px; cursor: pointer; font-size: 11px;">Ranch 2 Only</button>
+    </div>
+</div>
+
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function() {
+        const s2Output = document.getElementById('s2-output');
+        if (s2Output) {
+            const timestamp = new Date().toLocaleTimeString();
+            s2Output.innerHTML = 
+                '<div style="color: #9c27b0;">[' + timestamp + '] S2 Command System Ready</div>' +
+                '<div style="color: #666;">Type "help" for available commands</div>';
+        }
+    });
+} else {
+    // Already loaded
+    const s2Output = document.getElementById('s2-output');
+    if (s2Output) {
+        const timestamp = new Date().toLocaleTimeString();
+        s2Output.innerHTML = 
+            '<div style="color: #9c27b0;">[' + timestamp + '] S2 Command System Ready</div>' +
+            '<div style="color: #666;">Type "help" for available commands</div>';
+    }
+}
+

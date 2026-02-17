@@ -1,0 +1,233 @@
+<!-- S1: Irrigation Functions Section -->
+<!-- This section provides irrigation management commands -->
+
+<div class="s1-irrigation-functions">
+    <h3 style="color: #2a5298; margin-bottom: 15px;">🌾 Irrigation Functions</h3>
+    
+    <div class="function-buttons">
+        <button 
+            class="irrigation-btn"
+            onclick="readMeterForRanch1Planting1A()">
+            📊 Read Meter for Ranch 1 Planting 1A
+        </button>
+        
+        <button 
+            class="irrigation-btn blue"
+            onclick="createNextIrrigationForRanch1Planting1A()">
+            ➕ Create Next Irrigation for Ranch 1 Planting 1A
+        </button>
+    </div>
+    
+    <div id="s1-output" style="margin-top: 15px; padding: 10px; background: #f5f5f5; border-radius: 6px; min-height: 60px; font-family: monospace; font-size: 12px;">
+        <div style="color: #666;">Ready for irrigation commands...</div>
+    </div>
+</div>
+
+<style>
+/* S1 Specific Styles */
+.s1-irrigation-functions {
+    padding: 15px;
+}
+
+.irrigation-btn {
+    background: #4CAF50;
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    text-align: left;
+    width: 100%;
+    margin-bottom: 10px;
+    transition: all 0.3s ease;
+}
+
+.irrigation-btn:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.irrigation-btn:active {
+    transform: translateY(0);
+}
+
+.irrigation-btn.blue {
+    background: #2196F3;
+}
+</style>
+
+<script>
+// S1 Functions - Irrigation Commands
+function readMeterForRanch1Planting1A() {
+    const output = document.getElementById('s1-output');
+    const timestamp = new Date().toLocaleTimeString();
+    const data = window.irrigationLocalStorage || [];
+    
+    // Find ALL records for Ranch 1 Planting 1A (not just first)
+    const ranch1_1A = data.filter(record => 
+        record.Ranch && record.Ranch.includes('Ranch 1') && 
+        record.Planting && record.Planting.includes('1A')
+    );
+    
+    if (ranch1_1A.length > 0) {
+        // Sort by date to get most recent (last after sorting)
+        ranch1_1A.sort((a, b) => {
+            const dateA = new Date(a.Eventdate);
+            const dateB = new Date(b.Eventdate);
+            return dateA - dateB;
+        });
+        
+        const latest = ranch1_1A[ranch1_1A.length - 1]; // Get LAST (most recent)
+        
+        output.innerHTML = 
+            '<div style="color: #4CAF50; font-weight: bold;">[' + timestamp + '] METER READING</div>' +
+            '<div style="margin-left: 20px; color: #333;">Ranch: ' + latest.Ranch + '</div>' +
+            '<div style="margin-left: 20px; color: #333;">Planting: ' + latest.Planting + '</div>' +
+            '<div style="margin-left: 20px; color: #333;">Last Date: ' + latest.Eventdate + '</div>' +
+            '<div style="margin-left: 20px; color: #333;">Water Applied: ' + (latest.WaterApplied || '0') + ' hrs</div>' +
+            '<div style="margin-left: 20px; padding: 10px; background: #e8f5e9; border-radius: 4px; margin-top: 10px;">' +
+            '  <strong>Enter Water Applied (hrs):</strong><br>' +
+            '  <input type="number" id="waterInput" step="0.1" value="' + (latest.WaterApplied || '0') + '" ' +
+            '    style="margin: 5px 0; padding: 4px; width: 100px;">' +
+            '  <button onclick="updateWaterApplied()" ' +
+            '    style="margin-left: 10px; padding: 4px 10px; background: #4CAF50; color: white; border: none; border-radius: 3px; cursor: pointer;">' +
+            '    Update' +
+            '  </button>' +
+            '</div>';
+            
+        // Find and select the row in grid
+        const index = data.indexOf(latest);
+        if (index >= 0) {
+            selectGridRow('record_' + index);
+            window.currentMeterIndex = index; // Save for update
+        }
+    } else {
+        output.innerHTML = 
+            '<div style="color: #f44336;">[' + timestamp + '] ERROR</div>' +
+            '<div style="margin-left: 20px;">No records found for Ranch 1 Planting 1A</div>';
+    }
+}
+
+function updateWaterApplied() {
+    const waterValue = document.getElementById('waterInput').value;
+    const output = document.getElementById('s1-output');
+    const timestamp = new Date().toLocaleTimeString();
+    
+    if (window.currentMeterIndex !== undefined) {
+        // Update the record
+        window.irrigationLocalStorage[window.currentMeterIndex].WaterApplied = waterValue;
+        window.irrigationData = window.irrigationLocalStorage;
+        
+        // Show confirmation
+        output.innerHTML += 
+            '<div style="margin-top: 10px; color: #4CAF50; font-weight: bold;">' +
+            '[' + timestamp + '] WATER UPDATED: ' + waterValue + ' hrs' +
+            '</div>';
+        
+        // Refresh grid to show update
+        if (typeof loadIrrigationGrid === 'function') {
+            loadIrrigationGrid();
+        }
+        
+        // Re-select the updated record
+        selectGridRow('record_' + window.currentMeterIndex);
+        
+        // Send message to S2 if it exists
+        const s2Output = document.getElementById('s2-output');
+        if (s2Output) {
+            s2Output.innerHTML += 
+                '<div style="color: #4CAF50; margin: 5px 0;">' +
+                '[' + timestamp + '] Water meter updated to ' + waterValue + ' hrs' +
+                '</div>';
+        }
+    }
+}
+
+function createNextIrrigationForRanch1Planting1A() {
+    const output = document.getElementById('s1-output');
+    const timestamp = new Date().toLocaleTimeString();
+    const data = window.irrigationLocalStorage || [];
+    
+    // Find ALL records for Ranch 1 Planting 1A
+    const ranch1_1A = data.filter(record => 
+        record.Ranch && record.Ranch.includes('Ranch 1') && 
+        record.Planting && record.Planting.includes('1A')
+    );
+    
+    if (ranch1_1A.length > 0) {
+        // Sort by date to get the MOST RECENT
+        ranch1_1A.sort((a, b) => {
+            const dateA = new Date(a.Eventdate);
+            const dateB = new Date(b.Eventdate);
+            return dateA - dateB; // Oldest first
+        });
+        
+        const lastRecord = ranch1_1A[ranch1_1A.length - 1]; // Most recent is LAST
+        
+        // Calculate next date using interval
+        const currentDate = new Date(lastRecord.Eventdate);
+        const intervalDays = Math.round(parseFloat(lastRecord.RecommendedInterval) || 3);
+        const nextDate = new Date(currentDate);
+        nextDate.setDate(nextDate.getDate() + intervalDays);
+        
+        const nextDateStr = (nextDate.getMonth() + 1) + '/' + 
+                           nextDate.getDate() + '/' + 
+                           (nextDate.getFullYear() % 100);
+        
+        // Create new record with incremented hours
+        const newRecord = {
+            Ranch: lastRecord.Ranch,
+            Planting: lastRecord.Planting,
+            Eventdate: nextDateStr,
+            IrrigationMethod: lastRecord.IrrigationMethod,
+            WaterApplied: "0",
+            ManagerAmount: String((parseFloat(lastRecord.ManagerAmount) + 0.1).toFixed(1)),
+            RecommendedHours: String((parseFloat(lastRecord.RecommendedHours) + 0.1).toFixed(1)),
+            RecommendedInterval: lastRecord.RecommendedInterval,
+            RecommendedInches: lastRecord.RecommendedInches,
+            LastUpdatedDate: new Date().toLocaleString(),
+            UpdatedBy: "CropClient System"
+        };
+        
+        // Add to data array
+        window.irrigationLocalStorage.push(newRecord);
+        window.irrigationData = window.irrigationLocalStorage;
+        
+        output.innerHTML = 
+            '<div style="color: #2196F3; font-weight: bold;">[' + timestamp + '] NEXT IRRIGATION CREATED</div>' +
+            '<div style="margin-left: 20px; color: #333;">Ranch: ' + lastRecord.Ranch + '</div>' +
+            '<div style="margin-left: 20px; color: #333;">Planting: ' + lastRecord.Planting + '</div>' +
+            '<div style="margin-left: 20px; color: #333;">Current: ' + lastRecord.Eventdate + '</div>' +
+            '<div style="margin-left: 20px; color: #333;">Interval: ' + intervalDays + ' days</div>' +
+            '<div style="margin-left: 20px; color: #4CAF50; font-weight: bold;">→ Next: ' + nextDateStr + '</div>' +
+            '<div style="margin-left: 20px; color: #666;">Rec Hours: ' + newRecord.RecommendedHours + '</div>' +
+            '<div style="margin-left: 20px; color: #666;">Mgr Hours: ' + newRecord.ManagerAmount + '</div>';
+        
+        // Sort ALL records (Ranch → Planting → Date)
+        if (typeof sortAndRefreshGrid === 'function') {
+            sortAndRefreshGrid();
+        }
+        
+        // Find and select the new record
+        const sortedData = window.irrigationLocalStorage;
+        const newIndex = sortedData.findIndex(r => 
+            r.Ranch === newRecord.Ranch && 
+            r.Planting === newRecord.Planting && 
+            r.Eventdate === newRecord.Eventdate
+        );
+        
+        if (newIndex >= 0) {
+            setTimeout(() => {
+                selectGridRow('record_' + newIndex);
+            }, 100);
+        }
+    } else {
+        output.innerHTML = 
+            '<div style="color: #f44336;">[' + timestamp + '] ERROR</div>' +
+            '<div style="margin-left: 20px;">No records found for Ranch 1 Planting 1A</div>';
+    }
+}
+</script>

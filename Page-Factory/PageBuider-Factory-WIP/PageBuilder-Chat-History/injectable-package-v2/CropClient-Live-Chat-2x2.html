@@ -1,0 +1,965 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CropClient Live Chat</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        html, body {
+            height: 100vh;
+            overflow: hidden;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+        }
+        
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            gap: 20px;
+            height: 100vh;
+            padding: 20px;
+        }
+        
+        .section {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 20px;
+            overflow-y: auto;
+            position: relative;
+        }
+        
+        .section-s1 {
+            grid-row: 1;
+            grid-column: 1;
+            border-top: 4px solid #4CAF50;
+        }
+        
+        .section-s2 {
+            grid-row: 1;
+            grid-column: 2;
+            border-top: 4px solid #9c27b0;
+        }
+        
+        .section-s3 {
+            grid-row: 2;
+            grid-column: 1;
+            border-top: 4px solid #2196F3;
+        }
+        
+        .section-s4 {
+            grid-row: 2;
+            grid-column: 2;
+            border-top: 4px solid #ff9800;
+        }
+        
+        .placeholder {
+            color: #999;
+            text-align: center;
+            padding: 40px;
+        }
+        
+        /* S1 Specific Styles */
+        .s1-irrigation-functions {
+            padding: 15px;
+        }
+        
+        .irrigation-btn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            text-align: left;
+            width: 100%;
+            margin-bottom: 10px;
+            transition: all 0.3s ease;
+        }
+        
+        .irrigation-btn:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        
+        .irrigation-btn:active {
+            transform: translateY(0);
+        }
+        
+        .irrigation-btn.blue {
+            background: #2196F3;
+        }
+        
+        /* Grid selection styles */
+        #gridBody tr:hover {
+            background: #f5f5f5 !important;
+            cursor: pointer;
+        }
+        
+        #gridBody tr.selected {
+            background: #E3F2FD !important;
+            border-left: 4px solid #2196F3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- S1: Top-Left Section - Irrigation Functions -->
+        <div class="section section-s1">
+            <div class="s1-irrigation-functions">
+                <h3 style="color: #2a5298; margin-bottom: 15px;">🌾 Irrigation Functions</h3>
+                
+                <div class="function-buttons">
+                    <button 
+                        class="irrigation-btn"
+                        onclick="readMeterForSelected()">
+                        📊 Read Meter (Selected)
+                    </button>
+                    
+                    <button 
+                        class="irrigation-btn blue"
+                        onclick="createNextIrrigationForSelected()">
+                        ➕ Create Next Irrigation (Selected)
+                    </button>
+                </div>
+                
+                <div id="s1-output" style="margin-top: 15px; padding: 10px; background: #f5f5f5; border-radius: 6px; min-height: 60px; font-family: monospace; font-size: 12px;">
+                    <div style="color: #666;">Ready for irrigation commands...</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- S2: Top-Right Section - Chat/Prompts -->
+        <div class="section section-s2">
+            <div style="padding: 15px;">
+                <h3 style="color: #9c27b0; margin-bottom: 15px;">💬 Command Output</h3>
+                
+                <!-- Output area -->
+                <div id="s2-output" style="
+                    background: #f5f5f5; 
+                    border: 1px solid #ddd; 
+                    border-radius: 4px; 
+                    padding: 10px; 
+                    height: 150px; 
+                    overflow-y: auto; 
+                    font-family: monospace; 
+                    font-size: 12px;
+                    margin-bottom: 15px;">
+                    <div style="color: #666;">System ready...</div>
+                </div>
+                
+                <!-- Input area -->
+                <div style="display: flex; gap: 10px;">
+                    <input 
+                        type="text" 
+                        id="s2-input" 
+                        placeholder="Enter command (e.g., 'filter ranch 2')"
+                        onkeypress="if(event.key === 'Enter') executeCommand()"
+                        style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                    <button 
+                        onclick="executeCommand()"
+                        style="padding: 8px 20px; background: #9c27b0; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                        Send
+                    </button>
+                </div>
+                
+                <!-- Quick commands -->
+                <div style="margin-top: 10px;">
+                    <button onclick="executeCommand('show all')" style="margin: 2px; padding: 4px 8px; background: #e1bee7; border: none; border-radius: 3px; cursor: pointer; font-size: 11px;">Show All</button>
+                    <button onclick="executeCommand('ranch 1 only')" style="margin: 2px; padding: 4px 8px; background: #e1bee7; border: none; border-radius: 3px; cursor: pointer; font-size: 11px;">Ranch 1 Only</button>
+                    <button onclick="executeCommand('ranch 2 only')" style="margin: 2px; padding: 4px 8px; background: #e1bee7; border: none; border-radius: 3px; cursor: pointer; font-size: 11px;">Ranch 2 Only</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- S3: Bottom-Left Section - Data Grid -->
+        <div class="section section-s3">
+            <div class="s3-data-grid">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <h3 style="color: #2a5298; margin: 0;">📊 Irrigation Data Grid</h3>
+                    <button 
+                        onclick="resetIrrigationData()"
+                        style="background: #ff9800; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 600;">
+                        🔄 Reset Data
+                    </button>
+                </div>
+                
+                <div id="recordCount" style="margin-bottom: 10px; color: #666; font-size: 14px;">
+                    Loading records...
+                </div>
+                
+                <div style="overflow-x: auto; max-height: 300px; overflow-y: auto;">
+                    <table id="irrigationGrid" style="width: 100%; border-collapse: collapse; font-size: 12px;">
+                        <thead>
+                            <tr style="background: #2a5298; color: white; position: sticky; top: 0;">
+                                <th style="padding: 8px; text-align: center; border: 1px solid #ddd;">ID</th>
+                                <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Ranch</th>
+                                <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Planting</th>
+                                <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Date</th>
+                                <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Rec Hrs</th>
+                                <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Mgr Hrs</th>
+                                <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Interval</th>
+                                <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Applied</th>
+                            </tr>
+                        </thead>
+                        <tbody id="gridBody">
+                            <!-- Data rows will be inserted here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <!-- S4: Bottom-Right Section - Form Editor -->
+        <div class="section section-s4">
+            <div class="s4-form-editor" style="padding: 15px;">
+                <h3 style="color: #ff9800; text-align: center; margin-bottom: 20px;">📝 Selected Record Editor</h3>
+                
+                <!-- Record ID Display -->
+                <div style="background: #fff3e0; padding: 10px; border-radius: 6px; margin-bottom: 15px; text-align: center;">
+                    <strong>Record ID: </strong>
+                    <span id="formRecordId" style="color: #ff9800; font-size: 18px;">-</span>
+                </div>
+                
+                <!-- Form Fields in Grid Layout -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                    <!-- Ranch -->
+                    <div>
+                        <label style="display: block; font-size: 12px; color: #666; margin-bottom: 4px;">Ranch:</label>
+                        <input type="text" id="formRanch" readonly 
+                            style="width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 4px; background: #f5f5f5; font-size: 13px;">
+                    </div>
+                    
+                    <!-- Planting -->
+                    <div>
+                        <label style="display: block; font-size: 12px; color: #666; margin-bottom: 4px;">Planting:</label>
+                        <input type="text" id="formPlanting" readonly 
+                            style="width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 4px; background: #f5f5f5; font-size: 13px;">
+                    </div>
+                    
+                    <!-- Date -->
+                    <div>
+                        <label style="display: block; font-size: 12px; color: #666; margin-bottom: 4px;">Date:</label>
+                        <input type="text" id="formDate" readonly 
+                            style="width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 4px; background: #f5f5f5; font-size: 13px;">
+                    </div>
+                    
+                    <!-- Interval -->
+                    <div>
+                        <label style="display: block; font-size: 12px; color: #666; margin-bottom: 4px;">Interval (days):</label>
+                        <input type="text" id="formInterval" readonly 
+                            style="width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 4px; background: #f5f5f5; font-size: 13px;">
+                    </div>
+                    
+                    <!-- Recommended Hours -->
+                    <div>
+                        <label style="display: block; font-size: 12px; color: #666; margin-bottom: 4px;">Rec Hours:</label>
+                        <input type="text" id="formRecHours" 
+                            style="width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px;">
+                    </div>
+                    
+                    <!-- Manager Hours -->
+                    <div>
+                        <label style="display: block; font-size: 12px; color: #666; margin-bottom: 4px;">Mgr Hours:</label>
+                        <input type="text" id="formMgrHours" 
+                            style="width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px;">
+                    </div>
+                    
+                    <!-- Water Applied -->
+                    <div>
+                        <label style="display: block; font-size: 12px; color: #666; margin-bottom: 4px;">Water Applied:</label>
+                        <input type="text" id="formWaterApplied" 
+                            style="width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 4px; background: #e8f5e9; font-size: 13px;">
+                    </div>
+                    
+                    <!-- Method -->
+                    <div>
+                        <label style="display: block; font-size: 12px; color: #666; margin-bottom: 4px;">Method:</label>
+                        <input type="text" id="formMethod" readonly 
+                            style="width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 4px; background: #f5f5f5; font-size: 13px;">
+                    </div>
+                </div>
+                
+                <!-- Message Field (full width) -->
+                <div style="margin-top: 12px;">
+                    <label style="display: block; font-size: 12px; color: #666; margin-bottom: 4px;">Field Message:</label>
+                    <input type="text" id="formMessage" placeholder="Instructions for field worker..." 
+                        style="width: 100%; padding: 8px; border: 2px solid #ffd700; border-radius: 4px; background: #fffacd; font-size: 13px;">
+                </div>
+                
+                <!-- CRUD Buttons -->
+                <div style="display: flex; gap: 8px; margin-top: 15px; justify-content: center;">
+                    <button onclick="handleFormCreate()" 
+                        style="padding: 8px 16px; background: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: 600;">
+                        ✨ Create
+                    </button>
+                    <button onclick="handleFormRead()" 
+                        style="padding: 8px 16px; background: #2196F3; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: 600;">
+                        👁️ Read
+                    </button>
+                    <button onclick="handleFormUpdate()" 
+                        style="padding: 8px 16px; background: #ff9800; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: 600;">
+                        💾 Update
+                    </button>
+                    <button onclick="handleFormDelete()" 
+                        style="padding: 8px 16px; background: #f44336; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: 600;">
+                        🗑️ Delete
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // @@@@@ START: Data Manager Component @@@@@
+        // Three-layer data pattern from harness
+        // Layer 1: Original data (never modified)
+        const IRRIGATION_ORIGINAL = [
+            {"Ranch":"MobileFrame Ranch 1","Planting":"Planting 1A","Eventdate":"9/15/25","IrrigationMethod":"Germination Sprinkler","WaterApplied":"0","ManagerAmount":"0","RecommendedInches":"0","RecommendedHours":"0","RecommendedInterval":"0","LastUpdatedDate":"9/16/25 22:25","UpdatedBy":"Robert Rossilli"},
+            {"Ranch":"MobileFrame Ranch 1","Planting":"Planting 1A","Eventdate":"9/20/25","IrrigationMethod":"Germination Sprinkler","WaterApplied":"2","ManagerAmount":"2","RecommendedInches":"0.5","RecommendedHours":"1.7","RecommendedInterval":"2.6","LastUpdatedDate":"9/16/25 22:36","UpdatedBy":"Robert Rossilli"},
+            {"Ranch":"MobileFrame Ranch 1","Planting":"Planting 1A","Eventdate":"9/23/25","IrrigationMethod":"Germination Sprinkler","WaterApplied":"0","ManagerAmount":"0","RecommendedInches":"0.6","RecommendedHours":"2.1","RecommendedInterval":"1.2","LastUpdatedDate":"9/16/25 22:37","UpdatedBy":"Robert Rossilli"},
+            {"Ranch":"MobileFrame Ranch 1","Planting":"Planting 1B","Eventdate":"9/15/25","IrrigationMethod":"Sprinkler","WaterApplied":"0.56","ManagerAmount":"0.28","RecommendedInches":"0","RecommendedHours":"0","RecommendedInterval":"0","LastUpdatedDate":"9/16/25 22:30","UpdatedBy":"Robert Rossilli"},
+            {"Ranch":"MobileFrame Ranch 1","Planting":"Planting 1B","Eventdate":"9/18/25","IrrigationMethod":"Sprinkler","WaterApplied":"0","ManagerAmount":"0","RecommendedInches":"0.3","RecommendedHours":"0.9","RecommendedInterval":"3","LastUpdatedDate":"9/16/25 22:29","UpdatedBy":"Robert Rossilli"},
+            {"Ranch":"MobileFrame Ranch 1","Planting":"Planting 1B","Eventdate":"9/21/25","IrrigationMethod":"Sprinkler","WaterApplied":"0","ManagerAmount":"0","RecommendedInches":"0.2","RecommendedHours":"0.9","RecommendedInterval":"3","LastUpdatedDate":"9/16/25 22:32","UpdatedBy":"Robert Rossilli"},
+            {"Ranch":"MobileFrame Ranch 2","Planting":"Planting 2A","Eventdate":"9/15/25","IrrigationMethod":"Sprinkler","WaterApplied":"0.54","ManagerAmount":"0","RecommendedInches":"0","RecommendedHours":"0","RecommendedInterval":"0","LastUpdatedDate":"9/16/25 23:50","UpdatedBy":"Robert Rossilli"},
+            {"Ranch":"MobileFrame Ranch 2","Planting":"Planting 2A","Eventdate":"9/18/25","IrrigationMethod":"Sprinkler","WaterApplied":"0","ManagerAmount":"0","RecommendedInches":"0.6","RecommendedHours":"2","RecommendedInterval":"1.1","LastUpdatedDate":"9/16/25 23:50","UpdatedBy":"Robert Rossilli"},
+            {"Ranch":"MobileFrame Ranch 2","Planting":"Planting 2A","Eventdate":"9/23/25","IrrigationMethod":"Sprinkler","WaterApplied":"0","ManagerAmount":"0","RecommendedInches":"0.6","RecommendedHours":"1.9","RecommendedInterval":"1.9","LastUpdatedDate":"9/16/25 23:44","UpdatedBy":"CropManage"},
+            {"Ranch":"MobileFrame Ranch 2","Planting":"Planting 2B","Eventdate":"9/15/25","IrrigationMethod":"Germination Sprinkler","WaterApplied":"0","ManagerAmount":"0","RecommendedInches":"0","RecommendedHours":"0","RecommendedInterval":"0","LastUpdatedDate":"9/16/25 23:46","UpdatedBy":"CropManage"},
+            {"Ranch":"MobileFrame Ranch 2","Planting":"Planting 2B","Eventdate":"9/18/25","IrrigationMethod":"Germination Sprinkler","WaterApplied":"0","ManagerAmount":"0","RecommendedInches":"0.7","RecommendedHours":"2.3","RecommendedInterval":"1.1","LastUpdatedDate":"9/16/25 23:51","UpdatedBy":"Robert Rossilli"},
+            {"Ranch":"MobileFrame Ranch 2","Planting":"Planting 2B","Eventdate":"9/23/25","IrrigationMethod":"Germination Sprinkler","WaterApplied":"0","ManagerAmount":"0","RecommendedInches":"0.7","RecommendedHours":"2.2","RecommendedInterval":"1.9","LastUpdatedDate":"9/16/25 23:51","UpdatedBy":"Robert Rossilli"}
+        ];
+        
+        // Layer 2: Working copy (gets modified, sorted, added to)
+        let displayRecords = [];
+        
+        // Layer 3: Display data (what's shown in grid - can be filtered)
+        let gridDisplayData = [];
+        
+        // Keep legacy variables for compatibility
+        window.irrigationFileStored = IRRIGATION_ORIGINAL;
+        window.irrigationLocalStorage = displayRecords;
+        window.irrigationData = displayRecords;
+        
+        // Load data into working copy with IDs
+        function loadIrrigationData() {
+            displayRecords = [];
+            
+            IRRIGATION_ORIGINAL.forEach((record, index) => {
+                // Clone record and add ID
+                const newRecord = Object.assign({}, record);
+                newRecord.ID = index + 1;  // Simple sequential IDs
+                displayRecords.push(newRecord);
+            });
+            
+            // Update legacy variables
+            window.irrigationLocalStorage = displayRecords;
+            window.irrigationData = displayRecords;
+            
+            // Set grid display to show all
+            gridDisplayData = [...displayRecords];
+            
+            console.log('Data loaded: ' + displayRecords.length + ' records');
+        }
+        
+        // Initialize on startup
+        loadIrrigationData();
+        // @@@@@ END: Data Manager Component @@@@@
+        
+        // @@@@@ START: Grid Component @@@@@
+        // S3 Grid Functions - from harness pattern
+        function loadIrrigationGrid() {
+            const tbody = document.getElementById('gridBody');
+            const count = document.getElementById('recordCount');
+            
+            if (!tbody) return;
+            
+            tbody.innerHTML = '';
+            
+            // Use gridDisplayData for rendering (can be filtered view)
+            const data = gridDisplayData || [];
+            
+            data.forEach((record, index) => {
+                const row = document.createElement('tr');
+                row.dataset.recordId = 'record_' + index;
+                row.dataset.actualId = record.ID;  // Store actual ID
+                row.onclick = function() { selectGridRow('record_' + index); };
+                
+                row.innerHTML = 
+                    '<td style="padding: 6px 8px; border-bottom: 1px solid #ddd; text-align: center; font-weight: bold;">' + (record.ID || '-') + '</td>' +
+                    '<td style="padding: 6px 8px; border-bottom: 1px solid #ddd;">' + (record.Ranch || '') + '</td>' +
+                    '<td style="padding: 6px 8px; border-bottom: 1px solid #ddd;">' + (record.Planting || '') + '</td>' +
+                    '<td style="padding: 6px 8px; border-bottom: 1px solid #ddd;">' + (record.Eventdate || '') + '</td>' +
+                    '<td style="padding: 6px 8px; border-bottom: 1px solid #ddd; text-align: center;">' + (record.RecommendedHours || '0') + '</td>' +
+                    '<td style="padding: 6px 8px; border-bottom: 1px solid #ddd; text-align: center;">' + (record.ManagerAmount || '0') + '</td>' +
+                    '<td style="padding: 6px 8px; border-bottom: 1px solid #ddd; text-align: center;">' + (parseFloat(record.RecommendedInterval) || 0) + ' days</td>' +
+                    '<td style="padding: 6px 8px; border-bottom: 1px solid #ddd; text-align: center; font-weight: ' + 
+                    (record.WaterApplied > 0 ? 'bold' : 'normal') + '; color: ' + 
+                    (record.WaterApplied > 0 ? '#4CAF50' : '#999') + ';">' + (record.WaterApplied || '0') + '</td>';
+                
+                tbody.appendChild(row);
+            });
+            
+            if (count) {
+                const totalRecords = displayRecords.length;
+                const showingRecords = gridDisplayData.length;
+                if (totalRecords === showingRecords) {
+                    count.textContent = 'Showing all ' + showingRecords + ' records';
+                } else {
+                    count.textContent = 'Showing ' + showingRecords + ' of ' + totalRecords + ' records';
+                }
+            }
+        }
+        // @@@@@ END: Grid Component @@@@@
+        
+        function selectGridRow(recordId) {
+            // TRAIL: Remove previous selection styling
+            const allRows = document.querySelectorAll('#gridBody tr');
+            allRows.forEach(row => {
+                row.classList.remove('selected');
+                row.style.background = '';
+                row.style.borderLeft = '';
+            });
+            
+            // TRAIL: Add selection to clicked row
+            const selectedRow = document.querySelector('[data-record-id="' + recordId + '"]');
+            if (selectedRow) {
+                selectedRow.classList.add('selected');
+                // Also set inline styles for immediate visual feedback
+                selectedRow.style.background = '#E3F2FD';
+                selectedRow.style.borderLeft = '4px solid #2196F3';
+                
+                // Update global selected record from gridDisplayData
+                const index = parseInt(recordId.replace('record_', ''));
+                window.selectedRecord = gridDisplayData[index];
+                
+                // Populate S4 form with selected record
+                populateForm(window.selectedRecord);
+                
+                console.log('Selected:', window.selectedRecord);
+            }
+        }
+        
+        // S4 Form Functions
+        function populateForm(record) {
+            if (!record) return;
+            
+            // Update form fields
+            document.getElementById('formRecordId').textContent = record.ID || '-';
+            document.getElementById('formRanch').value = record.Ranch || '';
+            document.getElementById('formPlanting').value = record.Planting || '';
+            document.getElementById('formDate').value = record.Eventdate || '';
+            document.getElementById('formInterval').value = record.RecommendedInterval || '';
+            document.getElementById('formRecHours').value = record.RecommendedHours || '';
+            document.getElementById('formMgrHours').value = record.ManagerAmount || '';
+            document.getElementById('formWaterApplied').value = record.WaterApplied || '';
+            document.getElementById('formMethod').value = record.IrrigationMethod || '';
+            document.getElementById('formMessage').value = '';
+        }
+        
+        // Form CRUD handlers
+        function handleFormCreate() {
+            // Just call our existing create function
+            createNextIrrigationForSelected();
+        }
+        
+        function handleFormRead() {
+            // Refresh the form with current data
+            if (window.selectedRecord) {
+                populateForm(window.selectedRecord);
+                
+                const s2Output = document.getElementById('s2-output');
+                const timestamp = new Date().toLocaleTimeString();
+                if (s2Output) {
+                    s2Output.innerHTML += 
+                        '<div style="color: #2196F3; margin: 5px 0;">' +
+                        '[' + timestamp + '] Form refreshed for ID: ' + window.selectedRecord.ID +
+                        '</div>';
+                    s2Output.scrollTop = s2Output.scrollHeight;
+                }
+            }
+        }
+        
+        function handleFormUpdate() {
+            if (!window.selectedRecord) {
+                alert('No record selected');
+                return;
+            }
+            
+            // Update the record with form values
+            const record = displayRecords.find(r => r.ID === window.selectedRecord.ID);
+            if (record) {
+                record.RecommendedHours = document.getElementById('formRecHours').value;
+                record.ManagerAmount = document.getElementById('formMgrHours').value;
+                record.WaterApplied = document.getElementById('formWaterApplied').value;
+                record.LastUpdatedDate = new Date().toLocaleString();
+                record.UpdatedBy = "Form Update";
+                
+                // Refresh grid
+                sortAndRefreshGrid();
+                
+                // Log to S2
+                const s2Output = document.getElementById('s2-output');
+                const timestamp = new Date().toLocaleTimeString();
+                if (s2Output) {
+                    s2Output.innerHTML += 
+                        '<div style="color: #ff9800; margin: 5px 0;">' +
+                        '[' + timestamp + '] Updated record ID: ' + record.ID +
+                        '</div>';
+                    s2Output.scrollTop = s2Output.scrollHeight;
+                }
+                
+                // Re-select the row
+                const gridIndex = gridDisplayData.findIndex(r => r.ID === record.ID);
+                if (gridIndex >= 0) {
+                    setTimeout(() => selectGridRow('record_' + gridIndex), 100);
+                }
+            }
+        }
+        
+        function handleFormDelete() {
+            if (!window.selectedRecord) {
+                alert('No record selected');
+                return;
+            }
+            
+            if (!confirm('Delete record ID: ' + window.selectedRecord.ID + '?')) {
+                return;
+            }
+            
+            // Remove from displayRecords
+            const index = displayRecords.findIndex(r => r.ID === window.selectedRecord.ID);
+            if (index >= 0) {
+                displayRecords.splice(index, 1);
+                
+                // Log to S2
+                const s2Output = document.getElementById('s2-output');
+                const timestamp = new Date().toLocaleTimeString();
+                if (s2Output) {
+                    s2Output.innerHTML += 
+                        '<div style="color: #f44336; margin: 5px 0;">' +
+                        '[' + timestamp + '] Deleted record ID: ' + window.selectedRecord.ID +
+                        '</div>';
+                    s2Output.scrollTop = s2Output.scrollHeight;
+                }
+                
+                // Clear form
+                window.selectedRecord = null;
+                populateForm(null);
+                document.getElementById('formRecordId').textContent = '-';
+                
+                // Refresh grid
+                sortAndRefreshGrid();
+            }
+        }
+        
+        function resetIrrigationData() {
+            // TRAIL: Reset to original data with IDs
+            loadIrrigationData();  // Reloads from IRRIGATION_ORIGINAL
+            
+            // TRAIL: Sort after reset
+            sortAndRefreshGrid();
+            
+            const s1Output = document.getElementById('s1-output');
+            if (s1Output) {
+                const timestamp = new Date().toLocaleTimeString();
+                s1Output.innerHTML = 
+                    '<div style="color: #ff9800; font-weight: bold;">[' + timestamp + '] DATA RESET</div>' +
+                    '<div style="margin-left: 20px;">Grid reset to original ' + IRRIGATION_ORIGINAL.length + ' records</div>' +
+                    '<div style="margin-left: 20px;">IDs reassigned: 1-' + IRRIGATION_ORIGINAL.length + '</div>' +
+                    '<div style="margin-left: 20px;">Sorted by Ranch → Planting → Date</div>';
+            }
+            
+            // TRAIL: Auto-select first Ranch 1 Planting 1A record after reset
+            setTimeout(() => {
+                const ranch1Index = gridDisplayData.findIndex(r => 
+                    r.Ranch && r.Ranch.includes('Ranch 1') && 
+                    r.Planting && r.Planting.includes('1A')
+                );
+                
+                if (ranch1Index >= 0) {
+                    selectGridRow('record_' + ranch1Index);
+                }
+            }, 100);
+        }
+        
+        window.refreshDataGrid = function() {
+            loadIrrigationGrid();
+        };
+        
+        // S1 Functions (Updated to work with SELECTED record)
+        function readMeterForSelected() {
+            const output = document.getElementById('s1-output');
+            const s2Output = document.getElementById('s2-output');
+            const timestamp = new Date().toLocaleTimeString();
+            
+            // Get selected record
+            if (!window.selectedRecord) {
+                const errorMsg = 'No record selected. Select a row in the grid first.';
+                output.innerHTML = 
+                    '<div style="color: #f44336;">[' + timestamp + '] ERROR</div>' +
+                    '<div style="margin-left: 20px;">' + errorMsg + '</div>';
+                
+                // Also show in S2
+                if (s2Output) {
+                    s2Output.innerHTML += 
+                        '<div style="color: #f44336; margin: 5px 0;">[' + timestamp + '] ERROR: ' + errorMsg + '</div>';
+                    s2Output.scrollTop = s2Output.scrollHeight;
+                }
+                return;
+            }
+            
+            const selected = window.selectedRecord;
+            const command = 'read meter for ' + selected.Ranch + ' ' + selected.Planting;
+            
+            // Show the command in S2 input
+            const s2Input = document.getElementById('s2-input');
+            if (s2Input) {
+                s2Input.value = command;
+            }
+            
+            // Add to S2 output (scrolling history)
+            if (s2Output) {
+                s2Output.innerHTML += 
+                    '<div style="color: #4CAF50; font-weight: bold; margin-top: 10px;">[' + timestamp + '] > ' + command + '</div>' +
+                    '<div style="margin-left: 20px; color: #666;">ID: ' + selected.ID + ' | ' + selected.Ranch + ' | ' + selected.Planting + '</div>' +
+                    '<div style="margin-left: 20px; color: #666;">Date: ' + selected.Eventdate + ' | Water Applied: ' + (selected.WaterApplied || '0') + ' hrs</div>';
+                s2Output.scrollTop = s2Output.scrollHeight;
+            }
+            
+            // Display meter reading for selected record in S1
+            output.innerHTML = 
+                '<div style="color: #4CAF50; font-weight: bold;">[' + timestamp + '] METER READING</div>' +
+                '<div style="margin-left: 20px; color: #333;">ID: ' + selected.ID + '</div>' +
+                '<div style="margin-left: 20px; color: #333;">Ranch: ' + selected.Ranch + '</div>' +
+                '<div style="margin-left: 20px; color: #333;">Planting: ' + selected.Planting + '</div>' +
+                '<div style="margin-left: 20px; color: #333;">Date: ' + selected.Eventdate + '</div>' +
+                '<div style="margin-left: 20px; color: #333;">Water Applied: ' + (selected.WaterApplied || '0') + ' hrs</div>' +
+                '<div style="margin-left: 20px; padding: 10px; background: #e8f5e9; border-radius: 4px; margin-top: 10px;">' +
+                '  <strong>Enter Water Applied (hrs):</strong><br>' +
+                '  <input type="number" id="waterInput" step="0.1" value="' + (selected.WaterApplied || '0') + '" ' +
+                '    style="margin: 5px 0; padding: 4px; width: 100px;">' +
+                '  <button onclick="updateWaterApplied()" ' +
+                '    style="margin-left: 10px; padding: 4px 10px; background: #4CAF50; color: white; border: none; border-radius: 3px; cursor: pointer;">' +
+                '    Update' +
+                '  </button>' +
+                '</div>';
+                
+            window.currentMeterRecord = selected; // Save for update
+        }
+        
+        // New function to update water applied
+        function updateWaterApplied() {
+            const waterValue = document.getElementById('waterInput').value;
+            const output = document.getElementById('s1-output');
+            const timestamp = new Date().toLocaleTimeString();
+            
+            if (window.currentMeterRecord) {
+                // Update the record in displayRecords
+                const recordToUpdate = displayRecords.find(r => r.ID === window.currentMeterRecord.ID);
+                if (recordToUpdate) {
+                    recordToUpdate.WaterApplied = waterValue;
+                    
+                    // Show confirmation
+                    output.innerHTML += 
+                        '<div style="margin-top: 10px; color: #4CAF50; font-weight: bold;">' +
+                        '[' + timestamp + '] WATER UPDATED: ' + waterValue + ' hrs' +
+                        '</div>';
+                    
+                    // Refresh grid to show update
+                    sortAndRefreshGrid();
+                    
+                    // Re-select the updated record
+                    const gridIndex = gridDisplayData.findIndex(r => r.ID === window.currentMeterRecord.ID);
+                    if (gridIndex >= 0) {
+                        selectGridRow('record_' + gridIndex);
+                    }
+                    
+                    // Send message to S2 if it exists
+                    const s2Output = document.getElementById('s2-output');
+                    if (s2Output) {
+                        s2Output.innerHTML += 
+                            '<div style="color: #4CAF50; margin: 5px 0;">' +
+                            '[' + timestamp + '] Water meter updated to ' + waterValue + ' hrs for ID: ' + window.currentMeterRecord.ID +
+                            '</div>';
+                        s2Output.scrollTop = s2Output.scrollHeight;
+                    }
+                }
+            }
+        }
+        
+        function createNextIrrigationForSelected() {
+            const output = document.getElementById('s1-output');
+            const s2Output = document.getElementById('s2-output');
+            const timestamp = new Date().toLocaleTimeString();
+            
+            // Get selected record
+            if (!window.selectedRecord) {
+                const errorMsg = 'No record selected. Select a row in the grid first.';
+                output.innerHTML = 
+                    '<div style="color: #f44336;">[' + timestamp + '] ERROR</div>' +
+                    '<div style="margin-left: 20px;">' + errorMsg + '</div>';
+                
+                // Also show in S2
+                if (s2Output) {
+                    s2Output.innerHTML += 
+                        '<div style="color: #f44336; margin: 5px 0;">[' + timestamp + '] ERROR: ' + errorMsg + '</div>';
+                    s2Output.scrollTop = s2Output.scrollHeight;
+                }
+                return;
+            }
+            
+            const selected = window.selectedRecord;
+            const command = 'create next irrigation for ' + selected.Ranch + ' ' + selected.Planting;
+            
+            // Show the command in S2 input
+            const s2Input = document.getElementById('s2-input');
+            if (s2Input) {
+                s2Input.value = command;
+            }
+            
+            // TRAIL: Find ALL records for this ranch/planting to get the most recent
+            const matchingRecords = displayRecords.filter(record => 
+                record.Ranch === selected.Ranch && 
+                record.Planting === selected.Planting
+            );
+            
+            if (matchingRecords.length > 0) {
+                // TRAIL: Sort by date to get the MOST RECENT
+                matchingRecords.sort((a, b) => {
+                    const dateA = new Date(a.Eventdate);
+                    const dateB = new Date(b.Eventdate);
+                    return dateA - dateB; // Oldest first
+                });
+                
+                const lastRecord = matchingRecords[matchingRecords.length - 1]; // Most recent is LAST
+                
+                // TRAIL: Calculate next date using interval
+                const currentDate = new Date(lastRecord.Eventdate);
+                const intervalDays = Math.round(parseFloat(lastRecord.RecommendedInterval) || 3);
+                const nextDate = new Date(currentDate);
+                nextDate.setDate(nextDate.getDate() + intervalDays);
+                
+                const nextDateStr = (nextDate.getMonth() + 1) + '/' + 
+                                   nextDate.getDate() + '/' + 
+                                   (nextDate.getFullYear() % 100);
+                
+                // TRAIL: Create new record with next ID
+                let maxID = 0;
+                for (let record of displayRecords) {
+                    if (record.ID && record.ID > maxID) {
+                        maxID = record.ID;
+                    }
+                }
+                const newID = maxID + 1;
+                
+                const newRecord = {
+                    ID: newID,
+                    Ranch: lastRecord.Ranch,
+                    Planting: lastRecord.Planting,
+                    Eventdate: nextDateStr,
+                    IrrigationMethod: lastRecord.IrrigationMethod,
+                    WaterApplied: "0",
+                    ManagerAmount: String((parseFloat(lastRecord.ManagerAmount) + 0.1).toFixed(1)),
+                    RecommendedHours: String((parseFloat(lastRecord.RecommendedHours) + 0.1).toFixed(1)),
+                    RecommendedInterval: lastRecord.RecommendedInterval,
+                    RecommendedInches: lastRecord.RecommendedInches,
+                    LastUpdatedDate: new Date().toLocaleString(),
+                    UpdatedBy: "CropClient System"
+                };
+                
+                // TRAIL: Add to displayRecords
+                displayRecords.push(newRecord);
+                
+                // Add to S2 output (scrolling history)
+                if (s2Output) {
+                    s2Output.innerHTML += 
+                        '<div style="color: #2196F3; font-weight: bold; margin-top: 10px;">[' + timestamp + '] > ' + command + '</div>' +
+                        '<div style="margin-left: 20px; color: #4CAF50;">✓ Created ID: ' + newID + ' for ' + nextDateStr + '</div>' +
+                        '<div style="margin-left: 20px; color: #666;">Rec: ' + newRecord.RecommendedHours + ' hrs | Mgr: ' + newRecord.ManagerAmount + ' hrs | Interval: ' + intervalDays + ' days</div>';
+                    s2Output.scrollTop = s2Output.scrollHeight;
+                }
+                
+                // Show in S1 output too
+                output.innerHTML = 
+                    '<div style="color: #2196F3; font-weight: bold;">[' + timestamp + '] NEXT IRRIGATION CREATED</div>' +
+                    '<div style="margin-left: 20px; color: #333;">ID: ' + newID + '</div>' +
+                    '<div style="margin-left: 20px; color: #333;">Ranch: ' + lastRecord.Ranch + '</div>' +
+                    '<div style="margin-left: 20px; color: #333;">Planting: ' + lastRecord.Planting + '</div>' +
+                    '<div style="margin-left: 20px; color: #333;">Current: ' + lastRecord.Eventdate + '</div>' +
+                    '<div style="margin-left: 20px; color: #333;">Interval: ' + intervalDays + ' days</div>' +
+                    '<div style="margin-left: 20px; color: #4CAF50; font-weight: bold;">→ Next: ' + nextDateStr + '</div>' +
+                    '<div style="margin-left: 20px; color: #666;">Rec Hours: ' + newRecord.RecommendedHours + '</div>' +
+                    '<div style="margin-left: 20px; color: #666;">Mgr Hours: ' + newRecord.ManagerAmount + '</div>';
+                
+                // TRAIL: Sort ALL records
+                sortAndRefreshGrid();
+                
+                // TRAIL: Find and select the new record by ID
+                setTimeout(() => {
+                    const gridIndex = gridDisplayData.findIndex(r => r.ID === newID);
+                    if (gridIndex >= 0) {
+                        selectGridRow('record_' + gridIndex);
+                    }
+                }, 100);
+                
+                return newID;
+            } else {
+                const errorMsg = 'No records found for ' + selected.Ranch + ' ' + selected.Planting;
+                output.innerHTML = 
+                    '<div style="color: #f44336;">[' + timestamp + '] ERROR</div>' +
+                    '<div style="margin-left: 20px;">' + errorMsg + '</div>';
+                    
+                if (s2Output) {
+                    s2Output.innerHTML += 
+                        '<div style="color: #f44336; margin: 5px 0;">[' + timestamp + '] ERROR: ' + errorMsg + '</div>';
+                    s2Output.scrollTop = s2Output.scrollHeight;
+                }
+                return null;
+            }
+        }
+        
+        // TRAIL: Following harness handleRead() pattern - sort and refresh
+        function sortAndRefreshGrid() {
+            // Sort displayRecords by Ranch → Planting → Date (oldest first)
+            displayRecords.sort((a, b) => {
+                // First by Ranch
+                if (a.Ranch < b.Ranch) return -1;
+                if (a.Ranch > b.Ranch) return 1;
+                
+                // Then by Planting  
+                if (a.Planting < b.Planting) return -1;
+                if (a.Planting > b.Planting) return 1;
+                
+                // Finally by Date (ascending - oldest first)
+                const dateA = new Date(a.Eventdate);
+                const dateB = new Date(b.Eventdate);
+                return dateA - dateB;
+            });
+            
+            // Update gridDisplayData to show sorted records
+            gridDisplayData = [...displayRecords];
+            
+            // Update legacy variables
+            window.irrigationLocalStorage = displayRecords;
+            window.irrigationData = displayRecords;
+            
+            // Refresh the grid with sorted data
+            loadIrrigationGrid();
+        }
+        
+        // S2 Command execution
+        function executeCommand(cmd) {
+            const input = document.getElementById('s2-input');
+            const output = document.getElementById('s2-output');
+            const timestamp = new Date().toLocaleTimeString();
+            
+            // Get command from parameter or input field
+            const command = cmd || input.value.trim();
+            if (!command) return;
+            
+            // Add command to output
+            output.innerHTML += 
+                '<div style="color: #9c27b0; font-weight: bold; margin-top: 10px;">' +
+                '[' + timestamp + '] > ' + command +
+                '</div>';
+            
+            // Process command
+            const lowerCmd = command.toLowerCase();
+            let result = '';
+            
+            if (lowerCmd.includes('ranch 1') || lowerCmd.includes('filter ranch 1')) {
+                // Filter gridDisplayData only (non-destructive!)
+                gridDisplayData = displayRecords.filter(r => 
+                    r.Ranch && r.Ranch.includes('Ranch 1')
+                );
+                loadIrrigationGrid();
+                result = 'Filtered to Ranch 1: ' + gridDisplayData.length + ' of ' + displayRecords.length + ' records';
+                
+            } else if (lowerCmd.includes('ranch 2') || lowerCmd.includes('filter ranch 2')) {
+                // Filter gridDisplayData only (non-destructive!)
+                gridDisplayData = displayRecords.filter(r => 
+                    r.Ranch && r.Ranch.includes('Ranch 2')
+                );
+                loadIrrigationGrid();
+                result = 'Filtered to Ranch 2: ' + gridDisplayData.length + ' of ' + displayRecords.length + ' records';
+                
+            } else if (lowerCmd.includes('show all') || lowerCmd === 'all') {
+                // Show all records in displayRecords (unfilter)
+                gridDisplayData = [...displayRecords];
+                loadIrrigationGrid();
+                result = 'Showing all ' + displayRecords.length + ' records';
+                
+            } else if (lowerCmd === 'reset') {
+                // Explicit reset command - reload from original
+                resetIrrigationData();
+                result = 'Data reset to original ' + IRRIGATION_ORIGINAL.length + ' records';
+                
+            } else if (lowerCmd.includes('count')) {
+                // Count records
+                result = 'Total: ' + displayRecords.length + ' records, Showing: ' + gridDisplayData.length;
+                
+            } else if (lowerCmd.includes('help')) {
+                // Show help
+                result = 'Commands: ranch 1 only, ranch 2 only, show all, reset, count, help';
+                
+            } else {
+                result = 'Unknown command: "' + command + '". Try: help';
+            }
+            
+            // Add result to output
+            output.innerHTML += 
+                '<div style="color: #666; margin-left: 20px;">' +
+                '→ ' + result +
+                '</div>';
+            
+            // Clear input
+            if (!cmd) input.value = '';
+            
+            // Scroll to bottom
+            output.scrollTop = output.scrollHeight;
+        }
+        
+        // Initialize S2 on load
+        window.addEventListener('DOMContentLoaded', function() {
+            const s2Output = document.getElementById('s2-output');
+            if (s2Output) {
+                const timestamp = new Date().toLocaleTimeString();
+                s2Output.innerHTML = 
+                    '<div style="color: #9c27b0;">[' + timestamp + '] S2 Command System Ready</div>' +
+                    '<div style="color: #666;">Type "help" for available commands</div>';
+            }
+        });
+        
+        // Initialize on load
+        window.addEventListener('DOMContentLoaded', function() {
+            // TRAIL: Sort data on initial load
+            sortAndRefreshGrid();
+            
+            // TRAIL: Auto-select first Ranch 1 Planting 1A
+            setTimeout(() => {
+                const data = window.irrigationLocalStorage;
+                const ranch1Index = data.findIndex(r => 
+                    r.Ranch && r.Ranch.includes('Ranch 1') && 
+                    r.Planting && r.Planting.includes('1A')
+                );
+                
+                if (ranch1Index >= 0) {
+                    selectGridRow('record_' + ranch1Index);
+                }
+            }, 200);
+            
+            console.log('CropClient Live Chat with Grid initialized');
+        });
+    </script>
+</body>
+</html>
