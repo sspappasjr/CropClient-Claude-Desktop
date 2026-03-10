@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MCP Test Harness - API Server Tools</title>
+    <style>
+        :root {
+            --left-width: 60%;
+            --right-width: 40%;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* HEADER */
+        header {
+            background: linear-gradient(135deg, #2e7d32 0%, #4caf50 100%);
+            color: white;
+            padding: 8px 20px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+        header h1 { font-size: 1.4em; }
+        header p { font-size: 0.85em; opacity: 0.9; }
+
+        /* MAIN LAYOUT */
+        .main-content {
+            flex: 1;
+            display: grid;
+            grid-template-columns: var(--left-width) var(--right-width);
+            grid-template-rows: 1fr;
+            gap: 10px;
+            padding: 10px;
+            overflow: hidden;
+        }
+
+        /* LEFT PANEL */
+        .left-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            overflow: hidden;
+        }
+
+        /* TOKEN SELECTOR - Section 1 Component */
+        .token-selector {
+            background: #fff3e0;
+            border: 2px solid #ff9800;
+            border-radius: 8px;
+            padding: 12px;
+            flex-shrink: 0;
+        }
+        .token-selector h3 {
+            color: #f57c00;
+            font-size: 1em;
+            margin-bottom: 8px;
+        }
+        .selector-row {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .tab-buttons {
+            display: flex;
+            gap: 0;
+            flex-shrink: 0;
+        }
+        .tab-btn {
+            padding: 6px 16px;
+            border: 2px solid #ddd;
+            background: #f5f5f5;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.85em;
+            transition: all 0.2s;
+        }
+        .tab-btn:first-child { border-radius: 6px 0 0 6px; }
+        .tab-btn:last-child { border-radius: 0 6px 6px 0; }
+        .tab-btn.active-json {
+            background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
+            color: white;
+            border-color: #1976D2;
+        }
+        .tab-btn.active-api {
+            background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%);
+            color: white;
+            border-color: #F57C00;
+        }
+        .token-dropdown {
+            flex: 1;
+            padding: 6px 10px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 0.9em;
+            background: white;
+        }
+        .server-select {
+            padding: 6px 10px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 0.85em;
+            background: white;
+            flex-shrink: 0;
+        }
+
+        /* FIELDS AREA */
+        .fields-area {
+            background: #fafafa;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 12px;
+            flex-shrink: 0;
+        }
+        .fields-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+        .fields-row label {
+            font-weight: 600;
+            font-size: 0.85em;
+            color: #2e7d32;
+            min-width: 70px;
+            padding-top: 6px;
+        }
+        .fields-row input {
+            flex: 1;
+            padding: 6px 10px;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+        }
+        .fields-row input:focus { outline: none; border-color: #4caf50; }
+        .json-editor {
+            width: 100%;
+            padding: 8px;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+            min-height: 80px;
+            max-height: 120px;
+            resize: vertical;
+        }
+        .json-editor:focus { outline: none; border-color: #4caf50; }
+
+        /* DATA GRID */
+        .data-grid-panel {
+            flex: 1;
+            background: #fafafa;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .data-grid-panel h3 {
+            color: #2e7d32;
+            font-size: 1em;
+            margin-bottom: 8px;
+            flex-shrink: 0;
+        }
+        .data-grid {
+            flex: 1;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            overflow: auto;
+        }
+        .data-grid table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.8em;
+        }
+        .data-grid th {
+            background: linear-gradient(135deg, #2e7d32 0%, #4caf50 100%);
+            color: white;
+            padding: 8px;
+            text-align: left;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        .data-grid td {
+            padding: 6px 8px;
+            border-bottom: 1px solid #eee;
+        }
+        .data-grid tr:hover { background: #f5f5f5; }
+        .data-grid .empty-state {
+            padding: 30px;
+            text-align: center;
+            color: #999;
+            font-style: italic;
+        }
+
+        /* RIGHT PANEL - MESSAGE LOG */
+        .right-panel {
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .message-log-panel {
+            flex: 1;
+            background: #fafafa;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .message-log-panel h3 {
+            color: #2e7d32;
+            font-size: 1em;
+            margin-bottom: 8px;
+            flex-shrink: 0;
+        }
+        .message-log {
+            flex: 1;
+            background: #263238;
+            color: #aed581;
+            font-family: 'Courier New', monospace;
+            padding: 10px;
+            border-radius: 6px;
+            overflow-y: auto;
+            font-size: 0.8em;
+            line-height: 1.4;
+        }
+        .message-log .success { color: #81c784; }
+        .message-log .error { color: #ef5350; }
+        .message-log .info { color: #64b5f6; }
+
+        /* CREDENTIALS (compact) */
+        .credentials-row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px solid #e0e0e0;
+        }
+        .credentials-row label {
+            font-size: 0.8em;
+            font-weight: 600;
+            color: #666;
+        }
+        .credentials-row input {
+            padding: 4px 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 0.8em;
+            width: 140px;
+        }
+
+        /* BOTTOM ACTION BAR - always visible */
+        .action-bar {
+            background: #263238;
+            padding: 10px 20px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-shrink: 0;
+        }
+        .action-btn {
+            padding: 10px 30px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 0.95em;
+            color: white;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .action-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 3px 8px rgba(0,0,0,0.3);
+        }
+        .action-btn.send { background: linear-gradient(135deg, #4caf50 0%, #388e3c 100%); }
+        .action-btn.clear { background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%); }
+        .action-btn.save { background: linear-gradient(135deg, #4caf50 0%, #388e3c 100%); }
+        .action-btn.restore { background: linear-gradient(135deg, #9c27b0 0%, #7b1fa2 100%); }
+        .action-bar .spacer { flex: 1; }
+        .action-bar .status {
+            color: #aed581;
+            font-size: 0.85em;
+            font-family: 'Courier New', monospace;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- HEADER -->
+    <header>
+        <h1>MCP Test Harness</h1>
+        <p>APIServer 1.3 — 15 Tools — JSON + CropManage API</p>
+    </header>
+
+    <!-- MAIN CONTENT -->
+    <div class="main-content">
+
+        <!-- LEFT PANEL -->
+        <div class="left-panel">
+
+            <!-- TOKEN SELECTOR COMPONENT -->
+            <div class="token-selector">
+                <h3>Token Selector</h3>
+                <div class="selector-row">
+                    <div class="tab-buttons">
+                        <button class="tab-btn active-json" id="tabJson" onclick="setTab('json')">JSON</button>
+                        <button class="tab-btn" id="tabApi" onclick="setTab('api')">API</button>
+                    </div>
+                    <select class="token-dropdown" id="tokenDropdown" onchange="selectToken()">
+                        <option value="">— select a token —</option>
+                    </select>
+                    <select class="server-select" id="envSelect">
+                        <option value="http://localhost:3101">Local</option>
+                        <option value="http://api.cropclient.com">Online</option>
+                    </select>
+                </div>
+                <!-- Credentials row - shows only when API tab active -->
+                <div class="credentials-row" id="credentialsRow" style="display:none;">
+                    <label>User:</label>
+                    <input type="text" id="username" value="stevep@sspnet.com">
+                    <label>Pass:</label>
+                    <input type="password" id="password" value="gosteve1!">
+                    <label>Save As:</label>
+                    <input type="text" id="saveUsername" value="steve">
+                </div>
+            </div>
+
+            <!-- FIELDS AREA -->
+            <div class="fields-area">
+                <div class="fields-row">
+                    <label>Tool:</label>
+                    <input type="text" id="toolName" value="" placeholder="Select a token above...">
+                </div>
+                <textarea class="json-editor" id="jsonData" placeholder="JSON data will populate when you select a token...">{}</textarea>
+            </div>
+
+            <!-- DATA GRID -->
+            <div class="data-grid-panel">
+                <h3>Data Grid</h3>
+                <div class="data-grid" id="dataGrid">
+                    <div class="empty-state">No data loaded. Select a token and click SEND.</div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- RIGHT PANEL -->
+        <div class="right-panel">
+            <div class="message-log-panel">
+                <h3>Message Log</h3>
+                <div class="message-log" id="messageLog">
+                    <span class="info">Ready — select a token to begin...</span>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- BOTTOM ACTION BAR - always visible -->
+    <div class="action-bar">
+        <button class="action-btn send" onclick="sendCustomCall()">SEND</button>
+        <button class="action-btn clear" onclick="clearFields()">Clear Fields</button>
+        <button class="action-btn clear" onclick="clearResults()">Clear Log</button>
+        <div class="spacer"></div>
+        <button class="action-btn save" onclick="saveCurrent()">SAVE</button>
+        <button class="action-btn restore" onclick="restoreCurrent()">RESTORE</button>
+        <div class="spacer"></div>
+        <span class="status" id="statusBar">Ready</span>
+    </div>
+
+    <script>
+        // ============================================
+        // TOKEN DEFINITIONS
+        // ============================================
+        const tokens = {
+            json: [
+                { name: 'json_write',    tool: 'json_write',    data: () => ({ filepath: 'test.json', data: { testName: 'API Server Test', timestamp: new Date().toISOString(), version: '1.3', values: [1, 2, 3] }}) },
+                { name: 'json_read',     tool: 'json_read',     data: () => ({ filepath: 'test.json' }) },
+                { name: 'json_update',   tool: 'json_update',   data: () => ({ filepath: 'test.json', updates: { updated: true, lastModified: new Date().toISOString() }}) },
+                { name: 'json_delete',   tool: 'json_delete',   data: () => ({ filepath: 'test.json' }) },
+                { name: 'json_exists',   tool: 'json_exists',   data: () => ({ filepath: 'test.json' }) },
+                { name: 'json_list',     tool: 'json_list',     data: () => ({ directory: '/.' }) },
+                { name: 'data_operation',tool: 'data_operation', data: () => ({ action: 'read', table: 'test' }) }
+            ],
+            api: [
+                { name: 'get_token',              tool: 'get_token',              data: () => ({ username: document.getElementById('username').value, password: document.getElementById('password').value }) },
+                { name: 'get_ranches',            tool: 'get_ranches',            data: () => ({}) },
+                { name: 'get_plantings',          tool: 'get_plantings',          data: () => ({ ranchGuid: ranchGuid || 'ENTER_RANCH_GUID_HERE' }) },
+                { name: 'get_irrigation_details', tool: 'get_irrigation_details', data: () => ({ plantingId: plantingId || 'ENTER_PLANTING_ID_HERE' }) },
+                { name: 'load_into_displayRecords', tool: 'load_into_displayRecords', data: () => ({ plantingId: plantingId || 'ENTER_PLANTING_ID_HERE' }) },
+                { name: 'post_new_irrigation',    tool: 'post_new_irrigation',    data: () => ({ plantingId: plantingId || 'ENTER_PLANTING_ID_HERE', scheduledDate: '12/28/24', recommendedInches: 1.5, appliedHours: 5.0, irrigationMethod: 'Sprinkler' }) },
+                { name: 'update_irrigation',      tool: 'update_irrigation',      data: () => ({ eventId: 'ENTER_EVENT_ID_HERE', appliedHours: 6.0, mgrHours: 5.5 }) },
+                { name: 'batch_post_queue',       tool: 'batch_post_queue',       data: () => ({ records: [{ id: 1, plantingId: plantingId || 'ENTER_PLANTING_ID', scheduledDate: '12/28/24', hours: 5.0, status: -1, isNew: true }] }) }
+            ]
+        };
+
+        let currentTab = 'json';
+        let ranchGuid = null;
+        let plantingId = null;
+        let currentGridData = null;
+
+        // ============================================
+        // TOKEN SELECTOR COMPONENT
+        // ============================================
+        function setTab(tab) {
+            currentTab = tab;
+            const jsonBtn = document.getElementById('tabJson');
+            const apiBtn = document.getElementById('tabApi');
+            const creds = document.getElementById('credentialsRow');
+
+            // Reset both
+            jsonBtn.className = 'tab-btn';
+            apiBtn.className = 'tab-btn';
+
+            if (tab === 'json') {
+                jsonBtn.className = 'tab-btn active-json';
+                creds.style.display = 'none';
+            } else {
+                apiBtn.className = 'tab-btn active-api';
+                creds.style.display = 'flex';
+            }
+
+            populateDropdown();
+        }
+
+        function populateDropdown() {
+            const dropdown = document.getElementById('tokenDropdown');
+            const list = tokens[currentTab];
+            dropdown.innerHTML = '<option value="">— select a token —</option>';
+            list.forEach((t, i) => {
+                const opt = document.createElement('option');
+                opt.value = i;
+                opt.textContent = t.name;
+                dropdown.appendChild(opt);
+            });
+        }
+
+        function selectToken() {
+            const dropdown = document.getElementById('tokenDropdown');
+            const index = dropdown.value;
+            if (index === '') return;
+
+            const token = tokens[currentTab][index];
+            document.getElementById('toolName').value = token.tool;
+            document.getElementById('jsonData').value = JSON.stringify(token.data(), null, 2);
+            log(`Loaded: ${token.name}`, 'success');
+            document.getElementById('statusBar').textContent = `Token: ${token.name}`;
+        }
+
+        // ============================================
+        // UTILITIES
+        // ============================================
+        function log(text, type = 'info') {
+            const area = document.getElementById('messageLog');
+            const div = document.createElement('div');
+            div.className = type;
+            div.textContent = text;
+            area.appendChild(div);
+            area.scrollTop = area.scrollHeight;
+        }
+
+        function setFields(toolName, data) {
+            document.getElementById('toolName').value = toolName;
+            document.getElementById('jsonData').value = JSON.stringify(data, null, 2);
+        }
+
+        function clearFields() {
+            document.getElementById('toolName').value = '';
+            document.getElementById('jsonData').value = '{}';
+            document.getElementById('tokenDropdown').value = '';
+            document.getElementById('statusBar').textContent = 'Fields cleared';
+        }
+
+        function clearResults() {
+            document.getElementById('messageLog').innerHTML = '<span class="info">Log cleared.</span>';
+            document.getElementById('dataGrid').innerHTML = '<div class="empty-state">No data loaded.</div>';
+            document.getElementById('statusBar').textContent = 'Cleared';
+        }
+
+        // ============================================
+        // DATA GRID RENDERER
+        // ============================================
+        function renderDataGrid(data) {
+            const grid = document.getElementById('dataGrid');
+            currentGridData = data;
+            grid.innerHTML = '';
+
+            if (data === null || data === undefined) {
+                grid.innerHTML = '<div class="empty-state">No data returned.</div>';
+                return;
+            }
+
+            // Array of objects → table
+            if (Array.isArray(data) && data.length > 0 && typeof data[0] === 'object') {
+                const table = document.createElement('table');
+                const thead = document.createElement('thead');
+                const headerRow = document.createElement('tr');
+                const keys = Object.keys(data[0]);
+                keys.forEach(key => {
+                    const th = document.createElement('th');
+                    th.textContent = key;
+                    headerRow.appendChild(th);
+                });
+                thead.appendChild(headerRow);
+                table.appendChild(thead);
+
+                const tbody = document.createElement('tbody');
+                data.forEach(row => {
+                    const tr = document.createElement('tr');
+                    keys.forEach(key => {
+                        const td = document.createElement('td');
+                        const val = row[key];
+                        td.textContent = (typeof val === 'object' && val !== null) ? JSON.stringify(val) : (val != null ? val : '');
+                        tr.appendChild(td);
+                    });
+                    tbody.appendChild(tr);
+                });
+                table.appendChild(tbody);
+                grid.appendChild(table);
+                return;
+            }
+
+            // Single object → key/value
+            if (typeof data === 'object' && !Array.isArray(data)) {
+                const table = document.createElement('table');
+                const tbody = document.createElement('tbody');
+                Object.keys(data).forEach(key => {
+                    const tr = document.createElement('tr');
+                    const tdK = document.createElement('td');
+                    const tdV = document.createElement('td');
+                    tdK.textContent = key;
+                    tdK.style.fontWeight = '600';
+                    tdK.style.background = '#f5f5f5';
+                    const val = data[key];
+                    tdV.textContent = (typeof val === 'object' && val !== null) ? JSON.stringify(val, null, 2) : (val != null ? val : '');
+                    tr.appendChild(tdK);
+                    tr.appendChild(tdV);
+                    tbody.appendChild(tr);
+                });
+                table.appendChild(tbody);
+                grid.appendChild(table);
+                return;
+            }
+
+            // Simple array
+            if (Array.isArray(data)) {
+                const table = document.createElement('table');
+                const tbody = document.createElement('tbody');
+                data.forEach((item, i) => {
+                    const tr = document.createElement('tr');
+                    const tdI = document.createElement('td');
+                    const tdV = document.createElement('td');
+                    tdI.textContent = i;
+                    tdI.style.fontWeight = '600';
+                    tdI.style.background = '#f5f5f5';
+                    tdV.textContent = (typeof item === 'object' && item !== null) ? JSON.stringify(item, null, 2) : (item != null ? item : '');
+                    tr.appendChild(tdI);
+                    tr.appendChild(tdV);
+                    tbody.appendChild(tr);
+                });
+                table.appendChild(tbody);
+                grid.appendChild(table);
+                return;
+            }
+
+            // Primitive
+            grid.innerHTML = `<div style="padding:15px; font-family:monospace;">${String(data)}</div>`;
+        }
+
+        // ============================================
+        // SEND
+        // ============================================
+        async function sendCustomCall() {
+            const serverUrl = document.getElementById('envSelect').value;
+            const toolName = document.getElementById('toolName').value.trim();
+            const jsonText = document.getElementById('jsonData').value.trim();
+
+            if (!toolName) {
+                log('Select a token first!', 'error');
+                return;
+            }
+
+            let args = {};
+            if (jsonText) {
+                try { args = JSON.parse(jsonText); }
+                catch (e) { log(`Invalid JSON: ${e.message}`, 'error'); return; }
+            }
+
+            try {
+                document.getElementById('statusBar').textContent = `Calling ${toolName}...`;
+                log(`→ ${toolName} on ${serverUrl}`, 'info');
+                log(`→ ${JSON.stringify(args)}`, 'info');
+
+                const response = await fetch(`${serverUrl}/tools/${toolName}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(args)
+                });
+                const result = await response.json();
+
+                if (result.success || response.ok) {
+                    log(`${toolName}: SUCCESS`, 'success');
+                    document.getElementById('statusBar').textContent = `${toolName} — OK`;
+
+                    const gridData = result.data || result.ranches || result.plantings || result.events || result.displayRecords || result.records || result;
+                    renderDataGrid(gridData);
+
+                    if (toolName.includes('read') || toolName === 'data_operation') {
+                        document.getElementById('jsonData').value = JSON.stringify(result.data, null, 2);
+                    }
+
+                    if (toolName === 'get_ranches' && result.ranches && result.ranches.length > 0) {
+                        ranchGuid = result.ranches[0].Ranch_External_GUID;
+                        log(`Saved Ranch GUID: ${ranchGuid}`, 'success');
+                    }
+                    if (toolName === 'get_plantings' && result.plantings && result.plantings.length > 0) {
+                        plantingId = result.plantings[0].Id;
+                        log(`Saved Planting ID: ${plantingId}`, 'success');
+                    }
+                } else {
+                    log(`${toolName}: FAILED — ${result.error || result.message}`, 'error');
+                    document.getElementById('statusBar').textContent = `${toolName} — FAILED`;
+                    renderDataGrid(result);
+                }
+            } catch (error) {
+                if (error.message === 'Failed to fetch' || error.name === 'TypeError') {
+                    log(`CORS blocked — enable the CORS extension for localhost`, 'error');
+                    document.getElementById('statusBar').textContent = 'CORS — need extension';
+                } else {
+                    log(`ERROR: ${error.message}`, 'error');
+                    document.getElementById('statusBar').textContent = 'Error';
+                }
+            }
+        }
+
+        // ============================================
+        // SAVE / RESTORE
+        // ============================================
+        function saveCurrent() {
+            const saveUser = document.getElementById('saveUsername').value.trim();
+            if (!saveUser) { log('Enter a username for save!', 'error'); return; }
+            if (!currentGridData) { log('No data in grid to save!', 'error'); return; }
+            setFields('data_operation', { action: 'write', table: saveUser, data: currentGridData });
+            log(`Ready to save as "${saveUser}" — click SEND`, 'success');
+            document.getElementById('statusBar').textContent = `Save → ${saveUser} (click SEND)`;
+        }
+
+        function restoreCurrent() {
+            const saveUser = document.getElementById('saveUsername').value.trim();
+            if (!saveUser) { log('Enter a username for restore!', 'error'); return; }
+            setFields('data_operation', { action: 'read', table: saveUser });
+            log(`Ready to restore "${saveUser}" — click SEND`, 'success');
+            document.getElementById('statusBar').textContent = `Restore → ${saveUser} (click SEND)`;
+        }
+
+        // ============================================
+        // INIT
+        // ============================================
+        window.addEventListener('DOMContentLoaded', () => {
+            populateDropdown();
+            log('MCP Test Harness Ready', 'success');
+            log('Select a tab → pick a token → SEND', 'info');
+        });
+    </script>
+</body>
+</html>

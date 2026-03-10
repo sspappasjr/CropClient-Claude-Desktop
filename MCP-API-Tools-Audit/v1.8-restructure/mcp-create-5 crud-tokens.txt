@@ -1,0 +1,23 @@
+the client-AI-Component.js need to be re-injected. 
+
+the crud... tokens and the source code connected to them are trash. 
+
+the intent was to follow this trail below. and find the actual token we have been using in harness app since day one. 
+a good place to find and create an injectable component is stated below. 
+take this as a priority .. George.has been involved with the tools for a long time 
+
+steve (coach) 
+
+
+
+
+!-- @@@@ IRRIGATION_COMPONENT v1.1 id:irrigation-mcp @@@@ -->771
+<!-- @@@@ IRRIGATION_COMPONENT v1.1 id:irrigation-mcp @@@@ -->1014
+in dashboard 
+// MCP TOOLS REGISTRY  1047+1065 last is 
+// ========================================
+// FUNCTIONS - MCP Tool Caller
+// ========================================
+
+ taken from:
+CropClient-MCP-API-Tools-Audit-Q-v1.6.html

@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CropClient — Deploy API</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #1a1a2e;
+    color: #e0e0e0;
+    min-height: 100vh;
+    padding: 20px;
+  }
+
+  .header {
+    text-align: center;
+    padding: 20px 0;
+    border-bottom: 2px solid #16213e;
+    margin-bottom: 24px;
+  }
+  .header h1 { color: #e94560; font-size: 24px; }
+  .header .subtitle { color: #888; font-size: 14px; margin-top: 4px; }
+
+  .config-panel {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    background: #16213e;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 20px;
+  }
+  .config-panel label {
+    font-size: 11px;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+    display: block;
+  }
+  .config-panel input, .config-panel select {
+    width: 100%;
+    padding: 8px 12px;
+    background: #0f3460;
+    border: 1px solid #1a1a4e;
+    border-radius: 4px;
+    color: #e0e0e0;
+    font-size: 14px;
+    font-family: 'Consolas', monospace;
+  }
+  .config-panel input:focus, .config-panel select:focus {
+    outline: none;
+    border-color: #e94560;
+  }
+  .field-group { display: flex; flex-direction: column; }
+  .field-row-full { grid-column: 1 / -1; }
+
+  .steps-panel {
+    background: #16213e;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 20px;
+  }
+  .steps-panel h2 {
+    font-size: 14px;
+    color: #e94560;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 12px;
+  }
+
+  .step {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    border-radius: 6px;
+    margin-bottom: 8px;
+    background: #0f3460;
+    transition: background 0.2s;
+  }
+  .step:hover { background: #1a1a4e; }
+
+  .step-number {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: #1a1a2e;
+    color: #e94560;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: bold; font-size: 13px;
+    flex-shrink: 0;
+  }
+  .step-info { flex: 1; }
+  .step-name { font-weight: 600; font-size: 14px; }
+  .step-desc { font-size: 11px; color: #888; margin-top: 2px; }
+
+  .step-status {
+    font-size: 11px;
+    padding: 3px 10px;
+    border-radius: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    flex-shrink: 0;
+  }
+  .status-pending { background: #333; color: #888; }
+  .status-running { background: #e94560; color: #fff; animation: pulse 1s infinite; }
+  .status-done { background: #2ecc71; color: #fff; }
+  .status-fail { background: #e74c3c; color: #fff; }
+  .status-skip { background: #555; color: #aaa; }
+
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.6; } }
+
+  .step button {
+    padding: 6px 16px;
+    background: #e94560;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    flex-shrink: 0;
+  }
+  .step button:hover { background: #c73650; }
+  .step button:disabled { background: #444; color: #777; cursor: not-allowed; }
+
+  .action-bar {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .action-bar button {
+    flex: 1;
+    padding: 12px;
+    border: none;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .btn-deploy { background: #e94560; color: #fff; }
+  .btn-deploy:hover { background: #c73650; }
+  .btn-verify { background: #0f3460; color: #e0e0e0; border: 1px solid #1a1a4e; }
+  .btn-verify:hover { background: #1a1a4e; }
+  .btn-clear { background: #333; color: #aaa; }
+  .btn-clear:hover { background: #444; }
+
+  .log-panel {
+    background: #0d0d1a;
+    border: 1px solid #16213e;
+    border-radius: 8px;
+    padding: 16px;
+    max-height: 300px;
+    overflow-y: auto;
+    font-family: 'Consolas', monospace;
+    font-size: 12px;
+    line-height: 1.6;
+  }
+  .log-panel h2 {
+    font-size: 14px;
+    color: #e94560;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+  }
+  .log-line { margin: 0; }
+  .log-ok { color: #2ecc71; }
+  .log-err { color: #e74c3c; }
+  .log-info { color: #888; }
+  .log-cmd { color: #3498db; }
+  .log-heading { color: #e94560; font-weight: bold; }
+
+  .pair-warning {
+    background: #e74c3c22;
+    border: 1px solid #e74c3c;
+    border-radius: 6px;
+    padding: 10px 14px;
+    margin-bottom: 16px;
+    font-size: 12px;
+    color: #e74c3c;
+    display: none;
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <h1>CropClient — Deploy API</h1>
+  <div class="subtitle">Butler Tool — Push API updates to production</div>
+</div>
+
+<!-- CONFIG FIELDS -->
+<div class="config-panel">
+  <div class="field-group">
+    <label>Version</label>
+    <input type="text" id="cfgVersion" value="2.0" onchange="updateVersion()">
+  </div>
+  <div class="field-group">
+    <label>Server IP</label>
+    <input type="text" id="cfgServerIP" value="184.168.20.205">
+  </div>
+  <div class="field-group">
+    <label>Domain</label>
+    <input type="text" id="cfgDomain" value="api.cropclient.com">
+  </div>
+  <div class="field-group">
+    <label>API Port</label>
+    <input type="text" id="cfgPort" value="3101">
+  </div>
+  <div class="field-group">
+    <label>Alpha Path</label>
+    <input type="text" id="cfgAlpha" value="C:\AICode\crop-client-services\api-server">
+  </div>
+  <div class="field-group">
+    <label>Server Path</label>
+    <input type="text" id="cfgServer" value="C:\Crop-Client-Services\api-server">
+  </div>
+  <div class="field-group field-row-full">
+    <label>Source (v2.0 folder)</label>
+    <input type="text" id="cfgSource" value="C:\AICode\CropClient-Claude-Desktop\MCP-API-Tools-Audit\v2.0-apiupdate">
+  </div>
+</div>
+
+<!-- PAIR WARNING -->
+<div class="pair-warning" id="pairWarning">
+  web.config PAIR RULE: web.config and web(version).config must be exact copies. Check sync before deploying!
+</div>
+
+<!-- DEPLOY STEPS -->
+<div class="steps-panel">
+  <h2>Deploy Steps</h2>
+
+  <div class="step" id="step1">
+    <div class="step-number">1</div>
+    <div class="step-info">
+      <div class="step-name">Run api-deploy bat</div>
+      <div class="step-desc">Copy v<span class="ver">2.0</span> files → alpha + pre-test</div>
+    </div>
+    <span class="step-status status-pending" id="status1">pending</span>
+    <button onclick="runStep(1)">Run</button>
+  </div>
+
+  <div class="step" id="step2">
+    <div class="step-number">2</div>
+    <div class="step-info">
+      <div class="step-name">Test Local</div>
+      <div class="step-desc">Verify APIServer<span class="ver">2.0</span>.js runs on port <span class="port-val">3101</span></div>
+    </div>
+    <span class="step-status status-pending" id="status2">pending</span>
+    <button onclick="runStep(2)">Test</button>
+  </div>
+
+  <div class="step" id="step3">
+    <div class="step-number">3</div>
+    <div class="step-info">
+      <div class="step-name">Git Commit + Push</div>
+      <div class="step-desc">Commit alpha and push to GitHub</div>
+    </div>
+    <span class="step-status status-pending" id="status3">pending</span>
+    <button onclick="runStep(3)">Push</button>
+  </div>
+
+  <div class="step" id="step4">
+    <div class="step-number">4</div>
+    <div class="step-info">
+      <div class="step-name">Server Deploy</div>
+      <div class="step-desc">RDP to <span class="ip-val">184.168.20.205</span> — git pull + iisreset</div>
+    </div>
+    <span class="step-status status-pending" id="status4">pending</span>
+    <button onclick="runStep(4)">Remind</button>
+  </div>
+
+  <div class="step" id="step5">
+    <div class="step-number">5</div>
+    <div class="step-info">
+      <div class="step-name">Verify Live</div>
+      <div class="step-desc">Test https://<span class="domain-val">api.cropclient.com</span>/ping + /tools</div>
+    </div>
+    <span class="step-status status-pending" id="status5">pending</span>
+    <button onclick="runStep(5)">Verify</button>
+  </div>
+</div>
+
+<!-- ACTION BAR -->
+<div class="action-bar">
+  <button class="btn-verify" onclick="verifyPair()">Check Config Pair</button>
+  <button class="btn-deploy" onclick="runAllSteps()">Deploy All</button>
+  <button class="btn-clear" onclick="clearLog()">Clear Log</button>
+</div>
+
+<!-- LOG -->
+<div class="log-panel" id="logPanel">
+  <h2>Deploy Log</h2>
+  <div id="logContent"></div>
+</div>
+
+<script>
+  // ---- State ----
+  const stepStates = { 1: 'pending', 2: 'pending', 3: 'pending', 4: 'pending', 5: 'pending' };
+
+  // ---- Config helpers ----
+  function cfg(id) { return document.getElementById(id).value.trim(); }
+  function ver() { return cfg('cfgVersion'); }
+
+  function updateVersion() {
+    const v = ver();
+    document.querySelectorAll('.ver').forEach(el => el.textContent = v);
+    document.querySelectorAll('.port-val').forEach(el => el.textContent = cfg('cfgPort'));
+    document.querySelectorAll('.ip-val').forEach(el => el.textContent = cfg('cfgServerIP'));
+    document.querySelectorAll('.domain-val').forEach(el => el.textContent = cfg('cfgDomain'));
+  }
+
+  // ---- Logging ----
+  function log(msg, cls) {
+    const line = document.createElement('p');
+    line.className = 'log-line ' + (cls || 'log-info');
+    line.textContent = msg;
+    document.getElementById('logContent').appendChild(line);
+    document.getElementById('logPanel').scrollTop = 999999;
+  }
+
+  function clearLog() {
+    document.getElementById('logContent').innerHTML = '';
+    Object.keys(stepStates).forEach(k => setStatus(k, 'pending'));
+  }
+
+  // ---- Status badges ----
+  function setStatus(step, state) {
+    stepStates[step] = state;
+    const el = document.getElementById('status' + step);
+    el.textContent = state;
+    el.className = 'step-status status-' + (state === 'running' ? 'running' : state === 'done' ? 'done' : state === 'fail' ? 'fail' : state === 'skip' ? 'skip' : 'pending');
+  }
+
+  // ---- Step runners ----
+  function runStep(n) {
+    const v = ver();
+    const port = cfg('cfgPort');
+    const domain = cfg('cfgDomain');
+    const ip = cfg('cfgServerIP');
+    const alpha = cfg('cfgAlpha');
+    const server = cfg('cfgServer');
+    const source = cfg('cfgSource');
+
+    setStatus(n, 'running');
+
+    switch(n) {
+      case 1:
+        log('=== STEP 1: api-deploy' + v + '.bat ===', 'log-heading');
+        log('> Source: ' + source, 'log-cmd');
+        log('> Alpha:  ' + alpha, 'log-cmd');
+        log('Copy APIServer' + v + '.js → alpha', 'log-info');
+        log('Copy api-component' + v + '.js → alpha', 'log-info');
+        log('Copy web' + v + '.config → web.config (pair rule)', 'log-info');
+        log('Copy web' + v + '.config → web' + v + '.config', 'log-info');
+        log('Copy SERVER-INSTALL-GUIDE' + v + '.txt → tools/', 'log-info');
+        log('Copy QUICK_START' + v + '.txt → tools/', 'log-info');
+        log('ACTION: Double-click api-deploy' + v + '.bat in the source folder', 'log-ok');
+        log('Then mark this step done.', 'log-info');
+        setStatus(n, 'done');
+        break;
+
+      case 2:
+        log('=== STEP 2: Test Local ===', 'log-heading');
+        log('> cd ' + alpha, 'log-cmd');
+        log('> node APIServer' + v + '.js', 'log-cmd');
+        log('Expect: 15 tools, port ' + port, 'log-info');
+        // Try to ping local server
+        fetch('http://localhost:' + port + '/ping')
+          .then(r => r.json())
+          .then(data => {
+            log('PING OK: ' + JSON.stringify(data), 'log-ok');
+            return fetch('http://localhost:' + port + '/tools');
+          })
+          .then(r => r.json())
+          .then(data => {
+            if (Array.isArray(data)) {
+              log('TOOLS: ' + data.length + ' available', 'log-ok');
+            } else if (data.tools) {
+              log('TOOLS: ' + data.tools.length + ' available', 'log-ok');
+            }
+            setStatus(n, 'done');
+          })
+          .catch(e => {
+            log('Could not reach localhost:' + port + ' — is the server running?', 'log-err');
+            log('Start it manually, then click Test again.', 'log-info');
+            setStatus(n, 'fail');
+          });
+        break;
+
+      case 3:
+        log('=== STEP 3: Git Commit + Push ===', 'log-heading');
+        log('> cd ' + alpha.replace('\\api-server', ''), 'log-cmd');
+        log('> git add .', 'log-cmd');
+        log('> git commit -m "Deploy v' + v + ' — APIServer' + v + ' to production"', 'log-cmd');
+        log('> git push', 'log-cmd');
+        log('ACTION: Run these commands in your terminal, or use deploy-api.js', 'log-ok');
+        log('Then mark this step done.', 'log-info');
+        setStatus(n, 'done');
+        break;
+
+      case 4:
+        log('=== STEP 4: Server Deploy ===', 'log-heading');
+        log('RDP to ' + ip, 'log-info');
+        log('> cd /d ' + server, 'log-cmd');
+        log('> git pull', 'log-cmd');
+        log('> iisreset', 'log-cmd');
+        log('Or double-click: server-deploy' + v + '.bat', 'log-ok');
+        setStatus(n, 'done');
+        break;
+
+      case 5:
+        log('=== STEP 5: Verify Live ===', 'log-heading');
+        log('Testing https://' + domain + '/ping ...', 'log-cmd');
+        fetch('https://' + domain + '/ping')
+          .then(r => r.json())
+          .then(data => {
+            log('PING OK: ' + JSON.stringify(data), 'log-ok');
+            return fetch('https://' + domain + '/tools');
+          })
+          .then(r => r.json())
+          .then(data => {
+            if (Array.isArray(data)) {
+              log('TOOLS: ' + data.length + ' available — v' + v + ' is LIVE', 'log-ok');
+            } else if (data.tools) {
+              log('TOOLS: ' + data.tools.length + ' available — v' + v + ' is LIVE', 'log-ok');
+            }
+            setStatus(n, 'done');
+          })
+          .catch(e => {
+            log('Could not reach ' + domain + ' — ' + e.message, 'log-err');
+            setStatus(n, 'fail');
+          });
+        break;
+    }
+  }
+
+  function runAllSteps() {
+    log('========== DEPLOY v' + ver() + ' — FULL RUN ==========', 'log-heading');
+    [1, 2, 3, 4, 5].forEach((n, i) => {
+      setTimeout(() => runStep(n), i * 1500);
+    });
+  }
+
+  function verifyPair() {
+    const v = ver();
+    log('Checking web.config pair rule...', 'log-heading');
+    log('web.config must point to APIServer' + v + '.js', 'log-info');
+    log('web' + v + '.config must be an exact copy of web.config', 'log-info');
+    log('ACTION: Open both files and compare — they must match.', 'log-ok');
+    document.getElementById('pairWarning').style.display = 'block';
+  }
+
+  // Init
+  updateVersion();
+</script>
+</body>
+</html>

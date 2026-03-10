@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Server Tester v1.7</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* HEADER — warm, spacious like 1.4 */
+        header {
+            background: linear-gradient(135deg, #2e7d32 0%, #4caf50 100%);
+            color: white;
+            padding: 12px 25px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+        header h1 { font-size: 1.5em; margin-bottom: 2px; }
+        header p { opacity: 0.9; font-size: 0.95em; }
+
+        /* 2x2 GRID */
+        .grid-2x2 {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 60% 40%;
+            grid-template-rows: 50% 50%;
+            gap: 8px;
+            padding: 8px;
+            overflow: hidden;
+        }
+
+        /* QUADRANT BASE */
+        .quad {
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            background: #fafafa;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .quad-header {
+            background: linear-gradient(135deg, #2e7d32 0%, #4caf50 100%);
+            color: white;
+            padding: 8px 15px;
+            font-weight: 700;
+            font-size: 1.0em;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* TOP LEFT — interactive panel style from 1.4 */
+        .quad.interactive {
+            border: 3px solid #ff9800;
+            background: #fff3e0;
+        }
+        .quad.interactive .quad-header {
+            background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%);
+        }
+        .quad-body {
+            flex: 1;
+            padding: 12px;
+            overflow: auto;
+        }
+
+        /* SECTION LABELS — green accent like 1.4 headings */
+        .section-label {
+            font-size: 0.9em;
+            font-weight: 700;
+            color: #2e7d32;
+            margin-bottom: 6px;
+            margin-top: 10px;
+            padding-bottom: 4px;
+            border-bottom: 2px solid #4caf50;
+        }
+        .section-label:first-child { margin-top: 0; }
+
+        /* BUTTONS — generous sizing like 1.4 */
+        .button-row {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 8px;
+        }
+        .test-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9em;
+            color: white;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .test-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        .test-btn:active { transform: translateY(0); }
+        .test-btn.json { background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%); }
+        .test-btn.api { background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%); }
+        .test-btn.save { background: linear-gradient(135deg, #4caf50 0%, #388e3c 100%); }
+        .test-btn.restore { background: linear-gradient(135deg, #9c27b0 0%, #7b1fa2 100%); }
+
+        /* CONFIG ROW — credentials & server */
+        .config-row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            padding-top: 8px;
+            border-top: 1px solid #ffcc80;
+            margin-top: 8px;
+        }
+        .config-row label {
+            font-size: 0.9em;
+            font-weight: 600;
+            color: #f57c00;
+            white-space: nowrap;
+        }
+        .config-row input {
+            padding: 5px 8px;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+        .config-row input:focus { outline: none; border-color: #ff9800; }
+        .server-input { flex: 1; min-width: 160px; font-family: 'Courier New', monospace; }
+
+        /* TOP RIGHT: MESSAGE LOG */
+        .message-log {
+            flex: 1;
+            background: #263238;
+            color: #aed581;
+            font-family: 'Courier New', monospace;
+            padding: 12px;
+            border-radius: 6px;
+            overflow-y: auto;
+            font-size: 0.9em;
+            line-height: 1.6;
+        }
+        .message-log .success { color: #81c784; }
+        .message-log .error { color: #ef5350; }
+        .message-log .info { color: #64b5f6; }
+
+        .fields-row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            padding-top: 8px;
+        }
+        .fields-row label {
+            font-weight: 600;
+            font-size: 0.95em;
+            color: #2e7d32;
+            min-width: 45px;
+        }
+        .fields-row input {
+            flex: 1;
+            padding: 6px 10px;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+        .fields-row input:focus { outline: none; border-color: #4caf50; }
+
+        .chat-actions {
+            display: flex;
+            gap: 8px;
+            padding-top: 8px;
+            flex-shrink: 0;
+        }
+        .btn-send {
+            flex: 1;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 1.0em;
+            color: white;
+            background: linear-gradient(135deg, #4caf50 0%, #388e3c 100%);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .btn-send:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        .btn-clear {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 1.0em;
+            color: white;
+            background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .btn-clear:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        /* BOTTOM LEFT: DATA GRID */
+        .view-toggle {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-left: auto;
+            font-size: 0.9em;
+        }
+        .view-toggle label { cursor: pointer; }
+        .data-grid {
+            flex: 1;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            overflow: auto;
+        }
+        .data-grid table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9em;
+        }
+        .data-grid th {
+            background: linear-gradient(135deg, #2e7d32 0%, #4caf50 100%);
+            color: white;
+            padding: 8px 10px;
+            text-align: left;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        .data-grid td {
+            padding: 6px 10px;
+            border-bottom: 1px solid #eee;
+        }
+        .data-grid tr:hover { background: #e8f5e9; }
+        .data-grid .empty-state {
+            padding: 40px;
+            text-align: center;
+            color: #999;
+            font-style: italic;
+        }
+        .json-preview {
+            flex: 1;
+            background: #263238;
+            color: #aed581;
+            font-family: 'Courier New', monospace;
+            padding: 12px;
+            border-radius: 6px;
+            overflow: auto;
+            font-size: 0.9em;
+            line-height: 1.5;
+            white-space: pre-wrap;
+        }
+
+        /* BOTTOM RIGHT: JSON EDITOR */
+        .json-editor {
+            flex: 1;
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            resize: none;
+        }
+        .json-editor:focus { outline: none; border-color: #4caf50; }
+
+        /* STATUS BAR */
+        .status-bar {
+            background: #263238;
+            color: #aed581;
+            padding: 5px 20px;
+            font-size: 0.9em;
+            font-family: 'Courier New', monospace;
+            flex-shrink: 0;
+        }
+        .test-btn.logon { background: linear-gradient(135deg, #00796b 0%, #009688 100%); padding:5px 12px; font-size:0.85em; white-space:nowrap; }
+        .modal-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center; }
+        .modal-overlay.active { display:flex; }
+        .modal-box { background:white; border-radius:10px; padding:28px; width:360px; box-shadow:0 8px 32px rgba(0,0,0,0.3); }
+        .modal-box h3 { color:#2e7d32; margin-bottom:18px; font-size:1.15em; }
+        .modal-field { margin-bottom:14px; }
+        .modal-field label { display:block; font-weight:600; color:#555; margin-bottom:4px; font-size:0.9em; }
+        .modal-field input { width:100%; padding:10px; border:2px solid #ddd; border-radius:6px; font-size:0.95em; }
+        .modal-field input:focus { outline:none; border-color:#4caf50; }
+        .modal-actions { display:flex; gap:10px; margin-top:18px; }
+        .modal-actions button { flex:1; padding:12px; border:none; border-radius:6px; cursor:pointer; font-weight:600; font-size:0.95em; color:white; }
+        .btn-logon { background:linear-gradient(135deg, #4caf50 0%, #388e3c 100%); }
+        .btn-cancel { background:linear-gradient(135deg, #9e9e9e 0%, #757575 100%); }
+    </style>
+</head>
+<body>
+
+<!-- LOGON POPUP MODAL -->
+<div class="modal-overlay" id="logonModal">
+    <div class="modal-box">
+        <h3>🔐 CropManage Logon</h3>
+        <div class="modal-field">
+            <label>Name:</label>
+            <input type="text" id="modalName" value="steve" placeholder="Save As name">
+        </div>
+        <div class="modal-field">
+            <label>Email:</label>
+            <input type="text" id="modalEmail" value="stevep@sspnet.com" placeholder="Email address">
+        </div>
+        <div class="modal-field">
+            <label>Password:</label>
+            <input type="password" id="modalPassword" value="gosteve1!" placeholder="Password">
+        </div>
+        <div class="modal-actions">
+            <button class="btn-logon" onclick="doLogon()">🔑 LOGIN</button>
+            <button class="btn-cancel" onclick="closeLogon()">Cancel</button>
+        </div>
+    </div>
+</div>
+
+    <!-- HEADER -->
+    <header>
+        <h1>🧪 API Server Interactive Tester v1.7</h1>
+        <p>APIServer 2.0 — 15 MCP Tools — Edit & Send Custom Calls</p>
+    </header>
+
+    <!-- 2x2 GRID -->
+    <div class="grid-2x2">
+
+        <!-- TOP LEFT: Interactive Command Panel -->
+        <div class="quad interactive">
+            <div class="quad-header">⚡ Interactive Command Panel</div>
+            <div class="quad-body">
+                <!-- CREDENTIALS BAR -->
+                <div class="config-row" style="gap:8px; align-items:center; margin-bottom:8px; background:#fff3e0; padding:6px 10px; border-radius:6px;">
+                    <label style="color:#e65100; font-weight:700;">credentials:</label>
+                    <input type="text" id="username" value="stevep@sspnet.com" style="flex:1; font-family:'Courier New',monospace; font-size:0.85em; padding:5px 8px; border:1px solid #ffcc80; border-radius:4px;">
+                    <label style="color:#e65100; font-weight:700; margin-left:12px;">File Name:</label>
+                    <input type="text" id="saveUsername" value="steve" style="width:100px; font-family:'Courier New',monospace; font-size:0.85em; padding:5px 8px; border:1px solid #ffcc80; border-radius:4px;">
+                    <button class="test-btn logon" onclick="showLogon()">🔑 LOGON</button>
+                </div>
+                <!-- URL BAR -->
+                <div class="config-row" style="gap:8px; align-items:center; margin-bottom:8px;">
+                    <label>Server URL:</label>
+                    <input type="text" id="serverUrl" class="server-input" value="http://localhost:3101" placeholder="http://localhost:3101 or https://api.cropclient.com">
+                    <button class="test-btn json" onclick="setServerLocal()" style="padding:7px 13px; white-space:nowrap;">📍 Local</button>
+                    <button class="test-btn api" onclick="setServerProduction()" style="padding:7px 13px; white-space:nowrap;">🌐 Online</button>
+                </div>
+                <div class="section-label">📁 JSON Tools (7)</div>
+                <div class="button-row">
+                    <button class="test-btn json" onclick="loadJsonWrite()">json_write</button>
+                    <button class="test-btn json" onclick="loadJsonRead()">json_read</button>
+                    <button class="test-btn json" onclick="loadJsonUpdate()">json_update</button>
+                    <button class="test-btn json" onclick="loadJsonDelete()">json_delete</button>
+                    <button class="test-btn json" onclick="loadJsonExists()">json_exists</button>
+                    <button class="test-btn json" onclick="loadJsonList()">json_list</button>
+                    <button class="test-btn json" onclick="loadDataOperation()">data_operation</button>
+                </div>
+
+                <div class="section-label">🌐 CropManage API (8)</div>
+                <div class="button-row">
+                    <button class="test-btn api" onclick="loadGetToken()">get_token</button>
+                    <button class="test-btn api" onclick="loadGetRanches()">get_ranches</button>
+                    <button class="test-btn api" onclick="loadGetPlantings()">get_plantings</button>
+                    <button class="test-btn api" onclick="loadGetIrrigationDetails()">get_irrigation_details</button>
+                    <button class="test-btn api" onclick="loadDisplayRecords()">load_displayRecords</button>
+                    <button class="test-btn api" onclick="loadPostIrrigation()">post_new_irrigation</button>
+                    <button class="test-btn api" onclick="loadUpdateIrrigation()">update_irrigation</button>
+                    <button class="test-btn api" onclick="loadBatchPost()">batch_post_queue</button>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- TOP RIGHT: Message Log + Tool + Send -->
+        <div class="quad">
+            <div class="quad-header">💬 Message Log</div>
+            <div class="quad-body" style="display:flex; flex-direction:column;">
+                <div class="message-log" id="messageLog">
+                    <span class="info">Click buttons to populate fields, or edit manually and click SEND...</span>
+                </div>
+                <div class="fields-row">
+                    <label>Tool:</label>
+                    <input type="text" id="toolName" value="" placeholder="Click a button or type tool name...">
+                </div>
+                <div class="chat-actions">
+                    <button class="btn-send" onclick="sendCustomCall()">📤 SEND</button>
+                    <button class="test-btn save" onclick="saveCurrent()">💾 SAVE</button>
+                    <button class="test-btn restore" onclick="restoreCurrent()">📥 RESTORE</button>
+                    <button class="btn-clear" onclick="clearResults()">Clear</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- BOTTOM LEFT: Data Grid -->
+        <div class="quad">
+            <div class="quad-header">
+                📊 Results
+                <div class="view-toggle">
+                    <label><input type="radio" name="viewMode" value="grid" checked onchange="switchView('grid')"> Grid</label>
+                    <label><input type="radio" name="viewMode" value="json" onchange="switchView('json')"> JSON</label>
+                </div>
+            </div>
+            <div class="quad-body" style="display:flex; flex-direction:column;">
+                <div class="data-grid" id="dataGrid">
+                    <div class="empty-state">No data loaded. Click a tool button and SEND.</div>
+                </div>
+                <div class="json-preview" id="jsonView" style="display:none;">No data loaded.</div>
+            </div>
+        </div>
+
+        <!-- BOTTOM RIGHT: JSON Data -->
+        <div class="quad">
+            <div class="quad-header">📝 JSON Data</div>
+            <div class="quad-body" style="display:flex; flex-direction:column;">
+                <textarea class="json-editor" id="jsonData" placeholder="JSON data will populate when you click a tool button...">{}</textarea>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- STATUS BAR -->
+    <div class="status-bar">
+        <span id="statusBar">✅ Ready</span>
+    </div>
+
+    <script>
+        let ranchGuid = null;
+        let plantingId = null;
+        let currentGridData = null;
+
+        // ============================================
+        // UTILITIES
+        // ============================================
+        function log(text, type = 'info') {
+            const area = document.getElementById('messageLog');
+            const div = document.createElement('div');
+            div.className = type;
+            div.textContent = text;
+            area.appendChild(div);
+            area.scrollTop = area.scrollHeight;
+        }
+
+        function setFields(toolName, data) {
+            document.getElementById('toolName').value = toolName;
+            document.getElementById('jsonData').value = JSON.stringify(data, null, 2);
+            log(`✅ Loaded: ${toolName}`, 'success');
+            document.getElementById('statusBar').textContent = `Tool: ${toolName}`;
+        }
+
+        function clearResults() {
+            document.getElementById('messageLog').innerHTML = '<span class="info">Log cleared.</span>';
+            document.getElementById('dataGrid').innerHTML = '<div class="empty-state">No data loaded.</div>';
+            document.getElementById('jsonView').textContent = 'No data loaded.';
+            document.getElementById('toolName').value = '';
+            document.getElementById('jsonData').value = '{}';
+            document.getElementById('statusBar').textContent = '✅ Cleared';
+        }
+
+        // ============================================
+        // LOGON POPUP
+        // ============================================
+        function showLogon() {
+            document.getElementById('logonModal').classList.add('active');
+            setTimeout(() => document.getElementById('modalEmail').focus(), 100);
+        }
+        function closeLogon() {
+            document.getElementById('logonModal').classList.remove('active');
+        }
+        async function doLogon() {
+            const name     = document.getElementById('modalName').value.trim();
+            const email    = document.getElementById('modalEmail').value.trim();
+            const password = document.getElementById('modalPassword').value.trim();
+            if (!email || !password) { log('❌ Email and password required.', 'error'); return; }
+            closeLogon();
+            document.getElementById('username').value    = email;
+            document.getElementById('saveUsername').value = name || email.split('@')[0];
+            log(`🔑 Logging in as ${email}...`, 'info');
+            setFields('get_token', { username: email, password: password });
+            await sendCustomCall();
+        }
+
+        // ============================================
+        // SERVER PRESETS
+        // ============================================
+        function setServerLocal() {
+            document.getElementById('serverUrl').value = 'http://localhost:3101';
+            log('📍 Server set to localhost:3101', 'success');
+        }
+        function setServerProduction() {
+            document.getElementById('serverUrl').value = 'http://api.cropclient.com';
+            log('🌐 Server set to production', 'success');
+        }
+
+        // ============================================
+        // VIEW TOGGLE: Grid vs JSON
+        // ============================================
+        function switchView(mode) {
+            const grid = document.getElementById('dataGrid');
+            const json = document.getElementById('jsonView');
+            if (mode === 'json') {
+                grid.style.display = 'none';
+                json.style.display = 'block';
+                if (currentGridData) {
+                    json.textContent = JSON.stringify(currentGridData, null, 2);
+                }
+            } else {
+                grid.style.display = 'block';
+                json.style.display = 'none';
+            }
+        }
+
+        // ============================================
+        // DATA GRID RENDERER
+        // ============================================
+        function renderDataGrid(data) {
+            const grid = document.getElementById('dataGrid');
+            currentGridData = data;
+            grid.innerHTML = '';
+
+            if (data === null || data === undefined) {
+                grid.innerHTML = '<div class="empty-state">No data returned.</div>';
+                return;
+            }
+
+            // Array of objects → table
+            if (Array.isArray(data) && data.length > 0 && typeof data[0] === 'object') {
+                const table = document.createElement('table');
+                const thead = document.createElement('thead');
+                const headerRow = document.createElement('tr');
+                const keys = Object.keys(data[0]);
+                keys.forEach(key => {
+                    const th = document.createElement('th');
+                    th.textContent = key;
+                    headerRow.appendChild(th);
+                });
+                thead.appendChild(headerRow);
+                table.appendChild(thead);
+
+                const tbody = document.createElement('tbody');
+                data.forEach(row => {
+                    const tr = document.createElement('tr');
+                    keys.forEach(key => {
+                        const td = document.createElement('td');
+                        const val = row[key];
+                        td.textContent = (typeof val === 'object' && val !== null) ? JSON.stringify(val) : (val != null ? val : '');
+                        tr.appendChild(td);
+                    });
+                    tbody.appendChild(tr);
+                });
+                table.appendChild(tbody);
+                grid.appendChild(table);
+                return;
+            }
+
+            // Single object → key/value
+            if (typeof data === 'object' && !Array.isArray(data)) {
+                const table = document.createElement('table');
+                const tbody = document.createElement('tbody');
+                Object.keys(data).forEach(key => {
+                    const tr = document.createElement('tr');
+                    const tdK = document.createElement('td');
+                    const tdV = document.createElement('td');
+                    tdK.textContent = key;
+                    tdK.style.fontWeight = '600';
+                    tdK.style.background = '#e8f5e9';
+                    const val = data[key];
+                    tdV.textContent = (typeof val === 'object' && val !== null) ? JSON.stringify(val, null, 2) : (val != null ? val : '');
+                    tr.appendChild(tdK);
+                    tr.appendChild(tdV);
+                    tbody.appendChild(tr);
+                });
+                table.appendChild(tbody);
+                grid.appendChild(table);
+                return;
+            }
+
+            // Simple array
+            if (Array.isArray(data)) {
+                const table = document.createElement('table');
+                const tbody = document.createElement('tbody');
+                data.forEach((item, i) => {
+                    const tr = document.createElement('tr');
+                    const tdI = document.createElement('td');
+                    const tdV = document.createElement('td');
+                    tdI.textContent = i;
+                    tdI.style.fontWeight = '600';
+                    tdI.style.background = '#e8f5e9';
+                    tdV.textContent = (typeof item === 'object' && item !== null) ? JSON.stringify(item, null, 2) : (item != null ? item : '');
+                    tr.appendChild(tdI);
+                    tr.appendChild(tdV);
+                    tbody.appendChild(tr);
+                });
+                table.appendChild(tbody);
+                grid.appendChild(table);
+                return;
+            }
+
+            // Primitive
+            grid.innerHTML = `<div style="padding:20px; font-family:monospace; font-size:0.95em;">${String(data)}</div>`;
+        }
+
+        // ============================================
+        // SEND
+        // ============================================
+        async function sendCustomCall() {
+            const serverUrl = document.getElementById('serverUrl').value.trim();
+            const toolName = document.getElementById('toolName').value.trim();
+            const jsonText = document.getElementById('jsonData').value.trim();
+
+            if (!toolName) {
+                log('❌ Click a tool button first!', 'error');
+                return;
+            }
+
+            let args = {};
+            if (jsonText) {
+                try { args = JSON.parse(jsonText); }
+                catch (e) { log(`❌ Invalid JSON: ${e.message}`, 'error'); return; }
+            }
+
+            try {
+                document.getElementById('statusBar').textContent = `⏳ Calling ${toolName}...`;
+                log(`→ Calling ${toolName} on ${serverUrl}...`, 'info');
+                log(`→ Args: ${JSON.stringify(args)}`, 'info');
+
+                const response = await fetch(`${serverUrl}/tools/${toolName}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(args)
+                });
+                const result = await response.json();
+
+                if (result.success || response.ok) {
+                    log(`✅ ${toolName}: SUCCESS`, 'success');
+                    document.getElementById('statusBar').textContent = `✅ ${toolName} — OK`;
+
+                    const gridData = result.data || result.ranches || result.plantings || result.events || result.displayRecords || result.records || result.files || result;
+                    renderDataGrid(gridData);
+
+                    if (toolName.includes('read') || toolName === 'data_operation') {
+                        document.getElementById('jsonData').value = JSON.stringify(result.data, null, 2);
+                    }
+
+                    if (toolName === 'get_ranches' && result.ranches && result.ranches.length > 0) {
+                        ranchGuid = result.ranches[0].Ranch_External_GUID;
+                        log(`📌 Saved Ranch GUID: ${ranchGuid}`, 'success');
+                    }
+                    if (toolName === 'get_plantings' && result.plantings && result.plantings.length > 0) {
+                        plantingId = result.plantings[0].Id;
+                        log(`📌 Saved Planting ID: ${plantingId}`, 'success');
+                    }
+                } else {
+                    log(`❌ ${toolName}: FAILED — ${result.error || result.message}`, 'error');
+                    document.getElementById('statusBar').textContent = `❌ ${toolName} — FAILED`;
+                    renderDataGrid(result);
+                }
+            } catch (error) {
+                if (error.message === 'Failed to fetch' || error.name === 'TypeError') {
+                    log(`❌ CORS blocked — enable the CORS extension for localhost`, 'error');
+                    document.getElementById('statusBar').textContent = '❌ CORS — need extension';
+                } else {
+                    log(`❌ ERROR: ${error.message}`, 'error');
+                    document.getElementById('statusBar').textContent = '❌ Error';
+                }
+            }
+        }
+
+        // ============================================
+        // JSON TOOL LOADERS
+        // ============================================
+        function loadJsonWrite() {
+            setFields('json_write', {
+                filepath: 'test.json',
+                data: {
+                    testName: 'API Server Test',
+                    timestamp: new Date().toISOString(),
+                    version: '2.0',
+                    values: [1, 2, 3]
+                }
+            });
+        }
+        function loadJsonRead() { setFields('json_read', { filepath: 'test.json' }); }
+        function loadJsonUpdate() {
+            setFields('json_update', {
+                filepath: 'test.json',
+                updates: { updated: true, lastModified: new Date().toISOString() }
+            });
+        }
+        function loadJsonDelete() { setFields('json_delete', { filepath: 'test.json' }); }
+        function loadJsonExists() { setFields('json_exists', { filepath: 'test.json' }); }
+        function loadJsonList() { setFields('json_list', { directory: '/.' }); }
+        function loadDataOperation() { setFields('data_operation', { action: 'read', table: 'test' }); }
+
+        // ============================================
+        // API TOOL LOADERS
+        // ============================================
+        function loadGetToken() {
+            setFields('get_token', {
+                username: document.getElementById('username').value,
+                password: document.getElementById('password').value
+            });
+        }
+        function loadGetRanches() { setFields('get_ranches', {}); }
+        function loadGetPlantings() {
+            if (!ranchGuid) log('⚠️ No Ranch GUID stored. Run get_ranches first or enter manually.', 'error');
+            setFields('get_plantings', { ranchGuid: ranchGuid || 'ENTER_RANCH_GUID_HERE' });
+        }
+        function loadGetIrrigationDetails() {
+            if (!plantingId) log('⚠️ No Planting ID stored. Run get_plantings first or enter manually.', 'error');
+            setFields('get_irrigation_details', { plantingId: plantingId || 'ENTER_PLANTING_ID_HERE' });
+        }
+        function loadDisplayRecords() {
+            if (!plantingId) log('⚠️ No Planting ID stored. Run get_plantings first or enter manually.', 'error');
+            setFields('load_into_displayRecords', { plantingId: plantingId || 'ENTER_PLANTING_ID_HERE' });
+        }
+        function loadPostIrrigation() {
+            if (!plantingId) log('⚠️ No Planting ID stored. Run get_plantings first or enter manually.', 'error');
+            setFields('post_new_irrigation', {
+                plantingId: plantingId || 'ENTER_PLANTING_ID_HERE',
+                scheduledDate: '12/28/24',
+                recommendedInches: 1.5,
+                appliedHours: 5.0,
+                irrigationMethod: 'Sprinkler'
+            });
+        }
+        function loadUpdateIrrigation() {
+            setFields('update_irrigation', { eventId: 'ENTER_EVENT_ID_HERE', appliedHours: 6.0, mgrHours: 5.5 });
+        }
+        function loadBatchPost() {
+            setFields('batch_post_queue', {
+                records: [{
+                    id: 1,
+                    plantingId: plantingId || 'ENTER_PLANTING_ID',
+                    scheduledDate: '12/28/24',
+                    hours: 5.0,
+                    status: -1,
+                    isNew: true
+                }]
+            });
+        }
+
+        // ============================================
+        // SAVE / RESTORE
+        // ============================================
+        function saveCurrent() {
+            const saveUser = document.getElementById('saveUsername').value.trim();
+            if (!saveUser) { log('❌ Enter a username for save!', 'error'); return; }
+            if (!currentGridData) { log('❌ No data in grid to save! Load some data first.', 'error'); return; }
+            setFields('data_operation', { action: 'write', table: saveUser, data: currentGridData });
+            log(`💾 Ready to save as "${saveUser}" — click SEND to confirm`, 'success');
+        }
+
+        function restoreCurrent() {
+            const saveUser = document.getElementById('saveUsername').value.trim();
+            if (!saveUser) { log('❌ Enter a username for restore!', 'error'); return; }
+            setFields('data_operation', { action: 'read', table: saveUser });
+            log(`📥 Ready to restore "${saveUser}" — click SEND to load`, 'success');
+        }
+
+        // ============================================
+        // INIT
+        // ============================================
+        window.addEventListener('DOMContentLoaded', () => {
+            log('✅ API Server Tester v1.6 Ready!', 'success');
+            log('📍 Default: localhost:3101', 'info');
+            log('', 'info');
+            log('📋 Instructions:', 'info');
+            log('1. Click any button to populate fields', 'info');
+            log('2. Edit Server URL, Tool Name, or JSON as needed', 'info');
+            log('3. Click SEND to execute', 'info');
+            log('4. View data in grid (left) and messages in log (right)', 'info');
+            log('', 'info');
+            log('Ready to test!', 'success');
+        });
+    </script>
+</body>
+</html>

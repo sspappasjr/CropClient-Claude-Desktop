@@ -1,0 +1,1752 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CropClient - Field Test v10</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Top Header */
+        .top-header {
+            height: 48px;
+            background: linear-gradient(135deg, #1B5E20 0%, #2E7D32 100%);
+            color: white;
+            padding: 0 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo-link {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: white;
+        }
+
+        .logo-link::before {
+            content: "🌱";
+            font-size: 1.5rem;
+        }
+
+        .header-right {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            font-size: 0.9rem;
+        }
+
+        .version-display {
+            color: white;
+            opacity: 0.9;
+            font-weight: 600;
+            padding: 5px 12px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+        }
+
+        .user-btn {
+            background: rgba(255,255,255,0.1);
+            padding: 8px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: background 0.3s ease;
+            position: relative;
+        }
+
+        .user-btn:hover {
+            background: rgba(255,255,255,0.2);
+        }
+
+        .user-profile-popup {
+            display: none;
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 10px;
+            background: white;
+            color: #333;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+            min-width: 250px;
+            z-index: 1000;
+        }
+
+        .user-profile-popup.show {
+            display: block;
+        }
+
+        .profile-header {
+            font-size: 1.1rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #2E7D32;
+            border-bottom: 2px solid #4CAF50;
+            padding-bottom: 8px;
+        }
+
+        .profile-detail {
+            margin: 10px 0;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .profile-label {
+            color: #666;
+            font-weight: 600;
+        }
+
+        .profile-value {
+            color: #2E7D32;
+            font-weight: bold;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 60% 40%;
+            gap: 20px;
+            height: calc(100vh - 48px);
+            padding: 20px;
+        }
+
+        .left-panel {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .right-panel {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            height: 100%;
+        }
+
+        /* Chat Section - Top 50% of right panel */
+        .chat-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            border-bottom: 2px solid #e0e0e0;
+            overflow: hidden;
+        }
+
+        .chat-header {
+            background: #2196F3;
+            color: white;
+            padding: 15px 20px;
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px;
+            background: #f5f5f5;
+        }
+
+        .chat-message {
+            margin-bottom: 10px;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .chat-message.system {
+            background: #e3f2fd;
+            border-left: 4px solid #2196F3;
+        }
+
+        .chat-message.success {
+            background: #e8f5e9;
+            border-left: 4px solid #4CAF50;
+        }
+
+        .chat-message.warning {
+            background: #fff3e0;
+            border-left: 4px solid #ff9800;
+        }
+
+        .chat-message.error {
+            background: #ffebee;
+            border-left: 4px solid #f44336;
+        }
+
+        /* Form Section - Bottom 50% of right panel */
+        .form-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .form-header {
+            background: #ff9800;
+            color: white;
+            padding: 15px 20px;
+            font-size: 18px;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+        }
+
+        .form-header-left {
+            flex: 0 0 auto;
+        }
+
+        .form-header-center {
+            flex: 1;
+            text-align: center;
+            font-size: 16px;
+        }
+
+        .form-subheader {
+            padding: 12px 20px;
+            background: #f5f5f5;
+            border-bottom: 2px solid #e0e0e0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .form-subheader-icon {
+            font-size: 20px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .form-subheader-icon:hover {
+            transform: scale(1.2);
+        }
+
+        .form-subheader-text {
+            font-size: 15px;
+            font-weight: 600;
+            color: #2a5298;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 10000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 10% auto;
+            padding: 30px;
+            border-radius: 10px;
+            width: 60%;
+            max-width: 600px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+
+        .modal-header {
+            font-size: 20px;
+            font-weight: 600;
+            color: #2a5298;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #ff9800;
+        }
+
+        .modal-body {
+            font-size: 14px;
+            line-height: 1.6;
+            color: #333;
+        }
+
+        .modal-body p {
+            margin: 10px 0;
+        }
+
+        .modal-close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            line-height: 20px;
+        }
+
+        .modal-close:hover {
+            color: #000;
+        }
+
+        .expand-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 5px 10px;
+            border-radius: 5px;
+            transition: all 0.3s;
+            z-index: 100;
+        }
+
+        .expand-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.1);
+        }
+
+        .full-page {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            z-index: 9999 !important;
+            margin: 0 !important;
+            border-radius: 0 !important;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .form-content {
+            padding: 20px;
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        h1 {
+            color: #2a5298;
+            margin-bottom: 20px;
+        }
+
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f9f9f9;
+            border-radius: 8px;
+            border-left: 4px solid #4CAF50;
+        }
+
+        .test-section.grid-section {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .table-container {
+            flex: 1;
+            overflow-y: scroll;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+        }
+
+        .table-container::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        .table-container::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 5px;
+        }
+
+        .table-container::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 5px;
+        }
+
+        .table-container::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
+        .test-button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            margin: 5px;
+        }
+
+        .test-button:hover {
+            background: #45a049;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background: #2a5298;
+            color: white;
+            font-weight: 600;
+        }
+
+        tr:hover {
+            background: #f5f5f5;
+            cursor: pointer;
+        }
+
+        tr.selected {
+            background: #E3F2FD !important;
+            border-left: 4px solid #2196F3;
+        }
+
+        /* Form Module Styles */
+        .form-module {
+            margin-top: 20px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .form-field label {
+            display: block;
+            font-weight: 600;
+            color: #2a5298;
+            margin-bottom: 5px;
+            font-size: 13px;
+        }
+
+        .form-field input {
+            width: 100%;
+            padding: 8px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        .form-field input:read-only {
+            background: #f5f5f5;
+            color: #666;
+        }
+
+        .recommendation-box {
+            background: linear-gradient(135deg, #4CAF50 0%, #2E7D32 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            margin: 15px auto;
+            width: 60%;
+        }
+
+        .recommendation-label {
+            font-size: 11px;
+            opacity: 0.9;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+        }
+
+        .recommendation-value {
+            font-size: 42px;
+            font-weight: bold;
+        }
+
+        .crud-footer {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 2px solid #e0e0e0;
+        }
+
+        .crud-btn {
+            padding: 10px 5px;
+            border: none;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            color: white;
+        }
+
+        .btn-create { background: #4CAF50; }
+        .btn-read { background: #2196F3; }
+        .btn-update { background: #ff9800; }
+        .btn-delete { background: #f44336; }
+
+        .console-output {
+            display: none;
+        }
+
+        .form-instruction {
+            padding: 12px 20px;
+            background: #fffacd;
+            border: 2px solid #ffd700;
+            border-radius: 6px;
+            font-size: 14px;
+            color: #333;
+            text-align: center;
+            font-weight: 500;
+            margin-top: 15px;
+        }
+
+        .console-line {
+            margin: 3px 0;
+        }
+
+        .console-error {
+            color: #f48771;
+        }
+
+        .console-success {
+            color: #89d185;
+        }
+
+        .console-info {
+            color: #6cb6ff;
+        }
+
+        .result-box {
+            background: #e8f5e9;
+            border: 2px solid #4CAF50;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        #resultArea {
+            padding: 15px;
+            display: none;
+        }
+
+        .result-box.error {
+            background: #ffebee;
+            border-color: #f44336;
+        }
+
+        /* PROMPT INTERFACE STYLES */
+        .prompt-section {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .prompt-header {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1B5E20;
+            margin-bottom: 10px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .diy-builder {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .builder-column label {
+            display: block;
+            font-size: 11px;
+            font-weight: 600;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .builder-grid {
+            max-height: 120px;
+            overflow-y: auto;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            padding: 5px;
+        }
+
+        .builder-item {
+            padding: 6px 10px;
+            background: #f5f5f5;
+            border-radius: 4px;
+            margin-bottom: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+
+        .builder-item:hover {
+            background: #e8f5e9;
+        }
+
+        .builder-item.selected {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .prompt-textarea {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #2a5298;
+            border-radius: 6px;
+            font-size: 13px;
+            resize: vertical;
+            min-height: 60px;
+            font-family: inherit;
+        }
+
+        .prompt-buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 6px;
+            margin-top: 8px;
+        }
+
+        .prompt-btn {
+            padding: 8px;
+            border: none;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            color: white;
+        }
+
+        .btn-reset-prompt { background: #ff9800; }
+        .btn-save-prompt { background: #2196F3; }
+        .btn-fill-prompt { background: #9C27B0; }
+        .btn-execute-prompt { background: #4CAF50; }
+
+        .prompt-output {
+            margin-top: 10px;
+            padding: 10px;
+            background: #f5f5f5;
+            border-radius: 4px;
+            font-size: 12px;
+            color: #333;
+            min-height: 40px;
+            display: none;
+        }
+
+        .prompt-output.show {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="top-header">
+        <div class="header-left">
+            <div class="logo-link">CropClient Services</div>
+            <span style="opacity: 0.7;">|</span>
+            <span>Field Test</span>
+        </div>
+        <div class="header-right">
+            <span class="version-display">v10</span>
+            <div class="user-btn" onclick="toggleUserProfile()">
+                <span>👤</span>
+                <span id="currentUserDisplay">Not Logged In</span>
+                <div id="userProfilePopup" class="user-profile-popup">
+                    <div class="profile-header">User Profile</div>
+                    <div class="profile-detail">
+                        <span class="profile-label">Name:</span>
+                        <span class="profile-value" id="profileName">-</span>
+                    </div>
+                    <div class="profile-detail">
+                        <span class="profile-label">Role:</span>
+                        <span class="profile-value" id="profileRole">-</span>
+                    </div>
+                    <div class="profile-detail">
+                        <span class="profile-label">Ranch Access:</span>
+                        <span class="profile-value" id="profileRanch">-</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- LEFT PANEL: Grid and Console -->
+        <div class="left-panel">
+            <div class="form-header">
+                <span class="form-header-left">CropClient Field Test v10</span>
+            </div>
+
+            <div style="padding: 20px; display: flex; flex-direction: column; flex: 1; overflow: hidden;">
+            
+            <!-- PROMPT INTERFACE SECTION -->
+            <div class="prompt-section">
+                <div class="prompt-header" style="display: flex; justify-content: space-between; align-items: center;">
+                    <span>🤖 DIY Prompt Builder</span>
+                    <div style="display: flex; gap: 8px;">
+                        <button class="test-button" onclick="testCreateNext()" style="padding: 6px 12px; font-size: 12px;">Create</button>
+                        <button class="test-button" onclick="testReadMeter()" style="padding: 6px 12px; font-size: 12px;">Meter</button>
+                    </div>
+                </div>
+                
+                <!-- Action + Target Builder -->
+                <div class="diy-builder">
+                    <div class="builder-column">
+                        <label>Action:</label>
+                        <div class="builder-grid" id="actionGrid">
+                            <!-- Populated by JavaScript -->
+                        </div>
+                    </div>
+                    <div class="builder-column">
+                        <label>Target:</label>
+                        <div class="builder-grid" id="targetGrid">
+                            <!-- Populated by JavaScript -->
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Prompt Textarea -->
+                <textarea class="prompt-textarea" id="promptText" placeholder="Select Action + Target, or type your own prompt..."></textarea>
+                
+                <!-- Prompt Buttons -->
+                <div class="prompt-buttons">
+                    <button class="prompt-btn btn-reset-prompt" onclick="resetPrompt()">🔄 Reset</button>
+                    <button class="prompt-btn btn-save-prompt" onclick="savePrompt()">💾 Save</button>
+                    <button class="prompt-btn btn-fill-prompt" onclick="fillPrompt()">📝 Fill</button>
+                    <button class="prompt-btn btn-execute-prompt" onclick="executePrompt()">▶️ Execute</button>
+                </div>
+                
+                <!-- Prompt Output -->
+                <div class="prompt-output" id="promptOutput"></div>
+            </div>
+
+            <div class="test-section grid-section" style="flex: 1; margin: 10px 0; display: flex; flex-direction: column; overflow: hidden;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                    <span style="font-size: 14px; font-weight: 600; margin: 0;">Irrigation</span>
+                    <span style="font-size: 12px; margin: 0; color: #2a5298;" id="recordCount">0 Records</span>
+                </div>
+                <div class="table-container" style="flex: 1;">
+                    <table id="dataTable">
+                        <thead>
+                            <tr>
+                                <th>Ranch</th>
+                                <th>Planting</th>
+                                <th>Date</th>
+                                <th>Rec Hours</th>
+                                <th>Interval</th>
+                                <th>Water Applied</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            </div>
+
+        </div>
+
+        <!-- RIGHT PANEL: Chat (Top 50%) + Form (Bottom 50%) -->
+        <div class="right-panel" id="formPanel">
+            
+            <!-- CHAT SECTION - Top 50% -->
+            <div class="chat-section">
+                <div class="chat-header">
+                    💬 Activity Log
+                </div>
+                <div class="chat-messages" id="chatMessages">
+                    <div class="chat-message system">
+                        Welcome to CropClient Field Test v10. Use the prompt builder or test buttons to execute actions.
+                    </div>
+                </div>
+            </div>
+            
+            <!-- FORM SECTION - Bottom 50% -->
+            <div class="form-section">
+                <div class="form-header">
+                    <span class="form-header-left">Irrigation</span>
+                    <span class="form-header-center" id="headerRanchPlanting">Select a record</span>
+                    <button class="expand-btn" onclick="toggleFullPage('formPanel')" title="Expand">⛶</button>
+                </div>
+                <div class="form-subheader">
+                    <span class="form-subheader-icon" onclick="showInstructions()" title="Show Instructions">📋</span>
+                    <span class="form-subheader-text" id="formSubheaderText">Form Instructions</span>
+                </div>
+                
+                <div class="form-content">
+                
+                <!-- Result Area at top -->
+                <div id="resultArea"></div>
+                
+                <!-- MODULAR FORM -->
+                <div class="form-module" id="irrigationFormModule">
+                    
+                    <!-- Readonly Fields Row: Date & Interval -->
+                    <div class="form-row">
+                        <div class="form-field">
+                            <label>Date</label>
+                            <input type="text" id="formDate" readonly>
+                        </div>
+                        <div class="form-field">
+                            <label>Interval</label>
+                            <input type="text" id="formInterval" readonly>
+                        </div>
+                    </div>
+
+                    <!-- Centered Recommendation Box -->
+                    <div class="recommendation-box">
+                        <div class="recommendation-label">Recommended Hours</div>
+                        <div class="recommendation-value" id="formRecommendation">-</div>
+                    </div>
+
+                    <!-- Editable Fields Row: Manager & Water Applied -->
+                    <div class="form-row">
+                        <div class="form-field">
+                            <label>Manager Hours</label>
+                            <input type="number" id="formManagerHours" step="0.1">
+                        </div>
+                        <div class="form-field">
+                            <label>Water Applied</label>
+                            <input type="number" id="formWaterApplied" step="0.1">
+                        </div>
+                    </div>
+
+                    <!-- Message/Instructions Field (full width) -->
+                    <div style="margin: 15px 0;">
+                        <div class="form-field">
+                            <label>Task Message / Instructions</label>
+                            <input type="text" id="formMessage" placeholder="Instructions for field worker..." style="background: #fffacd; border-color: #ffd700;">
+                        </div>
+                    </div>
+
+                    <!-- CRUD Footer Buttons -->
+                    <div class="crud-footer" style="grid-template-columns: repeat(5, 1fr);">
+                        <button class="crud-btn" style="background: #9E9E9E;" onclick="handleReset()">🔄 Reset</button>
+                        <button class="crud-btn btn-create" onclick="handleCreate()">✨ Create</button>
+                        <button class="crud-btn btn-read" onclick="testReadMeter()">👁️ Meter</button>
+                        <button class="crud-btn btn-update" onclick="handleUpdate()">💾 Update</button>
+                        <button class="crud-btn btn-delete" onclick="handleDelete()">🗑️ Delete</button>
+                    </div>
+
+                </div>
+                <!-- END MODULAR FORM -->
+                </div> <!-- End form-content -->
+            </div> <!-- End form-section -->
+            
+        </div> <!-- End right-panel -->
+    </div>
+
+    <!-- Instructions Modal Popup -->
+    <div id="instructionsModal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeInstructions()">&times;</span>
+            <div class="modal-header">Form Instructions</div>
+            <div class="modal-body">
+                <p><strong>Reset:</strong> Reloads all irrigation data from scratch</p>
+                <p><strong>Create:</strong> Calculate and create next irrigation event</p>
+                <p><strong>Meter:</strong> Read water meter</p>
+                <p><strong>Update:</strong> Save changes to selected record</p>
+                <p><strong>Delete:</strong> Remove created records (originals protected)</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ========================================
+        // EMBEDDED IRRIGATION DATA (from irrigation.json)
+        // ========================================
+        const IRRIGATION_DATA = [
+  {
+    "Ranch": "MobileFrame Ranch 1",
+    "Planting": "Planting 1A",
+    "Eventdate": "9/15/25",
+    "IrrigationMethod": "Germination Sprinkler",
+    "WaterApplied": "0",
+    "ManagerAmount": "0",
+    "RecommendedInches": "0",
+    "RecommendedHours": "0",
+    "RecommendedInterval": "0",
+    "LastUpdatedDate": "9/16/25 22:25",
+    "UpdatedBy": "Robert Rossilli"
+  },
+  {
+    "Ranch": "MobileFrame Ranch 1",
+    "Planting": "Planting 1A",
+    "Eventdate": "9/20/25",
+    "IrrigationMethod": "Germination Sprinkler",
+    "WaterApplied": "2",
+    "ManagerAmount": "2",
+    "RecommendedInches": "0.5",
+    "RecommendedHours": "1.7",
+    "RecommendedInterval": "2.6",
+    "LastUpdatedDate": "9/16/25 22:36",
+    "UpdatedBy": "Robert Rossilli"
+  },
+  {
+    "Ranch": "MobileFrame Ranch 1",
+    "Planting": "Planting 1A",
+    "Eventdate": "9/23/25",
+    "IrrigationMethod": "Germination Sprinkler",
+    "WaterApplied": "0",
+    "ManagerAmount": "0",
+    "RecommendedInches": "0.6",
+    "RecommendedHours": "2.1",
+    "RecommendedInterval": "1.2",
+    "LastUpdatedDate": "9/16/25 22:37",
+    "UpdatedBy": "Robert Rossilli"
+  },
+  {
+    "Ranch": "MobileFrame Ranch 1",
+    "Planting": "Planting 1B",
+    "Eventdate": "9/15/25",
+    "IrrigationMethod": "Sprinkler",
+    "WaterApplied": "0.56",
+    "ManagerAmount": "0.28",
+    "RecommendedInches": "0",
+    "RecommendedHours": "0",
+    "RecommendedInterval": "0",
+    "LastUpdatedDate": "9/16/25 22:30",
+    "UpdatedBy": "Robert Rossilli"
+  },
+  {
+    "Ranch": "MobileFrame Ranch 1",
+    "Planting": "Planting 1B",
+    "Eventdate": "9/18/25",
+    "IrrigationMethod": "Sprinkler",
+    "WaterApplied": "0",
+    "ManagerAmount": "0",
+    "RecommendedInches": "0.3",
+    "RecommendedHours": "0.9",
+    "RecommendedInterval": "3",
+    "LastUpdatedDate": "9/16/25 22:29",
+    "UpdatedBy": "Robert Rossilli"
+  },
+  {
+    "Ranch": "MobileFrame Ranch 1",
+    "Planting": "Planting 1B",
+    "Eventdate": "9/21/25",
+    "IrrigationMethod": "Sprinkler",
+    "WaterApplied": "0",
+    "ManagerAmount": "0",
+    "RecommendedInches": "0.2",
+    "RecommendedHours": "0.9",
+    "RecommendedInterval": "3",
+    "LastUpdatedDate": "9/16/25 22:32",
+    "UpdatedBy": "Robert Rossilli"
+  },
+  {
+    "Ranch": "MobileFrame Ranch 2",
+    "Planting": "Planting 2A",
+    "Eventdate": "9/15/25",
+    "IrrigationMethod": "Sprinkler",
+    "WaterApplied": "0.54",
+    "ManagerAmount": "0",
+    "RecommendedInches": "0",
+    "RecommendedHours": "0",
+    "RecommendedInterval": "0",
+    "LastUpdatedDate": "9/16/25 23:50",
+    "UpdatedBy": "Robert Rossilli"
+  },
+  {
+    "Ranch": "MobileFrame Ranch 2",
+    "Planting": "Planting 2A",
+    "Eventdate": "9/18/25",
+    "IrrigationMethod": "Sprinkler",
+    "WaterApplied": "0",
+    "ManagerAmount": "0",
+    "RecommendedInches": "0.6",
+    "RecommendedHours": "2",
+    "RecommendedInterval": "1.1",
+    "LastUpdatedDate": "9/16/25 23:50",
+    "UpdatedBy": "Robert Rossilli"
+  },
+  {
+    "Ranch": "MobileFrame Ranch 2",
+    "Planting": "Planting 2A",
+    "Eventdate": "9/23/25",
+    "IrrigationMethod": "Sprinkler",
+    "WaterApplied": "0",
+    "ManagerAmount": "0",
+    "RecommendedInches": "0.6",
+    "RecommendedHours": "1.9",
+    "RecommendedInterval": "1.9",
+    "LastUpdatedDate": "9/16/25 23:44",
+    "UpdatedBy": "CropManage "
+  },
+  {
+    "Ranch": "MobileFrame Ranch 2",
+    "Planting": "Planting 2B",
+    "Eventdate": "9/15/25",
+    "IrrigationMethod": "Germination Sprinkler",
+    "WaterApplied": "0",
+    "ManagerAmount": "0",
+    "RecommendedInches": "0",
+    "RecommendedHours": "0",
+    "RecommendedInterval": "0",
+    "LastUpdatedDate": "9/16/25 23:46",
+    "UpdatedBy": "CropManage "
+  },
+  {
+    "Ranch": "MobileFrame Ranch 2",
+    "Planting": "Planting 2B",
+    "Eventdate": "9/18/25",
+    "IrrigationMethod": "Germination Sprinkler",
+    "WaterApplied": "0",
+    "ManagerAmount": "0",
+    "RecommendedInches": "0.7",
+    "RecommendedHours": "2.3",
+    "RecommendedInterval": "1.1",
+    "LastUpdatedDate": "9/16/25 23:51",
+    "UpdatedBy": "Robert Rossilli"
+  },
+  {
+    "Ranch": "MobileFrame Ranch 2",
+    "Planting": "Planting 2B",
+    "Eventdate": "9/23/25",
+    "IrrigationMethod": "Germination Sprinkler",
+    "WaterApplied": "0",
+    "ManagerAmount": "0",
+    "RecommendedInches": "0.7",
+    "RecommendedHours": "2.2",
+    "RecommendedInterval": "1.9",
+    "LastUpdatedDate": "9/16/25 23:51",
+    "UpdatedBy": "Robert Rossilli"
+  }
+];
+
+        // Working data array
+        let displayRecords = [];
+        let selectedRecord = null;
+
+        // ========================================
+        // DATE UTILITY FUNCTIONS
+        // ========================================
+
+        // Parse date in M/D/YY format to proper Date object
+        function parseEventDate(dateStr) {
+            logConsole(`Parsing date: "${dateStr}"`, 'info');
+            const parts = dateStr.split('/');
+            const month = parseInt(parts[0]);
+            const day = parseInt(parts[1]);
+            const year = 2000 + parseInt(parts[2]);
+            const result = new Date(year, month - 1, day);
+            logConsole(`  -> Parsed to: ${result}`, 'info');
+            return result;
+        }
+
+        // Format Date object to M/D/YY
+        function formatDate(date) {
+            const year = String(date.getFullYear()).slice(-2);
+            const month = date.getMonth() + 1;
+            const day = date.getDate();
+            const result = `${month}/${day}/${year}`;
+            logConsole(`Formatting date: ${date} -> "${result}"`, 'info');
+            return result;
+        }
+
+        // ========================================
+        // CONSOLE LOGGING
+        // ========================================
+
+        function logConsole(message, type = 'normal') {
+            // Debug console DISABLED - do not spam Activity Log
+            // Activity Log is for user-facing prompt messages only
+        }
+
+        function clearConsole() {
+            // Debug console DISABLED
+        }
+
+        // Add message to chat log (for prompt execution only, not debug)
+        function addChatMessage(message, type = 'normal') {
+            const chatMessages = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            
+            // Map log types to chat message classes
+            let messageClass = 'system';
+            if (type === 'success') messageClass = 'success';
+            else if (type === 'error') messageClass = 'error';
+            else if (type === 'info') messageClass = 'system';
+            else if (type === 'normal') messageClass = 'system';
+            
+            messageDiv.className = `chat-message ${messageClass}`;
+            messageDiv.textContent = message;
+            
+            chatMessages.appendChild(messageDiv);
+            
+            // Auto-scroll to bottom
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        // ========================================
+        // DATA LOADING
+        // ========================================
+
+        function loadData() {
+            clearConsole();
+            logConsole('=== LOADING IRRIGATION DATA ===', 'success');
+            
+            displayRecords = [];
+            
+            IRRIGATION_DATA.forEach((record, index) => {
+                const eventDate = parseEventDate(record.Eventdate);
+                
+                displayRecords.push({
+                    id: `original_${index}`,
+                    ranch: record.Ranch,
+                    planting: record.Planting,
+                    hours: parseFloat(record.RecommendedHours) || 0,
+                    mgrHours: parseFloat(record.ManagerAmount) || 0,
+                    appliedHours: parseFloat(record.WaterApplied) || 0,
+                    interval: parseFloat(record.RecommendedInterval) || 0,
+                    scheduledDate: formatDate(eventDate),
+                    irrigationMethod: record.IrrigationMethod,
+                    recommendedInches: record.RecommendedInches,
+                    lastUpdatedDate: record.LastUpdatedDate,
+                    updatedBy: record.UpdatedBy,
+                    isOriginal: true,
+                    isNew: false,
+                    isUpdated: false
+                });
+            });
+            
+            logConsole(`Loaded ${displayRecords.length} records`, 'success');
+            renderTable();
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+            
+            displayRecords.forEach(record => {
+                const row = tbody.insertRow();
+                row.dataset.recordId = record.id;
+                row.onclick = () => selectRecord(record.id);
+                
+                row.insertCell(0).textContent = record.ranch;
+                row.insertCell(1).textContent = record.planting;
+                row.insertCell(2).textContent = record.scheduledDate;
+                row.insertCell(3).textContent = record.hours;
+                row.insertCell(4).textContent = record.interval + ' days';
+                row.insertCell(5).textContent = record.appliedHours;
+            });
+            
+            document.getElementById('recordCount').textContent = 
+                `${displayRecords.length} Records`;
+                
+            // Auto-select first record
+            if (displayRecords.length > 0) {
+                selectRecord(displayRecords[0].id);
+            }
+        }
+
+        // Select and highlight a record
+        function selectRecord(recordId) {
+            selectedRecord = displayRecords.find(r => r.id === recordId);
+            
+            if (!selectedRecord) return;
+            
+            // Update orange header center with Ranch and Planting
+            document.getElementById('headerRanchPlanting').textContent = 
+                `${selectedRecord.ranch} ${selectedRecord.planting}`;
+            
+            // Update row highlighting
+            document.querySelectorAll('#tableBody tr').forEach(row => {
+                row.classList.remove('selected');
+            });
+            
+            const selectedRow = document.querySelector(`tr[data-record-id="${recordId}"]`);
+            if (selectedRow) {
+                selectedRow.classList.add('selected');
+            }
+            
+            // Populate form
+            populateForm(selectedRecord);
+            
+            logConsole(`Selected: ${selectedRecord.ranch} ${selectedRecord.planting} (${selectedRecord.scheduledDate})`, 'info');
+        }
+
+        // Populate form with selected record
+        function populateForm(record) {
+            document.getElementById('formDate').value = record.scheduledDate;
+            document.getElementById('formInterval').value = record.interval + ' days';
+            document.getElementById('formRecommendation').textContent = record.hours;
+            document.getElementById('formManagerHours').value = record.mgrHours;
+            document.getElementById('formWaterApplied').value = record.appliedHours;
+            document.getElementById('formMessage').value = record.message || '';
+        }
+
+        // ========================================
+        // CREATE NEXT IRRIGATION (TEST VERSION)
+        // ========================================
+
+        function testCreateNext() {
+            clearConsole();
+            
+            // Set form subheader to indicate Create Next operation
+            document.getElementById('formSubheaderText').textContent = 'Create Next Irrigation';
+            
+            if (!selectedRecord) {
+                logConsole('ERROR: No record selected. Click a row first.', 'error');
+                return;
+            }
+            
+            logConsole('=== TESTING CREATE NEXT IRRIGATION ===', 'success');
+            logConsole(`Selected Record ID: ${selectedRecord.id}`, 'info');
+            logConsole('', 'normal');
+            
+            logConsole('INPUT:', 'success');
+            logConsole(`  Ranch: ${selectedRecord.ranch}`, 'info');
+            logConsole(`  Planting: ${selectedRecord.planting}`, 'info');
+            logConsole(`  Date IN: "${selectedRecord.scheduledDate}"`, 'info');
+            logConsole(`  Interval: ${selectedRecord.interval} days`, 'info');
+            logConsole('', 'normal');
+            
+            // Find all records for this ranch/planting
+            const sameFieldRecords = displayRecords.filter(r => 
+                r.ranch === selectedRecord.ranch && 
+                r.planting === selectedRecord.planting
+            );
+            
+            logConsole(`Found ${sameFieldRecords.length} records for this field`, 'info');
+            
+            // Sort by date to get most recent
+            logConsole('Sorting by date (oldest first)...', 'info');
+            sameFieldRecords.sort((a, b) => {
+                const dateA = parseEventDate(a.scheduledDate);
+                const dateB = parseEventDate(b.scheduledDate);
+                return dateA - dateB;
+            });
+            
+            const lastRecord = sameFieldRecords[sameFieldRecords.length - 1];
+            logConsole(`Most recent (last): ${lastRecord.scheduledDate}`, 'success');
+            logConsole('', 'normal');
+            
+            // Calculate next date
+            logConsole('DATE CALCULATION:', 'success');
+            const currentDate = parseEventDate(lastRecord.scheduledDate);
+            const nextDate = new Date(currentDate);
+            const intervalDays = parseFloat(lastRecord.interval) || 1;
+            const roundedInterval = Math.round(intervalDays);
+            
+            logConsole(`  Interval: ${intervalDays} days`, 'info');
+            logConsole(`  Rounded: ${roundedInterval} days`, 'info');
+            logConsole(`  ${currentDate.toDateString()} + ${roundedInterval} days`, 'info');
+            
+            nextDate.setDate(nextDate.getDate() + roundedInterval);
+            const nextDateStr = formatDate(nextDate);
+            
+            logConsole('', 'normal');
+            logConsole('OUTPUT:', 'success');
+            logConsole(`  Date OUT: "${nextDateStr}"`, 'success');
+            logConsole('', 'normal');
+            
+            // Calculate new hours
+            const tinyAdjust = (Math.random() * 0.2 + 0.1);
+            const newRecHours = Math.max(0.1, parseFloat((lastRecord.hours + tinyAdjust).toFixed(1)));
+            const newMgrHours = parseFloat((lastRecord.mgrHours + 0.1).toFixed(1));
+            
+            logConsole(`New rec hours: ${newRecHours} (was ${lastRecord.hours})`, 'info');
+            logConsole(`New mgr hours: ${newMgrHours} (was ${lastRecord.mgrHours})`, 'info');
+            
+            // Create new record
+            const newRecord = {
+                id: `created_${Date.now()}`,
+                ranch: lastRecord.ranch,
+                planting: lastRecord.planting,
+                hours: newRecHours,
+                mgrHours: newMgrHours,
+                appliedHours: 0,
+                interval: lastRecord.interval,
+                scheduledDate: nextDateStr,
+                irrigationMethod: lastRecord.irrigationMethod,
+                recommendedInches: lastRecord.recommendedInches,
+                lastUpdatedDate: new Date().toLocaleString(),
+                updatedBy: "Test System",
+                isNew: true,
+                isOriginal: false,
+                isUpdated: false
+            };
+            
+            displayRecords.push(newRecord);
+            logConsole('=== NEW RECORD CREATED ===', 'success');
+            
+            renderTable();
+            showResult(lastRecord, newRecord);
+            
+            // Save the new record ID before sorting
+            const newRecordId = newRecord.id;
+            
+            // INLINE SORT (copied from handleRead) - sort by ranch, planting, then date (ascending)
+            displayRecords.sort((a, b) => {
+                // First by ranch
+                if (a.ranch < b.ranch) return -1;
+                if (a.ranch > b.ranch) return 1;
+                
+                // Then by planting
+                if (a.planting < b.planting) return -1;
+                if (a.planting > b.planting) return 1;
+                
+                // Finally by date (ascending - oldest first)
+                const dateA = parseEventDate(a.scheduledDate);
+                const dateB = parseEventDate(b.scheduledDate);
+                return dateA - dateB;
+            });
+            
+            logConsole('Records sorted by: Ranch → Planting → Date (oldest first)', 'info');
+            logConsole(`Total records: ${displayRecords.length}`, 'info');
+            
+            // Re-render table with sorted data
+            renderTable();
+            
+            // Restore selection to the new record
+            selectRecord(newRecordId);
+            logConsole(`Selection preserved: ${newRecord.ranch} ${newRecord.planting}`, 'success');
+            
+            // Clear Manager Hours field and set message in Task Message field
+            document.getElementById('formManagerHours').value = '';
+            document.getElementById('formMessage').value = 'Irrigation added and Recommendation generated. Enter Manager Hours';
+            
+            // Focus on Manager Hours field
+            document.getElementById('formManagerHours').focus();
+        }
+
+        // ========================================
+        // READ METER FUNCTIONALITY
+        // ========================================
+
+        function testReadMeter() {
+            clearConsole();
+            
+            // Set form subheader to indicate Meter operation
+            document.getElementById('formSubheaderText').textContent = 'Read Water Meter';
+            
+            if (!selectedRecord) {
+                logConsole('ERROR: No record selected. Click a row first.', 'error');
+                return;
+            }
+            
+            // Use selected record's ranch and planting
+            const targetRanch = selectedRecord.ranch;
+            const targetPlanting = selectedRecord.planting;
+            
+            logConsole('=== READ METER ===', 'success');
+            logConsole(`Looking for: ${targetRanch} / ${targetPlanting}`, 'info');
+            logConsole('', 'normal');
+            
+            // Find all records for this ranch/planting
+            const matchingRecords = displayRecords.filter(r => 
+                r.ranch === targetRanch && 
+                r.planting === targetPlanting
+            );
+            
+            if (matchingRecords.length === 0) {
+                logConsole(`❌ No records found for ${targetRanch} ${targetPlanting}`, 'error');
+                return;
+            }
+            
+            logConsole(`Found ${matchingRecords.length} records`, 'info');
+            
+            // Sort by date to get most recent (last)
+            matchingRecords.sort((a, b) => {
+                const dateA = parseEventDate(a.scheduledDate);
+                const dateB = parseEventDate(b.scheduledDate);
+                return dateA - dateB;
+            });
+            
+            const lastRecord = matchingRecords[matchingRecords.length - 1];
+            
+            logConsole('', 'normal');
+            logConsole('LAST RECORD FOUND:', 'success');
+            logConsole(`  Ranch: ${lastRecord.ranch}`, 'info');
+            logConsole(`  Planting: ${lastRecord.planting}`, 'info');
+            logConsole(`  Date: ${lastRecord.scheduledDate}`, 'info');
+            logConsole(`  Current Water Applied: ${lastRecord.appliedHours}`, 'info');
+            logConsole('', 'normal');
+            
+            // Select this record in the grid
+            selectRecord(lastRecord.id);
+            
+            // Populate form for meter reading
+            document.getElementById('formDate').value = lastRecord.scheduledDate;
+            document.getElementById('formInterval').value = lastRecord.interval + ' days';
+            document.getElementById('formRecommendation').textContent = lastRecord.hours.toFixed(1);
+            document.getElementById('formManagerHours').value = lastRecord.mgrHours;
+            document.getElementById('formWaterApplied').value = ''; // EMPTY for field worker entry
+            document.getElementById('formMessage').value = 'Read water meter and enter gallons. Meter located at northwest corner.';
+            
+            // Focus on Water Applied field
+            document.getElementById('formWaterApplied').focus();
+            
+            logConsole('✅ Form ready for meter reading entry', 'success');
+            logConsole('→ Enter water applied value and click Update to save', 'info');
+        }
+
+        // ========================================
+        // FORM CRUD HANDLERS
+        // ========================================
+
+        function handleCreate() {
+            testCreateNext();
+        }
+
+        function handleReset() {
+            // Clear display records
+            displayRecords = [];
+            selectedRecord = null;
+            
+            // Reload data
+            loadData();
+            
+            // Reset form subheader to Form Instructions
+            document.getElementById('formSubheaderText').textContent = 'Form Instructions';
+        }
+
+        function handleUpdate() {
+            if (!selectedRecord) {
+                alert('No record selected');
+                return;
+            }
+            
+            const recordId = selectedRecord.id; // Save ID before changes
+            const mgrHours = parseFloat(document.getElementById('formManagerHours').value);
+            const waterApplied = parseFloat(document.getElementById('formWaterApplied').value);
+            const message = document.getElementById('formMessage').value;
+            
+            selectedRecord.mgrHours = mgrHours;
+            selectedRecord.appliedHours = waterApplied;
+            selectedRecord.message = message;
+            selectedRecord.isUpdated = true;
+            
+            clearConsole();
+            logConsole('=== UPDATE RECORD ===', 'success');
+            logConsole(`Updated Manager Hours: ${mgrHours}`, 'info');
+            logConsole(`Updated Water Applied: ${waterApplied}`, 'info');
+            if (message) {
+                logConsole(`Message: ${message}`, 'info');
+            }
+            
+            renderTable();
+            selectRecord(recordId); // Re-select after render
+            
+            // Write success message to the Task Message field
+            document.getElementById('formMessage').value = `Record updated! Mgr Hours: ${mgrHours} | Water Applied: ${waterApplied}`;
+            
+            // Reset form subheader to Form Instructions
+            document.getElementById('formSubheaderText').textContent = 'Form Instructions';
+        }
+
+        function handleDelete() {
+            if (!selectedRecord) {
+                alert('No record selected');
+                return;
+            }
+            
+            if (!selectedRecord.isOriginal) {
+                if (confirm(`Delete created record for ${selectedRecord.ranch} ${selectedRecord.planting}?`)) {
+                    const index = displayRecords.findIndex(r => r.id === selectedRecord.id);
+                    if (index > -1) {
+                        displayRecords.splice(index, 1);
+                        selectedRecord = null;
+                        renderTable();
+                        clearConsole();
+                        logConsole('Record deleted', 'success');
+                    }
+                }
+            } else {
+                alert('Cannot delete original records. Only created records can be deleted.');
+            }
+        }
+
+        function showResult(oldRecord, newRecord) {
+            const resultArea = document.getElementById('resultArea');
+            resultArea.innerHTML = `
+                <div class="result-box">
+                    <h3>✅ Create Next Result</h3>
+                    <p><strong>Field:</strong> ${oldRecord.ranch} ${oldRecord.planting}</p>
+                    <p><strong>Last Irrigation:</strong> ${oldRecord.scheduledDate} (Interval: ${oldRecord.interval} days)</p>
+                    <p><strong>Next Irrigation:</strong> ${newRecord.scheduledDate}</p>
+                    <p><strong>Hours:</strong> ${oldRecord.hours} → ${newRecord.hours}</p>
+                </div>
+            `;
+        }
+
+
+        // ========================================
+        // FULLSCREEN TOGGLE FUNCTION
+        // ========================================
+        function toggleFullPage(panelId) {
+            const panel = document.getElementById(panelId);
+            const leftPanel = document.querySelector('.left-panel');
+            const container = document.querySelector('.container');
+            
+            if (panel.classList.contains('full-page')) {
+                // Restore normal view
+                panel.classList.remove('full-page');
+                if (leftPanel) leftPanel.classList.remove('hidden');
+            } else {
+                // Go fullscreen
+                panel.classList.add('full-page');
+                if (leftPanel) leftPanel.classList.add('hidden');
+            }
+        }
+
+        // ========================================
+        // INSTRUCTIONS MODAL FUNCTIONS
+        // ========================================
+        function showInstructions() {
+            document.getElementById('instructionsModal').style.display = 'block';
+        }
+
+        function closeInstructions() {
+            document.getElementById('instructionsModal').style.display = 'none';
+        }
+
+        // Close modal when clicking outside of it
+        window.onclick = function(event) {
+            const modal = document.getElementById('instructionsModal');
+            if (event.target == modal) {
+                modal.style.display = 'none';
+            }
+        }
+
+        // ========================================
+        // USER PROFILE FUNCTIONS
+        // ========================================
+        function toggleUserProfile() {
+            const popup = document.getElementById('userProfilePopup');
+            popup.classList.toggle('show');
+        }
+
+        // ========================================
+        // INITIALIZE
+        // ========================================
+        // PROMPT INTERFACE
+        // ========================================
+
+        // Action and Target Options
+        const ACTION_OPTIONS = [
+            { id: 'show', text: 'Show me' },
+            { id: 'filter', text: 'Filter to' },
+            { id: 'create', text: 'Create next irrigation for' },
+            { id: 'meter', text: 'Read meter for' },
+            { id: 'update', text: 'Update hours for' },
+            { id: 'analyze', text: 'Analyze' }
+        ];
+
+        const TARGET_OPTIONS = [
+            { id: 'all', text: 'all records' },
+            { id: 'selected', text: 'selected record' },
+            { id: 'ranch1', text: 'Ranch 1 records' },
+            { id: 'ranch2', text: 'Ranch 2 records' },
+            { id: '1a', text: 'Planting 1A' },
+            { id: '1b', text: 'Planting 1B' },
+            { id: '2a', text: 'Planting 2A' },
+            { id: '2b', text: 'Planting 2B' }
+        ];
+
+        let selectedAction = null;
+        let selectedTarget = null;
+
+        // Render Action Grid
+        function renderActionGrid() {
+            const grid = document.getElementById('actionGrid');
+            let html = '';
+            
+            ACTION_OPTIONS.forEach(option => {
+                const selectedClass = selectedAction && selectedAction.id === option.id ? ' selected' : '';
+                html += `<div class="builder-item${selectedClass}" onclick="selectAction('${option.id}')">${option.text}</div>`;
+            });
+            
+            grid.innerHTML = html;
+        }
+
+        // Render Target Grid
+        function renderTargetGrid() {
+            const grid = document.getElementById('targetGrid');
+            let html = '';
+            
+            TARGET_OPTIONS.forEach(option => {
+                const selectedClass = selectedTarget && selectedTarget.id === option.id ? ' selected' : '';
+                html += `<div class="builder-item${selectedClass}" onclick="selectTarget('${option.id}')">${option.text}</div>`;
+            });
+            
+            grid.innerHTML = html;
+        }
+
+        // Select Action
+        function selectAction(actionId) {
+            selectedAction = ACTION_OPTIONS.find(a => a.id === actionId);
+            renderActionGrid();
+            buildPrompt();
+        }
+
+        // Select Target
+        function selectTarget(targetId) {
+            selectedTarget = TARGET_OPTIONS.find(t => t.id === targetId);
+            renderTargetGrid();
+            buildPrompt();
+        }
+
+        // Build Prompt from Action + Target
+        function buildPrompt() {
+            if (selectedAction && selectedTarget) {
+                const prompt = `${selectedAction.text} ${selectedTarget.text}`;
+                document.getElementById('promptText').value = prompt;
+            }
+        }
+
+        // Reset Prompt
+        function resetPrompt() {
+            selectedAction = null;
+            selectedTarget = null;
+            document.getElementById('promptText').value = '';
+            renderActionGrid();
+            renderTargetGrid();
+            hidePromptOutput();
+        }
+
+        // Save Prompt (placeholder for future)
+        function savePrompt() {
+            const prompt = document.getElementById('promptText').value;
+            if (prompt) {
+                showPromptOutput(`✅ Prompt saved: "${prompt}"`, 'success');
+            } else {
+                showPromptOutput('⚠️ No prompt to save', 'warning');
+            }
+        }
+
+        // Fill Prompt (loads example prompts)
+        function fillPrompt() {
+            const examples = [
+                'Create next irrigation for selected record',
+                'Show me all records',
+                'Read meter for Ranch 1 records',
+                'Analyze Planting 1A'
+            ];
+            const random = examples[Math.floor(Math.random() * examples.length)];
+            document.getElementById('promptText').value = random;
+            showPromptOutput(`📝 Filled with example: "${random}"`, 'info');
+        }
+
+        // Execute Prompt - Parse and run the action
+        function executePrompt() {
+            const prompt = document.getElementById('promptText').value.toLowerCase();
+            
+            if (!prompt) {
+                showPromptOutput('⚠️ Please enter a prompt', 'warning');
+                addChatMessage('⚠️ No prompt entered', 'error');
+                return;
+            }
+
+            showPromptOutput(`🤖 Processing: "${document.getElementById('promptText').value}"`, 'info');
+            addChatMessage(`🤖 Executing prompt: "${document.getElementById('promptText').value}"`, 'system');
+
+            // Parse prompt and execute appropriate function
+            if (prompt.includes('create') || prompt.includes('next irrigation')) {
+                setTimeout(() => {
+                    testCreateNext();
+                    showPromptOutput('✅ Create Next executed successfully', 'success');
+                }, 500);
+            } else if (prompt.includes('meter') || prompt.includes('read meter')) {
+                setTimeout(() => {
+                    testReadMeter();
+                    showPromptOutput('✅ Read Meter executed successfully', 'success');
+                }, 500);
+            } else if (prompt.includes('reset')) {
+                setTimeout(() => {
+                    handleReset();
+                    showPromptOutput('✅ Reset executed successfully', 'success');
+                }, 500);
+            } else if (prompt.includes('show') || prompt.includes('filter')) {
+                showPromptOutput('✅ Showing all records in grid', 'success');
+                addChatMessage('✅ Grid displaying all records', 'success');
+            } else {
+                showPromptOutput('❓ Prompt not recognized. Try: "Create next irrigation for selected record" or "Read meter for Ranch 1"', 'warning');
+                addChatMessage('❓ Prompt not recognized', 'error');
+            }
+        }
+
+        // Show Prompt Output
+        function showPromptOutput(message, type = 'info') {
+            const output = document.getElementById('promptOutput');
+            output.textContent = message;
+            output.className = 'prompt-output show';
+            
+            // Auto-hide after 5 seconds
+            setTimeout(() => {
+                hidePromptOutput();
+            }, 5000);
+        }
+
+        // Hide Prompt Output
+        function hidePromptOutput() {
+            const output = document.getElementById('promptOutput');
+            output.classList.remove('show');
+        }
+
+        // ========================================
+
+        window.onload = function() {
+            // Auto-load irrigation data on startup
+            loadData();
+            
+            // Initialize prompt interface
+            renderActionGrid();
+            renderTargetGrid();
+        };
+    </script>
+</body>
+</html>

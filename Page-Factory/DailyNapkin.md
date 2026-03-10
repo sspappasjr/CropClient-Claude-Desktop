@@ -3,6 +3,147 @@ OUR DAILY THOUGHTS
 RULE: Answer a question with truth.
 RULE: Show code only when asked for it.
 RULE: Our app has to stand on its own.
+
+---
+
+# Napkin — Page Factory v1-Designer
+## Date: 2026-02-24
+
+## The Two Products
+
+**CropClient** — the working app.
+Irrigation apps, budget inputs, reporting forms.
+Landing page showcases those resources.
+Built for farmers and field users. Simple, focused, live.
+
+**CropClient Pro** — the platform.
+Page Factory + Multi-Agent Builder + Local LLM.
+The genius scientist and coder living inside.
+Helps users build their OWN tools on top of CropClient.
+Built for power users, developers, integrators.
+
+---
+
+## The Big Idea
+Designer produces JSON → JSON becomes components → Components inject into template → Live app.
+Every app is a package. Every package is a set of named parts. No spaghetti.
+
+## The 4 Players
+| Player | Job |
+|---|---|
+| **Coder/Designer** | Design component by type → JSON + SVG + code |
+| **Clone** | Read existing app → extract marked sections → component files |
+| **Builder** | Assemble components into 2x2 template |
+| **Injector** | Insert at @@@@@@ markers → preview → save |
+
+## The App Package
+Every app = 1 template + S1 through S99 components + 1 manifest.json
+
+manifest.json knows the whole app: name, version, component list, slot assignments.
+PageBuilder reads manifest → grid shows all slots → inject → save as package (zip).
+
+## v1-Designer — What It Does
+- Component type picker: token, grid, form, chat, tool, injector, drawing...
+- JSON editor auto-populates per type
+- Live preview builds as you design
+- "Build Component" → generates S-file ready for injection
+- SVG icons per type — visual identity built in
+
+## Key Rule
+Template = structure only. Components = all content and code.
+Template never changes. Components are swapped, versioned, reused.
+Programmers build any component they want — template stays clean.
+
+---
+
+## The Multi-App Container
+One HTML file can hold ALL factory apps inside it — menu-driven.
+User sees the half-oval assembly line map.
+Each station on the arc = a full app living inside the container.
+Click a station → that app loads in the work area.
+One file. The whole factory.
+
+---
+
+## Form & Grid Builder — Data Designer
+New component type: **Data Form + Grid**
+- Designer defines the fields (name, type, label, required, default)
+- Fields become the JSON definition
+- JSON drives BOTH the UI (form + grid) AND the data schema
+
+One design → multiple outputs:
+- JSON data file
+- SQLite schema
+- SQL Server CREATE TABLE
+- Any backend you need
+
+**The form IS the database. The grid IS the query.**
+Design the UI → get the schema for free.
+No separate database design step. One source of truth.
+
+## Admin Tool Vision (from Steve's screen design)
+
+- Admin does NOT see API detail and recommendation support — too deep
+- Admin gets: **Agent Builder** — easy way to create and give tools to their users
+- Simple, clean, purposeful — admin manages users and their toolsets
+- **Lucille** — AI assistant for the Admin. Helps the admin do their job.
+  Lilly = API guest assistant (MobileFrame users, CropClient tools).
+  Lucille = Admin's AI. Knows the platform, manages agents, guides the factory.
+  Different role, different persona, same ecosystem.
+
+---
+
+## First Move
+Build v1-designer prototype → start with S1 (token/API type) → test standalone
+→ inject into v1.7 template → compare with current S1 → factory confirmed.
+
+---
+
+## Scan Sections — The Rules
+
+**What it finds:**
+- Already marked sections → green ✓ badge
+- Unmarked detected sections → light blue 🔍 badge (special icon)
+- Unknown/unrecognized blocks → orange ⚠ badge
+
+**Per row — click to see the code.**
+Each detected section shows a preview of its content before you decide.
+
+**Two choices per unmarked section:**
+- ✅ Mark It → adds @@@@@@ INJECT marker, section enters the factory
+- ✏️ Change First → flag it, skip it, come back
+
+**Golden Rule: always creates a NEW file.**
+Original is never touched. Every scan output is a new versioned copy.
+Your app. Your decisions. Non-destructive always.
+
+---
+
+## The Front Door — Factory Landing Screen
+
+**Shape:** Half oval — like a stadium or amphitheater opening upward.
+Stations sit along the arc of the half oval (left to right):
+Designer → Clone → Builder → Injector
+
+**Center spotlight:** The showroom model — the finished beautiful app —
+always visible, always lit. Workers see what they are building toward.
+
+**Colors — no dark tones, ever:**
+- Light blue = health, clarity, clean sky
+- Green = gardens, growth, CropClient life
+- White backgrounds — open, bright, positive
+- Soft shadows only — never heavy or corporate
+
+**Feel:** Ford showroom. Not a dark factory floor.
+A place where building feels good. The product is always the hero.
+
+**Stations on the arc (clickable SVG):**
+- 🎨 Designer — left station
+- 📋 Clone — center-left
+- 🔧 Builder — center-right
+- 💉 Injector — right station
+
+**Spotlight center:** Current app / showroom model — live preview iframe.
 RULE: Be concise - no long explanations.
 
 ---

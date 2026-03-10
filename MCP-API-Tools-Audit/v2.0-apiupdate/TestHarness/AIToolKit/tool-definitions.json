@@ -1,0 +1,181 @@
+{
+  "source": "APIServer2.0.js",
+  "format": "anthropic",
+  "extracted": "2026-03-05",
+  "tools": [
+    {
+      "name": "get_token",
+      "description": "Authenticate with CropManage API and obtain access token. Required before any other API calls.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "username": { "type": "string", "description": "CropManage username" },
+          "password": { "type": "string", "description": "CropManage password" }
+        },
+        "required": ["username", "password"]
+      }
+    },
+    {
+      "name": "get_ranches",
+      "description": "Fetch all ranches from CropManage API. Requires authentication token.",
+      "input_schema": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      }
+    },
+    {
+      "name": "get_plantings",
+      "description": "Fetch all plantings for a specific ranch. Requires authentication token and ranch GUID.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "ranchGuid": { "type": "string", "description": "Ranch external GUID from CropManage" }
+        },
+        "required": ["ranchGuid"]
+      }
+    },
+    {
+      "name": "get_irrigation_details",
+      "description": "Fetch irrigation event details and automatically load into displayRecords format. Returns enriched irrigation records ready for dashboard display.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "plantingId": { "type": "string", "description": "Planting ID from CropManage" }
+        },
+        "required": ["plantingId"]
+      }
+    },
+    {
+      "name": "load_into_displayRecords",
+      "description": "Fetch irrigation events and transform to displayRecords JSON format for dashboard. Updates data source to 'api' mode.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "plantingId": { "type": "string", "description": "Planting ID from CropManage" }
+        },
+        "required": []
+      }
+    },
+    {
+      "name": "post_new_irrigation",
+      "description": "POST a new irrigation event to CropManage.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "plantingId": { "type": "string", "description": "Planting ID" },
+          "scheduledDate": { "type": "string", "description": "Event date (MM/DD/YY)" },
+          "recommendedInches": { "type": "number", "description": "Recommended irrigation in inches" },
+          "appliedHours": { "type": "number", "description": "Water applied in hours" },
+          "irrigationMethod": { "type": "string", "description": "Drip or Sprinkler" }
+        },
+        "required": ["plantingId", "scheduledDate"]
+      }
+    },
+    {
+      "name": "update_irrigation",
+      "description": "Update an existing irrigation event in CropManage.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "eventId": { "type": "string", "description": "CropManage event ID" },
+          "appliedHours": { "type": "number", "description": "Water applied in hours" },
+          "mgrHours": { "type": "number", "description": "Manager recommended hours" }
+        },
+        "required": ["eventId"]
+      }
+    },
+    {
+      "name": "batch_post_queue",
+      "description": "Process all pending irrigation records (status=-1). Automatically POSTs new records and UPDATEs existing records.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "records": { "type": "array", "description": "Array of irrigation records to process" }
+        },
+        "required": ["records"]
+      }
+    },
+    {
+      "name": "json_write",
+      "description": "Write (create/overwrite) a JSON file on the MCP server under the data directory.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "filepath": { "type": "string", "description": "Relative path under data dir, e.g. 'irrigation.json' or 'tables/users.json'" },
+          "data": { "description": "Any JSON-serializable object/array" }
+        },
+        "required": ["filepath", "data"]
+      }
+    },
+    {
+      "name": "json_read",
+      "description": "Read a JSON file from the MCP server data directory.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "filepath": { "type": "string", "description": "Relative path under data dir, e.g. 'irrigation.json'" }
+        },
+        "required": ["filepath"]
+      }
+    },
+    {
+      "name": "json_update",
+      "description": "Update a JSON file by shallow-merging an object into the existing JSON (objects merge; arrays replace).",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "filepath": { "type": "string" },
+          "updates": { "description": "Updates to merge into existing JSON" }
+        },
+        "required": ["filepath", "updates"]
+      }
+    },
+    {
+      "name": "json_delete",
+      "description": "Delete a JSON file from the MCP server data directory.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "filepath": { "type": "string" }
+        },
+        "required": ["filepath"]
+      }
+    },
+    {
+      "name": "json_list",
+      "description": "List JSON files in a directory under the MCP server data directory.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "directory": { "type": "string", "description": "Relative directory under data dir (default '.')" }
+        },
+        "required": []
+      }
+    },
+    {
+      "name": "json_exists",
+      "description": "Check whether a JSON file exists in the MCP server data directory.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "filepath": { "type": "string" }
+        },
+        "required": ["filepath"]
+      }
+    },
+    {
+      "name": "data_operation",
+      "description": "Generic JSON table operation using {action, table, data}. Persists to <table>.json in server data dir.",
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "action": { "type": "string", "description": "read | write | update | delete" },
+          "table": { "type": "string", "description": "Logical table name (maps to <table>.json)" },
+          "data": { "description": "Payload for write/update" }
+        },
+        "required": ["action", "table"]
+      }
+    }
+  ]
+}

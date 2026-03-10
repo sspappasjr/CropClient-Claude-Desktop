@@ -252,6 +252,26 @@ Each agent is a sequence of tokens. Butler shows these as skill cards.
 
 ---
 
+### Agent: NEW-TOOLS-API
+**"Install my new API tools"** — NEW-TOOLS (parm: API)
+**Script:** scripts/new-tools-api.js | **Butler card:** 📦 New Tools
+
+**Token 1: CLONE** — copy repo from GitHub
+`git clone https://github.com/sspappasjr/Crop-Client-Services.git C:\AICode\Crop-Client-Services`
+
+**Token 2: NPM-INSTALL** — install dependencies
+`cd C:\AICode\Crop-Client-Services && npm install && cd api-server && npm install`
+
+**Token 3: START** — start API server
+`cd C:\AICode\Crop-Client-Services\api-server && node APIServer1.2.js`
+
+**Token 4: STATUS** — verify running
+`GET http://localhost:3101/ping` + `GET http://localhost:3101/tools` → 15 tools
+
+**Token 5: NOTIFY** — "Your new API tools are ready."
+
+---
+
 ### Agent: ALPHA RELEASE
 **Purpose:** Move dev work to alpha branch on GitHub for server install
 **Tokens:**
@@ -372,3 +392,18 @@ Status comes back to Butler's status bar.
 **Tools installed:**
 - gh CLI v2.86.0 (via winget)
 - Authenticated as sspappasjr
+
+### Feb 16, 2026 — Server Deploy (NEW-TOOLS-API)
+
+**Server:** GoDaddy Windows Server — 184.168.20.205 (cropclient.com)
+**Agent used:** NEW-TOOLS-API
+**Tokens executed:**
+1. CLONE ✅ — `git clone` to C:\AICode\Crop-Client-Services
+2. NPM-INSTALL ✅ — root + api-server deps installed
+3. START ✅ — APIServer1.2.js running on localhost:3101, 15 tools
+4. STATUS ✅ — /ping and /tools verified from server browser
+5. NOTIFY ✅ — "Your new API tools are ready"
+
+**DNS:** api.cropclient.com A record added in GoDaddy → 184.168.20.205 (propagating)
+**IIS:** Pending — need URL Rewrite + ARR + new site for api.cropclient.com
+**Pre-reqs installed on server:** Git for Windows, Node v22.21.0

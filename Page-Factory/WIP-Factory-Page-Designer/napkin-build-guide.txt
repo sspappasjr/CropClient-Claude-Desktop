@@ -1,0 +1,100 @@
+NAPKIN BUILD GUIDE — PageBuilder + Designer Factory
+====================================================
+Steve Pappas | Feb 21, 2026
+====================================================
+
+THE PIPELINE
+============
+  Designer → Component Template → PageBuilder → Working App
+
+  1. DESIGN IT     (factory.2x2.designer.html)
+  2. EXPORT IT     (component template for a section)
+  3. ASSEMBLE IT   (PageBuilder-Skills.html)
+  4. BUILD IT      (AI + you fill the blanks)
+  5. SAVE IT       (working harness output)
+
+
+TWO TOOLS — TWO JOBS
+=====================
+  DESIGNER = makes the blueprint
+    - Drag tools onto 2x2 canvas (Box, Grid, Dropdown, Input, Button...)
+    - Name them (Ranch, Planting, Status...)
+    - Assign tokens (get-ranches, load-display...)
+    - SAVE = save your work in progress (HTML file, browse to folder)
+    - EXPORT = output a component template for one section
+
+  PAGEBUILDER = assembles the app
+    - Load a template (2x2-template.html, audit 1.6, anything)
+    - Sees sections: s1, s2, s3, s4, CSS, script
+    - Each section: UPLOAD existing component OR BUILD from designer blueprint
+    - Inject All → preview → Save As → working app
+
+
+THE REAL EXAMPLE
+================
+  "We want to redo the top-left of audit 1.6"
+
+  Step 1: Open factory designer
+  Step 2: Drag Dropdown (Ranch), Grid (Results), Button (Search) onto canvas
+  Step 3: Assign tokens — Dropdown gets "get-ranches", Grid gets "load-display"
+  Step 4: EXPORT as component template → "s1-tokens-actions.html"
+  Step 5: Open PageBuilder
+  Step 6: Load audit 1.6 template
+  Step 7: Upload s1-tokens-actions.html into s1 slot
+  Step 8: Click Edit — designer blueprint tells AI what to build
+  Step 9: Dropdown becomes REAL dropdown pulling ranch data
+  Step 10: Grid becomes REAL grid with columns
+  Step 11: Anything that needs help — you fill in the blanks
+  Step 12: Save component → done
+  Step 13: Inject All → Save As → new working audit app
+
+
+WHAT THE DESIGNER SAVES
+========================
+  SAVE = the whole HTML file (designer + tools in place)
+       - Browse to folder (standard Windows Save dialog)
+       - Reopen in browser → keep designing
+       - WIP folder: Page-Factory\WIP-Factory Agents
+
+  EXPORT = component template (one section, clean HTML)
+         - Just the tools and their tokens for that section
+         - Ready for PageBuilder to inject
+         - Ready for AI to turn into real working code
+
+
+WHAT THE TOOLS CARRY
+====================
+  Every tool on the canvas has:
+    TYPE    — what it is (Dropdown, Grid, Input, Button...)
+    NAME    — what it's called (Ranch, Planting, Search...)
+    TOKEN   — what data it needs (get-ranches, load-display...)
+
+  The token IS the agent. The tool IS the component.
+  Designer tells the factory: "put a dropdown HERE, call it Ranch,
+  wire it to get-ranches." Factory stamps it out.
+
+
+BUILD MODES
+===========
+  BUILD ONE  — select a section, edit it, AI builds just that piece
+  BUILD ALL  — AI builds every section it can from the blueprints
+  FILL BLANKS — anything AI couldn't finish, you fill in what's missing
+  ONLY the unfinished ones need attention. Rest are done.
+
+
+THE FACTORY PATTERN
+===================
+  Template    = empty frame (2x2 CSS grid with @@@ markers)
+  Tools       = components in toolbar
+  Tokens      = API data sources wired to each tool
+  Designer    = where you place tools and assign tokens
+  PageBuilder = where templates get assembled with real components
+  Factory     = the whole system — design, build, assemble, ship
+
+
+FILES
+=====
+  factory.2x2.designer.html    — the designer (v1.0)
+  PageBuilder-Skills.html      — the assembler (WIP)
+  2x2-template.html            — base template reference
+  napkin-build-guide.txt       — this file (you're reading it)

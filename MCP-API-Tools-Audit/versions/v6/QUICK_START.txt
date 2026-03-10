@@ -1,0 +1,45 @@
+CROPCLIENT API SERVER — QUICK START
+====================================
+Server: api-server/APIServer1.6.js
+Port:   3101
+Tools:  15 (8 CropManage API + 7 JSON file services)
+
+START SERVER:
+-------------
+  cd api-server
+  node APIServer1.6.js
+
+You should see:
+  API MCP Server started
+  API MCP Server running on http://localhost:3101
+  Tools available: 15
+
+VERIFY:
+-------
+  http://localhost:3101/ping
+  http://localhost:3101/tools
+
+STOP SERVER:
+------------
+  Ctrl+C in the CMD window
+
+RESTART:
+--------
+  Ctrl+C
+  node APIServer1.6.js
+
+WITH PM2 (keeps server running after terminal closes):
+------------------------------------------------------
+  Install:   npm install -g pm2
+  Start:     pm2 start APIServer1.6.js --name cropclient-api
+  Stop:      pm2 stop cropclient-api
+  Restart:   pm2 restart cropclient-api
+  Status:    pm2 status
+  Logs:      pm2 logs cropclient-api
+
+AFTER CODE UPDATE (git pull):
+-----------------------------
+  Without PM2:  Ctrl+C, then: node APIServer1.6.js
+  With PM2:     pm2 restart cropclient-api
+
+DONE.

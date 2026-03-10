@@ -1,0 +1,94 @@
+CROPCLIENT v2.0 — DEPLOY INSTRUCTIONS
+======================================
+Date: March 2, 2026
+From: v1.6 → v2.0
+
+WHAT CHANGED:
+  - APIServer1.6.js → APIServer2.0.js
+  - get_irrigation_details now auto-chains to loadIntoDisplayRecords
+  - web.config updated to point to APIServer2.0.js
+  - SSL ready (HTTPS redirect added)
+
+=============================================
+DEPLOY FILES IN THIS FOLDER
+=============================================
+  api-deploy2.0.bat        — copies v2.0 files to alpha + pre-test
+  server-deploy2.0.bat     — runs ON the server (git pull + iisreset)
+                              (api-deploy copies this to tools/ so git push delivers it)
+  web.config               — production IIS config (MUST be named web.config)
+  web2.0.config            — exact copy of web.config (version snapshot)
+  SERVER-INSTALL-GUIDE2.0.txt — full server install from scratch
+  QUICK_START2.0.txt       — quick reference for start/stop/restart
+  DEPLOY-INSTRUCTIONS-v2.0.txt — THIS FILE
+
+=============================================
+RULE: web.config VERSIONED PAIR
+=============================================
+  IIS requires the file be named "web.config" — cannot rename it.
+  web2.0.config is an EXACT COPY so we always know what version is live.
+  They MUST stay in sync. When you change web.config, update web2.0.config.
+  When you deploy a new version, create web(version).config as the pair.
+
+  Example:
+    web.config      ← what IIS reads (always this name)
+    web2.0.config   ← exact copy (tells us production = v2.0)
+
+=============================================
+DEPLOY STEPS (in order)
+=============================================
+
+STEP 1: RUN api-deploy2.0.bat (on your dev machine)
+  - Copies all v2.0 files from v2.0-apiupdate → alpha + pre-test
+  - Location: C:\AICode\CropClient-Claude-Desktop\MCP-API-Tools-Audit\v2.0-apiupdate\deploy\
+  - Double-click: api-deploy2.0.bat
+  - Verify: all [OK] messages, no [FAIL]
+
+STEP 2: TEST LOCALLY (from alpha)
+  - cd C:\AICode\crop-client-services\api-server
+  - node APIServer2.0.js
+  - Verify: 15 tools, port 3101
+  - Test: http://localhost:3101/ping
+  - Test: http://localhost:3101/tools
+  - Ctrl+C to stop
+
+STEP 3: COMMIT + PUSH TO GITHUB (from alpha)
+  - cd C:\AICode\crop-client-services
+  - git add .
+  - git commit -m "Deploy v2.0 — auto-chain irrigation details"
+  - git push
+  - Verify: https://github.com/sspappasjr/Crop-Client-Services
+
+STEP 4: RUN server-deploy2.0.bat (ON the server 184.168.20.205)
+  - RDP to server
+  - Navigate to: C:\Crop-Client-Services\tools\
+  - Double-click: server-deploy2.0.bat
+  - It runs: git pull + iisreset
+  - Verify: both steps show success
+
+STEP 5: VERIFY LIVE
+  - https://api.cropclient.com/ping
+  - https://api.cropclient.com/tools
+  - Should return JSON with 15 tools
+
+=============================================
+SSL NOTE
+=============================================
+  SSL is now installed on the server.
+  The web2.0.config should include HTTPS redirect rules.
+  After deploy, verify both http:// and https:// work:
+    http://api.cropclient.com/ping  → should redirect to https
+    https://api.cropclient.com/ping → should return JSON
+
+=============================================
+ROLLBACK (if something goes wrong)
+=============================================
+  The previous web1.6.config and APIServer1.6.js are still on the server.
+  To rollback:
+    1. RDP to server
+    2. cd C:\Crop-Client-Services\api-server
+    3. copy web1.6.config web.config
+    4. iisreset
+  This restores v1.6 immediately.
+
+=============================================
+DONE.

@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="UTF-8">
+<title>Factory Layout Designer v1.0</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height:100vh; overflow:hidden; }
+  body { font-family: Arial, sans-serif; background: #f0f0f0; display:flex; flex-direction:column; }
+
+  /* --- Template Styles (survive export) --- */
+  .container {
+    display: grid;
+    grid-template-columns: 60% 40%;
+    grid-template-rows: 50% 50%;
+    gap: 6px;
+  }
+  .quad { border:2px solid #333; border-radius:6px; background:#fff; display:flex; flex-direction:column; }
+  .quad-header { background:#2c3e50; color:#fff; padding:6px 12px; font-weight:bold; font-size:14px; border-radius:4px 4px 0 0; }
+  .quad-body { flex:1; padding:10px; color:#999; font-size:13px; }
+
+  /* --- Designer Styles (stripped on export) --- */
+
+  /* Header bar: title left, NAME input + SAVE right */
+  .designer-header {
+    height: 40px;
+    background: #2c3e50;
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    gap: 8px;
+  }
+  .designer-header .title { color:#fff; font-size:14px; font-weight:bold; margin-right:auto; }
+  .designer-header .name-label { color:#bdc3c7; font-size:12px; font-weight:bold; }
+  .designer-header .name-input {
+    width: 180px; padding:3px 8px; border:1px solid #7f8c8d; border-radius:3px;
+    font-size:13px; font-weight:bold; background:#fff; color:#2c3e50;
+  }
+  .hdr-btn {
+    padding:5px 14px; background:#ecf0f1; border:1px solid #7f8c8d; border-radius:3px;
+    font-size:12px; font-weight:bold; color:#2c3e50; cursor:pointer;
+  }
+  .hdr-btn:hover { background:#fff; }
+
+  /* Design tools bar: OPEN left, tools centered, CLEAR right */
+  .designer-bar {
+    height: 42px;
+    background: #ecf0f1;
+    border-bottom: 2px solid #bdc3c7;
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
+    gap: 4px;
+  }
+  .bar-left { display:flex; gap:4px; }
+  .bar-center { display:flex; gap:4px; flex:1; justify-content:center; }
+  .bar-right { display:flex; gap:4px; }
+  .bar-sep { width:1px; height:28px; background:#bdc3c7; margin:0 6px; }
+
+  .icon-btn {
+    width: 38px; height: 38px;
+    background: #fff; border:1px solid #999; border-radius:3px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; font-size:22px; color:#2c3e50; position:relative;
+  }
+  .icon-btn:hover { background:#d5e8f0; }
+  .icon-btn[title]:hover::after {
+    content: attr(title);
+    position:absolute; top:42px; left:50%; transform:translateX(-50%);
+    background:#2c3e50; color:#fff; font-size:12px; font-weight:bold;
+    padding:4px 10px; border-radius:3px; white-space:nowrap; z-index:50;
+    pointer-events:none;
+  }
+
+  .txt-btn {
+    padding:5px 14px; background:#fff; border:1px solid #999; border-radius:3px;
+    font-size:12px; font-weight:bold; color:#2c3e50; cursor:pointer;
+  }
+  .txt-btn:hover { background:#d5e8f0; }
+  .txt-btn.danger { color:#e74c3c; border-color:#e74c3c; }
+  .txt-btn.danger:hover { background:#fde8e8; }
+
+  /* Tools palette */
+  .designer-tools .toolbar {
+    height: 58px;
+    background: #f7f9fa;
+    border-bottom: 1px solid #ddd;
+    display: flex;
+    align-items: center;
+    padding: 4px 16px;
+    gap: 6px;
+    overflow-x: auto;
+  }
+  .toolbar-label { color:#2c3e50; font-weight:bold; font-size:13px; white-space:nowrap; margin-right:6px; }
+  .tool-btn {
+    min-width: 74px; height: 40px;
+    background: #fff; border:2px solid #333; border-radius:4px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:13px; font-weight:bold; color:#333;
+    cursor:grab; user-select:none; flex-shrink:0; padding:4px 8px;
+  }
+  .tool-btn:hover { background:#eaf2f8; }
+
+  .designer-tools { flex-shrink:0; }
+  .canvas { width:100%; flex:1; min-height:0; }
+
+  .section-bar {
+    height:28px; background:#f7f9fa; border-bottom:1px solid #ddd;
+    display:flex; align-items:center; justify-content:center;
+    padding:0 16px; gap:10px; font-size:12px; font-weight:bold; color:#2c3e50;
+  }
+  .section-bar input[type=number] {
+    width:40px; padding:1px 2px; border:1px solid #999; border-radius:3px;
+    font-size:12px; font-weight:bold; text-align:center;
+  }
+
+  .guide-outline { stroke:#bdc3c7; stroke-width:2; stroke-dasharray:8 4; fill:none; }
+  .guide-divider { stroke:#bdc3c7; stroke-width:1; stroke-dasharray:4 4; }
+  .guide-label { fill:#bdc3c7; font-size:12px; font-family:Arial; }
+
+  #renameInput {
+    display:none; position:fixed;
+    border:2px solid #2c3e50; font-size:14px; font-weight:bold;
+    font-family:Arial; padding:3px 6px; outline:none; z-index:100;
+  }
+
+  #toolPopup {
+    display:none; position:fixed;
+    background:#fff; border:2px solid #2c3e50; border-radius:4px;
+    padding:14px; z-index:200; box-shadow:0 2px 8px rgba(0,0,0,0.2);
+    min-width: 270px;
+  }
+  #toolPopup .pop-header {
+    font-size:14px; font-weight:bold; color:#fff; background:#2c3e50;
+    padding:6px 10px; margin:-14px -14px 12px -14px; border-radius:2px 2px 0 0;
+  }
+  #toolPopup label { font-size:13px; font-weight:bold; color:#2c3e50; display:block; margin-bottom:3px; }
+  #toolPopup .pop-type { font-size:12px; color:#999; margin-bottom:8px; }
+  #toolPopup input {
+    width:100%; padding:6px 8px; border:1px solid #999; border-radius:3px;
+    font-size:14px; margin-bottom:10px; display:block;
+  }
+  #toolPopup .pop-btns { display:flex; gap:6px; }
+  .pop-btn {
+    padding:6px 16px; border:1px solid #999; border-radius:3px;
+    font-size:13px; font-weight:bold; cursor:pointer; background:#fff;
+  }
+  .pop-btn.ok { background:#2c3e50; color:#fff; }
+  .pop-btn.del { color:#e74c3c; border-color:#e74c3c; }
+</style>
+</head>
+<body>
+
+<!-- @@@@ DESIGNER_TOOLS id:component @@@@ -->
+<div class="designer-tools" id="designerTools">
+
+  <!-- HEADER: Title left, NAME + SAVE right -->
+  <div class="designer-header">
+    <div class="title">Factory Layout Designer v1.0</div>
+    <span class="name-label">NAME:</span>
+    <input class="name-input" id="templateName" type="text" value="my-template" placeholder="template name">
+    <button class="hdr-btn" onclick="saveLayout()">SAVE</button>
+    <button class="hdr-btn" onclick="saveJSON()">JSON</button>
+    <button class="hdr-btn" onclick="exportHTML()">EXPORT</button>
+  </div>
+
+  <!-- DESIGN BAR: OPEN left, design tools centered, CLEAR right -->
+  <div class="designer-bar">
+    <div class="bar-left">
+      <button class="txt-btn" onclick="openLayout()" title="Open a saved template">OPEN</button>
+    </div>
+    <div class="bar-center">
+      <button class="icon-btn" onclick="undo()" title="Undo (Ctrl+Z)">↶</button>
+      <div class="bar-sep"></div>
+      <button class="icon-btn" onclick="copySelected()" title="Copy">⎘</button>
+      <div class="bar-sep"></div>
+      <button class="icon-btn" onclick="lineUp('h')" title="Line up horizontal">┅</button>
+      <button class="icon-btn" onclick="lineUp('v')" title="Line up vertical">┃</button>
+      <div class="bar-sep"></div>
+      <button class="icon-btn" onclick="alignSelected('left')" title="Align left">⇤</button>
+      <button class="icon-btn" onclick="alignSelected('right')" title="Align right">⇥</button>
+      <button class="icon-btn" onclick="alignSelected('top')" title="Align top">⤒</button>
+      <button class="icon-btn" onclick="alignSelected('bottom')" title="Align bottom">⤓</button>
+      <button class="icon-btn" onclick="alignSelected('hcenter')" title="Align center H">↔</button>
+      <button class="icon-btn" onclick="alignSelected('vcenter')" title="Align center V">↕</button>
+      <div class="bar-sep"></div>
+      <button class="icon-btn" onclick="groupSelected()" title="Group">⊞</button>
+      <button class="icon-btn" onclick="ungroupSelected()" title="Ungroup">⊟</button>
+    </div>
+    <div class="bar-right">
+      <button class="txt-btn danger" onclick="clearCanvas()">CLEAR</button>
+    </div>
+  </div>
+
+  <!-- TOOLS PALETTE -->
+  <div class="toolbar" id="toolbar">
+    <div class="toolbar-label">TOOLS:</div>
+  <div class="tool-btn" data-id="box">Box</div><div class="tool-btn" data-id="grid">Grid</div><div class="tool-btn" data-id="dropdown">Dropdown</div><div class="tool-btn" data-id="text">Text</div><div class="tool-btn" data-id="input">Input</div><div class="tool-btn" data-id="button">Button</div><div class="tool-btn" data-id="list">List</div><div class="tool-btn" data-id="tabs">Tabs</div><div class="tool-btn" data-id="bar">Bar</div><div class="tool-btn" data-id="label">Label</div></div>
+
+  <!-- SECTION SIZES -->
+  <div class="section-bar">
+    Page: <select id="pageSize" onchange="updateSplits()" style="padding:1px 4px;border:1px solid #999;border-radius:3px;font-size:12px;font-weight:bold;">
+      <option value="laptop">Laptop</option>
+      <option value="ipad">iPad</option>
+    </select>
+    &nbsp;Scroll: <select id="pageScroll" style="padding:1px 4px;border:1px solid #999;border-radius:3px;font-size:12px;font-weight:bold;">
+      <option value="no">No</option>
+      <option value="yes">Yes</option>
+    </select>
+    &nbsp;&nbsp;Cols: <input type="number" id="colLeft" value="60" min="10" max="90" onchange="updateSplits()">/<input type="number" id="colRight" value="40" min="10" max="90" onchange="updateSplits()">%
+    &nbsp;&nbsp;Rows: <input type="number" id="rowTop" value="50" min="10" max="90" onchange="updateSplits()">/<input type="number" id="rowBottom" value="50" min="10" max="90" onchange="updateSplits()">%
+  </div>
+
+  <input id="renameInput" type="text">
+
+  <div id="toolPopup" style="display: none; left: 161px; top: 227px;">
+    <div class="pop-header" id="popHeader">Label Settings</div>
+    <div class="pop-type" id="popType">Type: Label</div>
+    <label>NAME:</label>
+    <input id="popName" type="text" placeholder="e.g. Ranch">
+    <label>TOKEN:</label>
+    <input id="popToken" type="text" placeholder="e.g. get-ranches">
+    <div class="pop-btns">
+      <button class="pop-btn ok" onclick="saveTool()">OK</button>
+      <button class="pop-btn" onclick="closeTool()">CANCEL</button>
+      <button class="pop-btn del" onclick="deleteTool()">DELETE</button>
+    </div>
+  </div>
+
+</div>
+<!-- @@@@ /DESIGNER_TOOLS @@@@ -->
+
+<!-- @@@@ TEMPLATE_CANVAS id:2x2 @@@@ -->
+<svg class="canvas" id="canvas"><rect x="40" y="40" width="1840" height="825" class="guide-outline guide-el"></rect><line x1="1147" y1="40" x2="1147" y2="865" class="guide-divider guide-el"></line><line x1="40" y1="455.5" x2="1880" y2="455.5" class="guide-divider guide-el"></line><text x="592" y="246.25" text-anchor="middle" dominant-baseline="middle" class="guide-label guide-el">S1 (60%)</text><text x="1515" y="246.25" text-anchor="middle" dominant-baseline="middle" class="guide-label guide-el">S2 (40%)</text><text x="592" y="661.75" text-anchor="middle" dominant-baseline="middle" class="guide-label guide-el">S3 (60%)</text><text x="1515" y="661.75" text-anchor="middle" dominant-baseline="middle" class="guide-label guide-el">S4 (40%)</text><g transform="translate(925.6918334960938,395.4094543457031)" data-w="194.14148968390302" data-h="42.590553624803356" data-name="Save Dashboard" data-type="box" data-token="Save Irrigation Table" data-group-id="grp-5"><rect width="194.14148968390302" height="42.590553624803356" rx="4" ry="4" fill="#fff" stroke="#333" stroke-width="2" stroke-dasharray="4 2"></rect><text x="97.07074484195151" y="21.295276812401678" text-anchor="middle" dominant-baseline="middle" fill="#333" font-size="14" font-weight="bold" font-family="Arial">Save Dashboard</text><text x="97.07074484195151" y="37.29527681240168" text-anchor="middle" dominant-baseline="middle" fill="#2980b9" font-size="11" font-family="Arial">Save Irrigation Table</text><polygon points="194.14148968390302,30.590553624803356 194.14148968390302,42.590553624803356 182.14148968390302,42.590553624803356" fill="#999" cursor="nwse-resize"></polygon></g><g transform="translate(65.17283630371094,395.05450439453125)" data-w="209.88269155016548" data-h="42.590553624803356" data-name="Restore Dashboard" data-type="box" data-token="read irrigation table" data-group-id="grp-5"><rect width="209.88269155016548" height="42.590553624803356" rx="4" ry="4" fill="#fff" stroke="#333" stroke-width="2" stroke-dasharray="4 2"></rect><text x="104.94134577508274" y="21.295276812401678" text-anchor="middle" dominant-baseline="middle" fill="#333" font-size="14" font-weight="bold" font-family="Arial">Restore Dashboard</text><text x="104.94134577508274" y="37.29527681240168" text-anchor="middle" dominant-baseline="middle" fill="#2980b9" font-size="11" font-family="Arial">read irrigation table</text><polygon points="209.88269155016548,30.590553624803356 209.88269155016548,42.590553624803356 197.88269155016548,42.590553624803356" fill="#999" cursor="nwse-resize"></polygon></g><g transform="translate(280.3025207519531,395.05450439453125)" data-w="209.88269155016548" data-h="42.590553624803356" data-name="refresh irrigation" data-type="box" data-token="get-irrigation-detail" data-group-id="grp-5"><rect width="209.88269155016548" height="42.590553624803356" rx="4" ry="4" fill="#fff" stroke="#333" stroke-width="2" stroke-dasharray="4 2"></rect><text x="104.94134577508274" y="21.295276812401678" text-anchor="middle" dominant-baseline="middle" fill="#333" font-size="14" font-weight="bold" font-family="Arial">refresh irrigation</text><text x="104.94134577508274" y="37.29527681240168" text-anchor="middle" dominant-baseline="middle" fill="#2980b9" font-size="11" font-family="Arial">get-irrigation-detail</text><polygon points="209.88269155016548,30.590553624803356 209.88269155016548,42.590553624803356 197.88269155016548,42.590553624803356" fill="#999" cursor="nwse-resize"></polygon></g><g transform="translate(495.4324035644531,395.4094543457031)" data-w="209.88269155016548" data-h="42.590553624803356" data-name="Update Irrigation Record" data-type="box" data-token="Update Irrigation" data-group-id="grp-5"><rect width="209.88269155016548" height="42.590553624803356" rx="4" ry="4" fill="#fff" stroke="#333" stroke-width="2" stroke-dasharray="4 2"></rect><text x="104.94134577508274" y="21.295276812401678" text-anchor="middle" dominant-baseline="middle" fill="#333" font-size="14" font-weight="bold" font-family="Arial">Update Irrigation Record</text><text x="104.94134577508274" y="37.29527681240168" text-anchor="middle" dominant-baseline="middle" fill="#2980b9" font-size="11" font-family="Arial">Update Irrigation</text><polygon points="209.88269155016548,30.590553624803356 209.88269155016548,42.590553624803356 197.88269155016548,42.590553624803356" fill="#999" cursor="nwse-resize"></polygon></g><g transform="translate(710.5620727539062,395.4094543457031)" data-w="209.88269155016548" data-h="42.590553624803356" data-name="Post Irrigation Records" data-type="box" data-token="post irrligations" data-group-id="grp-5"><rect width="209.88269155016548" height="42.590553624803356" rx="4" ry="4" fill="#fff" stroke="#333" stroke-width="2" stroke-dasharray="4 2"></rect><text x="104.94134577508274" y="21.295276812401678" text-anchor="middle" dominant-baseline="middle" fill="#333" font-size="14" font-weight="bold" font-family="Arial">Post Irrigation Records</text><text x="104.94134577508274" y="37.29527681240168" text-anchor="middle" dominant-baseline="middle" fill="#2980b9" font-size="11" font-family="Arial">post irrligations</text><polygon points="209.88269155016548,30.590553624803356 209.88269155016548,42.590553624803356 197.88269155016548,42.590553624803356" fill="#999" cursor="nwse-resize"></polygon></g><g transform="translate(70.76327514648438,307.2549133300781)" data-w="860.2259064778029" data-h="42.94547362129616" data-name="Prompt" data-type="text" data-token="" data-group-id="grp-5"><rect width="860.2259064778029" height="42.94547362129616" rx="4" ry="4" fill="#fff" stroke="#333" stroke-width="2" stroke-dasharray="4 2"></rect><text x="430.11295323890147" y="21.47273681064808" text-anchor="middle" dominant-baseline="middle" fill="#333" font-size="14" font-weight="bold" font-family="Arial">Prompt</text><text x="430.11295323890147" y="37.47273681064808" text-anchor="middle" dominant-baseline="middle" fill="#2980b9" font-size="11" font-family="Arial"></text><polygon points="860.2259064778029,30.94547362129616 860.2259064778029,42.94547362129616 848.2259064778029,42.94547362129616" fill="#999" cursor="nwse-resize"></polygon></g><g transform="translate(934.2366943359375,307.1557312011719)" data-w="185.59668530171783" data-h="43.89981747954718" data-name=" Send" data-type="button" data-token="" data-group-id="grp-5"><rect width="185.59668530171783" height="43.89981747954718" rx="4" ry="4" fill="#fff" stroke="#333" stroke-width="2" stroke-dasharray="4 2"></rect><text x="92.79834265085891" y="21.94990873977359" text-anchor="middle" dominant-baseline="middle" fill="#333" font-size="14" font-weight="bold" font-family="Arial"> Send</text><text x="92.79834265085891" y="37.94990873977359" text-anchor="middle" dominant-baseline="middle" fill="#2980b9" font-size="11" font-family="Arial"></text><polygon points="185.59668530171783,31.89981747954718 185.59668530171783,43.89981747954718 173.59668530171783,43.89981747954718" fill="#999" cursor="nwse-resize"></polygon></g><g transform="translate(-99.72220102945965,-35)" data-w="194.44444444444443" data-h="34" data-name="Dropdown" data-type="dropdown" data-token="" data-group-id=""><rect width="194.44444444444443" height="34" rx="4" ry="4" fill="#fff" stroke="#333" stroke-width="2"></rect><text x="97.22222222222221" y="17" text-anchor="middle" dominant-baseline="middle" fill="#333" font-size="14" font-weight="bold" font-family="Arial">Dropdown</text><text x="97.22222222222221" y="33" text-anchor="middle" dominant-baseline="middle" fill="#2980b9" font-size="11" font-family="Arial"></text><polygon points="194.44444444444443,22 194.44444444444443,34 182.44444444444443,34" fill="#999" cursor="nwse-resize"></polygon></g><g transform="translate(708.1087646484375,152.36611938476562)" data-w="229.050696967198" data-h="147.09289695053465" data-name="Plantings" data-type="grid" data-token="get-plantings" data-group-id="grp-5"><rect width="229.050696967198" height="147.09289695053465" rx="4" ry="4" fill="#fff" stroke="#333" stroke-width="2" stroke-dasharray="4 2"></rect><text x="114.525348483599" y="73.54644847526733" text-anchor="middle" dominant-baseline="middle" fill="#333" font-size="14" font-weight="bold" font-family="Arial">Plantings</text><text x="114.525348483599" y="89.54644847526733" text-anchor="middle" dominant-baseline="middle" fill="#2980b9" font-size="11" font-family="Arial">get-plantings</text><polygon points="229.050696967198,135.09289695053465 229.050696967198,147.09289695053465 217.050696967198,147.09289695053465" fill="#999" cursor="nwse-resize"></polygon></g><g transform="translate(458.0616760253906,153.28546142578125)" data-w="244.32074343167787" data-h="146.17356634459384" data-name=" Ranches" data-type="grid" data-token="get-ranches" data-group-id="grp-5"><rect width="244.32074343167787" height="146.17356634459384" rx="4" ry="4" fill="#fff" stroke="#333" stroke-width="2" stroke-dasharray="4 2"></rect><text x="122.16037171583893" y="73.08678317229692" text-anchor="middle" dominant-baseline="middle" fill="#333" font-size="14" font-weight="bold" font-family="Arial"> Ranches</text><text x="122.16037171583893" y="89.08678317229692" text-anchor="middle" dominant-baseline="middle" fill="#2980b9" font-size="11" font-family="Arial">get-ranches</text><polygon points="244.32074343167787,134.17356634459384 244.32074343167787,146.17356634459384 232.32074343167787,146.17356634459384" fill="#999" cursor="nwse-resize"></polygon></g><g transform="translate(68.67552947998047,152.36611938476562)" data-w="383.6599174200567" data-h="146.17356634459384" data-name="tokens" data-type="grid" data-token="" data-group-id="grp-5"><rect width="383.6599174200567" height="146.17356634459384" rx="4" ry="4" fill="#fff" stroke="#333" stroke-width="2" stroke-dasharray="4 2"></rect><text x="191.82995871002834" y="73.08678317229692" text-anchor="middle" dominant-baseline="middle" fill="#333" font-size="14" font-weight="bold" font-family="Arial">tokens</text><text x="191.82995871002834" y="89.08678317229692" text-anchor="middle" dominant-baseline="middle" fill="#2980b9" font-size="11" font-family="Arial"></text><polygon points="383.6599174200567,134.17356634459384 383.6599174200567,146.17356634459384 371.6599174200567,146.17356634459384" fill="#999" cursor="nwse-resize"></polygon></g><g transform="translate(12.777777777777747,-87)" data-w="249.99999999999991" data-h="80" data-name="Text" data-type="text" data-token="" data-group-id=""><rect width="249.99999999999991" height="80" rx="4" ry="4" fill="#fff" stroke="#333" stroke-width="2"></rect><text x="124.99999999999996" y="40" text-anchor="middle" dominant-baseline="middle" fill="#333" font-size="14" font-weight="bold" font-family="Arial">Text</text><text x="124.99999999999996" y="56" text-anchor="middle" dominant-baseline="middle" fill="#2980b9" font-size="11" font-family="Arial"></text><polygon points="249.99999999999991,68 249.99999999999991,80 237.99999999999991,80" fill="#999" cursor="nwse-resize"></polygon></g><g transform="translate(68.36238861083984,352.0098876953125)" data-w="1051.4709847870827" data-h="36.76082959809247" data-name="Text" data-type="text" data-token="" data-group-id="grp-5"><rect width="1051.4709847870827" height="36.76082959809247" rx="4" ry="4" fill="#fff" stroke="#333" stroke-width="2" stroke-dasharray="4 2"></rect><text x="525.7354923935413" y="18.380414799046235" text-anchor="middle" dominant-baseline="middle" fill="#333" font-size="14" font-weight="bold" font-family="Arial">Text</text><text x="525.7354923935413" y="34.380414799046235" text-anchor="middle" dominant-baseline="middle" fill="#2980b9" font-size="11" font-family="Arial"></text><polygon points="1051.4709847870827,24.76082959809247 1051.4709847870827,36.76082959809247 1039.4709847870827,36.76082959809247" fill="#999" cursor="nwse-resize"></polygon></g><g transform="translate(450.2777777777777,-62)" data-w="277.77777777777777" data-h="34" data-name="Tabs" data-type="tabs" data-token="" data-group-id=""><rect width="277.77777777777777" height="34" rx="4" ry="4" fill="#fff" stroke="#333" stroke-width="2"></rect><text x="138.88888888888889" y="17" text-anchor="middle" dominant-baseline="middle" fill="#333" font-size="14" font-weight="bold" font-family="Arial">Tabs</text><text x="138.88888888888889" y="33" text-anchor="middle" dominant-baseline="middle" fill="#2980b9" font-size="11" font-family="Arial"></text><polygon points="277.77777777777777,22 277.77777777777777,34 265.77777777777777,34" fill="#999" cursor="nwse-resize"></polygon></g><g transform="translate(278.48956298828125,125.85518646240234)" data-w="177.4546462711954" data-h="30" data-name="Agents only" data-type="tabs" data-token="Filter Agents" data-group-id="grp-5"><rect width="177.4546462711954" height="30" rx="4" ry="4" fill="#fff" stroke="#333" stroke-width="2" stroke-dasharray="4 2"></rect><text x="88.7273231355977" y="15" text-anchor="middle" dominant-baseline="middle" fill="#333" font-size="14" font-weight="bold" font-family="Arial">Agents only</text><text x="88.7273231355977" y="31" text-anchor="middle" dominant-baseline="middle" fill="#2980b9" font-size="11" font-family="Arial">Filter Agents</text><polygon points="177.4546462711954,18 177.4546462711954,30 165.4546462711954,30" fill="#999" cursor="nwse-resize"></polygon></g><g transform="translate(67.63169860839844,125)" data-w="213.98942638585328" data-h="30" data-name="API Tokens" data-type="tabs" data-token="Filter API only" data-group-id="grp-5"><rect width="213.98942638585328" height="30" rx="4" ry="4" fill="#fff" stroke="#333" stroke-width="2" stroke-dasharray="4 2"></rect><text x="106.99471319292664" y="15" text-anchor="middle" dominant-baseline="middle" fill="#333" font-size="14" font-weight="bold" font-family="Arial">API Tokens</text><text x="106.99471319292664" y="31" text-anchor="middle" dominant-baseline="middle" fill="#2980b9" font-size="11" font-family="Arial">Filter API only</text><polygon points="213.98942638585328,18 213.98942638585328,30 201.98942638585328,30" fill="#999" cursor="nwse-resize"></polygon></g><g transform="translate(712.7777777777777,-61)" data-w="138.88888888888889" data-h="28" data-name="Label" data-type="label" data-token="" data-group-id=""><rect width="138.88888888888889" height="28" rx="4" ry="4" fill="#fff" stroke="#333" stroke-width="2"></rect><text x="69.44444444444444" y="14" text-anchor="middle" dominant-baseline="middle" fill="#333" font-size="14" font-weight="bold" font-family="Arial">Label</text><text x="69.44444444444444" y="30" text-anchor="middle" dominant-baseline="middle" fill="#2980b9" font-size="11" font-family="Arial"></text><polygon points="138.88888888888889,16 138.88888888888889,28 126.88888888888889,28" fill="#999" cursor="nwse-resize"></polygon></g><g transform="translate(701.6666666666666,-33)" data-w="138.88888888888889" data-h="28" data-name="Label" data-type="label" data-token="" data-group-id=""><rect width="138.88888888888889" height="28" rx="4" ry="4" fill="#fff" stroke="#333" stroke-width="2"></rect><text x="69.44444444444444" y="14" text-anchor="middle" dominant-baseline="middle" fill="#333" font-size="14" font-weight="bold" font-family="Arial">Label</text><text x="69.44444444444444" y="30" text-anchor="middle" dominant-baseline="middle" fill="#2980b9" font-size="11" font-family="Arial"></text><polygon points="138.88888888888889,16 138.88888888888889,28 126.88888888888889,28" fill="#999" cursor="nwse-resize"></polygon></g><g transform="translate(81.5,59)" data-w="138.88888888888889" data-h="28" data-name="Label" data-type="label" data-token="" data-group-id=""><rect width="138.88888888888889" height="28" rx="4" ry="4" fill="#fff" stroke="#e74c3c" stroke-width="3"></rect><text x="69.44444444444444" y="14" text-anchor="middle" dominant-baseline="middle" fill="#333" font-size="14" font-weight="bold" font-family="Arial">Label</text><text x="69.44444444444444" y="30" text-anchor="middle" dominant-baseline="middle" fill="#2980b9" font-size="11" font-family="Arial"></text><polygon points="138.88888888888889,16 138.88888888888889,28 126.88888888888889,28" fill="#999" cursor="nwse-resize"></polygon></g></svg>
+<!-- @@@@ /TEMPLATE_CANVAS @@@@ -->
+
+<!-- @@@@ DESIGNER_SCRIPT id:component @@@@ -->
+<script>
+  const tools = [
+    { id: 'box',      label: 'Box',      w: 160, h: 120 },
+    { id: 'grid',     label: 'Grid',     w: 200, h: 140 },
+    { id: 'dropdown', label: 'Dropdown', w: 140, h: 34  },
+    { id: 'text',     label: 'Text',     w: 180, h: 80  },
+    { id: 'input',    label: 'Input',    w: 160, h: 34  },
+    { id: 'button',   label: 'Button',   w: 100, h: 38  },
+    { id: 'list',     label: 'List',     w: 160, h: 120 },
+    { id: 'tabs',     label: 'Tabs',     w: 200, h: 34  },
+    { id: 'bar',      label: 'Bar',      w: 240, h: 38  },
+    { id: 'label',    label: 'Label',    w: 100, h: 28  },
+  ];
+
+  const PAD = 40, GAP = 6;
+  const canvas = document.getElementById('canvas');
+  const toolbar = document.getElementById('toolbar');
+  const renameInput = document.getElementById('renameInput');
+  const toolPopup = document.getElementById('toolPopup');
+  const popHeader = document.getElementById('popHeader');
+  const popType = document.getElementById('popType');
+  const popName = document.getElementById('popName');
+  const popToken = document.getElementById('popToken');
+  const templateName = document.getElementById('templateName');
+
+  let counter = 0, drag = null, activeBox = null;
+  let selected = [];
+  let groups = [];
+  let undoStack = [];
+  const MAX_UNDO = 30; // array of arrays of g elements
+
+  // --- Section % inputs ---
+  const colLeft = document.getElementById('colLeft');
+  const colRight = document.getElementById('colRight');
+  const rowTop = document.getElementById('rowTop');
+  const rowBottom = document.getElementById('rowBottom');
+
+  function getColPct() { return (parseInt(colLeft.value) || 60) / 100; }
+  function getRowPct() { return (parseInt(rowTop.value) || 50) / 100; }
+
+  let lastPageType = 'laptop'; // track page type for rescaling tools
+
+  function updateSplits() {
+    // Auto-calc the other side
+    colRight.value = 100 - (parseInt(colLeft.value) || 60);
+    rowBottom.value = 100 - (parseInt(rowTop.value) || 50);
+    const newType = document.getElementById('pageSize').value;
+    if (newType !== lastPageType) {
+      rescaleTools(lastPageType, newType);
+      lastPageType = newType;
+    }
+    drawGuide();
+  }
+
+  // --- Rescale all tools when switching page type ---
+  function rescaleTools(fromType, toType) {
+    const cr = canvas.getBoundingClientRect();
+    const fullW = cr.width - PAD*2, fullH = cr.height - PAD*2;
+
+    // Calculate old and new guide areas
+    let oldW = fullW, oldX = PAD;
+    if (fromType === 'ipad' && fullW > 600) {
+      oldW = fullW * 0.72;
+      oldX = PAD + (fullW - oldW) / 2;
+    }
+    let newW = fullW, newX = PAD;
+    if (toType === 'ipad' && fullW > 600) {
+      newW = fullW * 0.72;
+      newX = PAD + (fullW - newW) / 2;
+    }
+
+    const scaleX = newW / oldW;
+    const scaleY = 1; // height stays the same
+
+    canvas.querySelectorAll('g').forEach(g => {
+      const t = g.transform.baseVal.getItem(0);
+      const ox = t.matrix.e, oy = t.matrix.f;
+      const w = parseFloat(g.dataset.w), h = parseFloat(g.dataset.h);
+
+      // Remap position: relative to old guide origin → scale → new guide origin
+      const relX = ox - oldX;
+      const relY = oy - PAD;
+      const nx = newX + relX * scaleX;
+      const ny = PAD + relY * scaleY;
+      const nw = Math.max(40, w * scaleX);
+      const nh = h; // keep height
+
+      g.setAttribute('transform', `translate(${nx},${ny})`);
+      resizeBox(g, nw, nh);
+    });
+  }
+
+  // --- 2x2 Guide ---
+  function drawGuide() {
+    canvas.querySelectorAll('.guide-el').forEach(e => e.remove());
+    const cr = canvas.getBoundingClientRect();
+    const fullW = cr.width - PAD*2, fullH = cr.height - PAD*2;
+    const pageType = document.getElementById('pageSize').value;
+
+    // iPad: narrower guide to show constrained width
+    let w = fullW, guideX = PAD;
+    if (pageType === 'ipad' && fullW > 600) {
+      w = Math.min(fullW, fullW * 0.72);
+      guideX = PAD + (fullW - w) / 2;
+    }
+    const h = fullH;
+
+    const cp = getColPct(), rp = getRowPct();
+    const x = guideX, y = PAD, c1 = w*cp, r1 = h*rp;
+    const c2 = w*(1-cp), r2 = h*(1-rp);
+
+    gEl('rect', { x,y, width:w, height:h, class:'guide-outline guide-el' });
+    gEl('line', { x1:x+c1+GAP/2, y1:y, x2:x+c1+GAP/2, y2:y+h, class:'guide-divider guide-el' });
+    gEl('line', { x1:x, y1:y+r1+GAP/2, x2:x+w, y2:y+r1+GAP/2, class:'guide-divider guide-el' });
+
+    const lp = Math.round(cp*100), rpp = Math.round((1-cp)*100);
+    const label = pageType === 'ipad' ? ' iPad' : '';
+    [['S1 ('+lp+'%)'+label, x+c1/2, y+r1/2],
+     ['S2 ('+rpp+'%)'+label, x+c1+GAP+(c2-GAP)/2, y+r1/2],
+     ['S3 ('+lp+'%)', x+c1/2, y+r1+GAP+(r2-GAP)/2],
+     ['S4 ('+rpp+'%)', x+c1+GAP+(c2-GAP)/2, y+r1+GAP+(r2-GAP)/2]
+    ].forEach(([t,tx,ty]) => gEl('text', { x:tx, y:ty, 'text-anchor':'middle', 'dominant-baseline':'middle', class:'guide-label guide-el' }, t));
+  }
+
+  window.addEventListener('resize', () => drawGuide());
+
+  function gEl(tag, attrs, text) {
+    const el = svgCreate(tag, attrs, text);
+    const firstG = canvas.querySelector('g');
+    if (firstG) canvas.insertBefore(el, firstG); else canvas.appendChild(el);
+    return el;
+  }
+
+  // --- Toolbar ---
+  tools.forEach(t => {
+    const div = document.createElement('div');
+    div.className = 'tool-btn';
+    div.textContent = t.label;
+    div.dataset.id = t.id;
+    div.addEventListener('mousedown', spawnTool);
+    toolbar.appendChild(div);
+  });
+
+  function spawnTool(e) {
+    e.preventDefault();
+    const t = tools.find(x => x.id === e.target.dataset.id);
+    if (!t) return;
+    counter++;
+    saveSnapshot();
+    const cr = canvas.getBoundingClientRect();
+    const g = makeBox(t.label, t.id, e.clientX-cr.left-t.w/2, e.clientY-cr.top-t.h/2, t.w, t.h, '');
+    drag = { el:g, ox:t.w/2, oy:t.h/2, mode:'move' };
+  }
+
+  // --- Make a Tool Box: plain white, name centered ---
+  function makeBox(name, type, x, y, w, h, token) {
+    const g = svgCreate('g', { transform:`translate(${x},${y})` });
+    canvas.appendChild(g);
+
+    svgCreate('rect', { width:w, height:h, rx:4, ry:4, fill:'#fff', stroke:'#333', 'stroke-width':2 }, null, g);
+
+    const display = name || type;
+    svgCreate('text', {
+      x:w/2, y:h/2, 'text-anchor':'middle', 'dominant-baseline':'middle',
+      fill:'#333', 'font-size':'14', 'font-weight':'bold', 'font-family':'Arial'
+    }, display, g);
+
+    svgCreate('text', {
+      x:w/2, y:h/2+16, 'text-anchor':'middle', 'dominant-baseline':'middle',
+      fill:'#2980b9', 'font-size':'11', 'font-family':'Arial'
+    }, token || '', g);
+
+    svgCreate('polygon', {
+      points:`${w},${h-12} ${w},${h} ${w-12},${h}`,
+      fill:'#999', cursor:'nwse-resize'
+    }, null, g);
+
+    g.dataset.w = w; g.dataset.h = h;
+    g.dataset.name = name; g.dataset.type = type;
+    g.dataset.token = token || '';
+    g.dataset.groupId = '';
+
+    g.querySelector('rect').addEventListener('mousedown', (e) => { if (e.button===0) { handleSelect(e,g); startMove(e,g); } });
+    g.querySelectorAll('text')[0].addEventListener('mousedown', (e) => { if (e.button===0) { handleSelect(e,g); startMove(e,g); } });
+    g.querySelector('rect').addEventListener('dblclick', (e) => startRename(e,g));
+    g.querySelectorAll('text')[0].addEventListener('dblclick', (e) => startRename(e,g));
+    g.addEventListener('contextmenu', (e) => openTool(e,g));
+    g.querySelector('polygon').addEventListener('mousedown', (e) => startResize(e,g));
+
+    return g;
+  }
+
+  function updateBoxDisplay(g) {
+    const w = parseFloat(g.dataset.w), h = parseFloat(g.dataset.h);
+    const texts = g.querySelectorAll('text');
+    texts[0].textContent = g.dataset.name || g.dataset.type;
+    texts[0].setAttribute('x', w/2); texts[0].setAttribute('y', h/2);
+    texts[1].textContent = g.dataset.token || '';
+    texts[1].setAttribute('x', w/2); texts[1].setAttribute('y', h/2+16);
+  }
+
+  // --- Selection ---
+  function handleSelect(e, g) {
+    e.preventDefault(); e.stopPropagation();
+
+    // If this box is in a group, select the whole group
+    let toSelect = [g];
+    if (g.dataset.groupId) {
+      const grp = groups.find(gr => gr.id === g.dataset.groupId);
+      if (grp) toSelect = grp.members;
+    }
+
+    if (e.shiftKey) {
+      toSelect.forEach(s => {
+        if (selected.includes(s)) {
+          selected = selected.filter(x => x !== s);
+          markSelected(s, false);
+        } else {
+          selected.push(s);
+          markSelected(s, true);
+        }
+      });
+    } else {
+      clearSelection();
+      selected = [...toSelect];
+      toSelect.forEach(s => markSelected(s, true));
+    }
+  }
+
+  function markSelected(g, on) {
+    g.querySelector('rect').setAttribute('stroke', on ? '#e74c3c' : '#333');
+    g.querySelector('rect').setAttribute('stroke-width', on ? 3 : 2);
+  }
+
+  function clearSelection() {
+    selected.forEach(g => markSelected(g, false));
+    selected = [];
+  }
+
+  canvas.addEventListener('mousedown', (e) => { if (e.target === canvas) clearSelection(); });
+
+  // --- Copy ---
+  function copySelected() {
+    if (!selected.length) return;
+    saveSnapshot();
+    const copies = [];
+    selected.forEach(g => {
+      const t = g.transform.baseVal.getItem(0);
+      copies.push(makeBox(g.dataset.name, g.dataset.type, t.matrix.e+20, t.matrix.f+20,
+        parseFloat(g.dataset.w), parseFloat(g.dataset.h), g.dataset.token));
+    });
+    clearSelection();
+    copies.forEach(c => { selected.push(c); markSelected(c, true); });
+  }
+
+  // --- Line Up: place side by side ---
+  function lineUp(dir) {
+    if (selected.length < 2) return;
+    saveSnapshot();
+    const positions = selected.map(g => {
+      const t = g.transform.baseVal.getItem(0);
+      return { g, x:t.matrix.e, y:t.matrix.f, w:parseFloat(g.dataset.w), h:parseFloat(g.dataset.h) };
+    });
+    // Sort by current position
+    if (dir === 'h') {
+      positions.sort((a,b) => a.x - b.x);
+      let cx = positions[0].x;
+      positions.forEach(p => {
+        p.g.setAttribute('transform', `translate(${cx},${p.y})`);
+        cx += p.w + 4;
+      });
+    }
+    if (dir === 'v') {
+      positions.sort((a,b) => a.y - b.y);
+      let cy = positions[0].y;
+      positions.forEach(p => {
+        p.g.setAttribute('transform', `translate(${p.x},${cy})`);
+        cy += p.h + 4;
+      });
+    }
+  }
+
+  // --- Align ---
+  function alignSelected(mode) {
+    if (selected.length < 2) return;
+    saveSnapshot();
+    const pos = selected.map(g => {
+      const t = g.transform.baseVal.getItem(0);
+      return { g, x:t.matrix.e, y:t.matrix.f, w:parseFloat(g.dataset.w), h:parseFloat(g.dataset.h) };
+    });
+
+    if (mode === 'left')    { const v = Math.min(...pos.map(p=>p.x)); pos.forEach(p => p.g.setAttribute('transform',`translate(${v},${p.y})`)); }
+    if (mode === 'right')   { const v = Math.max(...pos.map(p=>p.x+p.w)); pos.forEach(p => p.g.setAttribute('transform',`translate(${v-p.w},${p.y})`)); }
+    if (mode === 'top')     { const v = Math.min(...pos.map(p=>p.y)); pos.forEach(p => p.g.setAttribute('transform',`translate(${p.x},${v})`)); }
+    if (mode === 'bottom')  { const v = Math.max(...pos.map(p=>p.y+p.h)); pos.forEach(p => p.g.setAttribute('transform',`translate(${p.x},${v-p.h})`)); }
+    if (mode === 'hcenter') { const v = pos.reduce((s,p)=>s+p.x+p.w/2,0)/pos.length; pos.forEach(p => p.g.setAttribute('transform',`translate(${v-p.w/2},${p.y})`)); }
+    if (mode === 'vcenter') { const v = pos.reduce((s,p)=>s+p.y+p.h/2,0)/pos.length; pos.forEach(p => p.g.setAttribute('transform',`translate(${p.x},${v-p.h/2})`)); }
+  }
+
+  // --- Group / Ungroup ---
+  let groupCounter = 0;
+  function groupSelected() {
+    if (selected.length < 2) return;
+    groupCounter++;
+    const gid = 'grp-' + groupCounter;
+    const grp = { id: gid, members: [...selected] };
+    groups.push(grp);
+    selected.forEach(g => {
+      g.dataset.groupId = gid;
+      // Show grouped with dashed blue border
+      g.querySelector('rect').setAttribute('stroke-dasharray', '4 2');
+      g.querySelector('rect').setAttribute('stroke', '#2980b9');
+    });
+  }
+
+  function ungroupSelected() {
+    if (!selected.length) return;
+    const gids = new Set();
+    selected.forEach(g => { if (g.dataset.groupId) gids.add(g.dataset.groupId); });
+    gids.forEach(gid => {
+      const grp = groups.find(g => g.id === gid);
+      if (grp) {
+        grp.members.forEach(g => {
+          g.dataset.groupId = '';
+          g.querySelector('rect').setAttribute('stroke-dasharray', '');
+          g.querySelector('rect').setAttribute('stroke', '#333');
+          g.querySelector('rect').setAttribute('stroke-width', 2);
+        });
+        groups = groups.filter(g => g.id !== gid);
+      }
+    });
+    clearSelection();
+  }
+
+  // --- Double-click Rename ---
+  function startRename(e, g) {
+    e.preventDefault(); e.stopPropagation();
+    const cr = canvas.getBoundingClientRect();
+    const t = g.transform.baseVal.getItem(0);
+    const w = parseFloat(g.dataset.w);
+    renameInput.style.display = 'block';
+    renameInput.style.left = (cr.left + t.matrix.e + 4) + 'px';
+    renameInput.style.top = (cr.top + t.matrix.f + parseFloat(g.dataset.h)/2 - 12) + 'px';
+    renameInput.style.width = (w - 8) + 'px';
+    renameInput.value = g.dataset.name;
+    renameInput.focus(); renameInput.select();
+
+    const finish = () => {
+      g.dataset.name = renameInput.value;
+      updateBoxDisplay(g);
+      renameInput.style.display = 'none';
+      renameInput.removeEventListener('blur', finish);
+      renameInput.removeEventListener('keydown', onKey);
+    };
+    const onKey = (ev) => { if (ev.key==='Enter') finish(); if (ev.key==='Escape') { renameInput.style.display='none'; } };
+    renameInput.addEventListener('blur', finish);
+    renameInput.addEventListener('keydown', onKey);
+  }
+
+  // --- Right-click Tool Settings ---
+  function openTool(e, g) {
+    e.preventDefault(); e.stopPropagation();
+    activeBox = g;
+    const typeLabel = g.dataset.type.charAt(0).toUpperCase() + g.dataset.type.slice(1);
+    popHeader.textContent = typeLabel + ' Settings';
+    popType.textContent = 'Type: ' + typeLabel;
+    popName.value = g.dataset.name || '';
+    popToken.value = g.dataset.token || '';
+    toolPopup.style.display = 'block';
+    toolPopup.style.left = e.clientX + 'px';
+    toolPopup.style.top = e.clientY + 'px';
+    popName.focus();
+  }
+
+  function saveTool() {
+    if (!activeBox) return;
+    activeBox.dataset.name = popName.value;
+    activeBox.dataset.token = popToken.value;
+    updateBoxDisplay(activeBox);
+    closeTool();
+  }
+
+  function closeTool() { toolPopup.style.display = 'none'; activeBox = null; }
+
+  function deleteTool() {
+    if (!activeBox) return;
+    selected = selected.filter(s => s !== activeBox);
+    activeBox.remove();
+    closeTool();
+  }
+
+  document.addEventListener('mousedown', (e) => {
+    if (toolPopup.style.display === 'block' && !toolPopup.contains(e.target)) closeTool();
+  });
+
+  // --- Move & Resize ---
+  function startMove(e, g) {
+    e.preventDefault(); e.stopPropagation();
+    const cr = canvas.getBoundingClientRect();
+
+    // Move all selected (includes group members)
+    const toMove = selected.length > 1 ? selected : (g.dataset.groupId ? (groups.find(gr=>gr.id===g.dataset.groupId)||{members:[g]}).members : [g]);
+    const offsets = toMove.map(s => {
+      const st = s.transform.baseVal.getItem(0);
+      return { el:s, ox: e.clientX - cr.left - st.matrix.e, oy: e.clientY - cr.top - st.matrix.f };
+    });
+    drag = toMove.length > 1 ? { els:offsets, mode:'moveGroup' } :
+      { el:g, mode:'move', ox:offsets[0].ox, oy:offsets[0].oy };
+  }
+
+  function startResize(e, g) {
+    e.preventDefault(); e.stopPropagation();
+    // If grouped, resize whole group proportionally
+    if (g.dataset.groupId) {
+      const grp = groups.find(gr => gr.id === g.dataset.groupId);
+      if (grp && grp.members.length > 1) {
+        const starts = grp.members.map(m => {
+          const mt = m.transform.baseVal.getItem(0);
+          return { el:m, x:mt.matrix.e, y:mt.matrix.f, w:parseFloat(m.dataset.w), h:parseFloat(m.dataset.h) };
+        });
+        // Find bounding box of group
+        const minX = Math.min(...starts.map(s=>s.x));
+        const minY = Math.min(...starts.map(s=>s.y));
+        const maxX = Math.max(...starts.map(s=>s.x+s.w));
+        const maxY = Math.max(...starts.map(s=>s.y+s.h));
+        drag = { mode:'resizeGroup', startX:e.clientX, startY:e.clientY,
+          groupW:maxX-minX, groupH:maxY-minY, originX:minX, originY:minY, starts };
+        return;
+      }
+    }
+    drag = { el:g, mode:'resize', startX:e.clientX, startY:e.clientY, startW:parseFloat(g.dataset.w), startH:parseFloat(g.dataset.h) };
+  }
+
+  document.addEventListener('mousemove', (e) => {
+    if (!drag) return;
+    const cr = canvas.getBoundingClientRect();
+    if (drag.mode === 'move')
+      drag.el.setAttribute('transform', `translate(${e.clientX-cr.left-drag.ox},${e.clientY-cr.top-drag.oy})`);
+    if (drag.mode === 'moveGroup')
+      drag.els.forEach(d => d.el.setAttribute('transform', `translate(${e.clientX-cr.left-d.ox},${e.clientY-cr.top-d.oy})`));
+    if (drag.mode === 'resize')
+      resizeBox(drag.el, Math.max(60, drag.startW+e.clientX-drag.startX), Math.max(30, drag.startH+e.clientY-drag.startY));
+    if (drag.mode === 'resizeGroup') {
+      const scaleX = Math.max(0.3, (drag.groupW + e.clientX - drag.startX) / drag.groupW);
+      const scaleY = Math.max(0.3, (drag.groupH + e.clientY - drag.startY) / drag.groupH);
+      drag.starts.forEach(s => {
+        const nx = drag.originX + (s.x - drag.originX) * scaleX;
+        const ny = drag.originY + (s.y - drag.originY) * scaleY;
+        const nw = Math.max(60, s.w * scaleX);
+        const nh = Math.max(30, s.h * scaleY);
+        s.el.setAttribute('transform', `translate(${nx},${ny})`);
+        resizeBox(s.el, nw, nh);
+      });
+    }
+  });
+
+  document.addEventListener('mouseup', () => {
+    if (drag && (drag.mode === 'move' || drag.mode === 'moveGroup' || drag.mode === 'resize' || drag.mode === 'resizeGroup')) saveSnapshot();
+    drag = null;
+  });
+
+  function resizeBox(g, w, h) {
+    g.querySelector('rect').setAttribute('width', w);
+    g.querySelector('rect').setAttribute('height', h);
+    g.querySelector('polygon').setAttribute('points', `${w},${h-12} ${w},${h} ${w-12},${h}`);
+    g.dataset.w = w; g.dataset.h = h;
+    updateBoxDisplay(g);
+  }
+
+  // --- Undo ---
+  function saveSnapshot() {
+    const snap = [];
+    canvas.querySelectorAll('g').forEach(g => {
+      const t = g.transform.baseVal.getItem(0);
+      snap.push({ name:g.dataset.name, type:g.dataset.type, x:t.matrix.e, y:t.matrix.f,
+        w:parseFloat(g.dataset.w), h:parseFloat(g.dataset.h), token:g.dataset.token||'',
+        groupId:g.dataset.groupId||'' });
+    });
+    undoStack.push(JSON.stringify(snap));
+    if (undoStack.length > MAX_UNDO) undoStack.shift();
+  }
+
+  function undo() {
+    if (!undoStack.length) return;
+    clearCanvas();
+    const snap = JSON.parse(undoStack.pop());
+    snap.forEach(b => {
+      const g = makeBox(b.name, b.type, b.x, b.y, b.w, b.h, b.token);
+      if (b.groupId) g.dataset.groupId = b.groupId;
+    });
+    // Rebuild groups
+    const gids = new Set();
+    canvas.querySelectorAll('g').forEach(g => { if (g.dataset.groupId) gids.add(g.dataset.groupId); });
+    gids.forEach(gid => {
+      const members = [];
+      canvas.querySelectorAll('g').forEach(g => { if (g.dataset.groupId === gid) members.push(g); });
+      if (members.length > 1) {
+        groups.push({ id:gid, members });
+        members.forEach(g => { g.querySelector('rect').setAttribute('stroke-dasharray','4 2'); g.querySelector('rect').setAttribute('stroke','#2980b9'); });
+      }
+    });
+  }
+
+  // --- Keyboard: Delete, Ctrl+Z, Arrow nudge ---
+  document.addEventListener('keydown', (e) => {
+    if (document.activeElement.tagName === 'INPUT') return;
+
+    if (e.key === 'Delete' && selected.length) {
+      saveSnapshot();
+      selected.forEach(g => g.remove());
+      selected = [];
+    }
+    if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
+      e.preventDefault();
+      undo();
+    }
+    // Arrow keys: nudge 1px, Shift+Arrow: nudge 10px
+    const arrows = { ArrowLeft:[-1,0], ArrowRight:[1,0], ArrowUp:[0,-1], ArrowDown:[0,1] };
+    if (arrows[e.key] && selected.length) {
+      e.preventDefault();
+      const step = e.shiftKey ? 10 : 1;
+      const [dx, dy] = arrows[e.key];
+      if (!e.repeat) saveSnapshot(); // snapshot only on first press
+      selected.forEach(g => {
+        const t = g.transform.baseVal.getItem(0);
+        g.setAttribute('transform', `translate(${t.matrix.e + dx*step},${t.matrix.f + dy*step})`);
+      });
+    }
+  });
+
+  // --- SAVE as HTML (remembers name + folder) ---
+  let lastSaveHandle = null;
+  let lastJsonHandle = null;
+  async function saveLayout() {
+    const name = templateName.value || 'my-template';
+    const boxes = [];
+    canvas.querySelectorAll('g').forEach(g => {
+      const t = g.transform.baseVal.getItem(0);
+      boxes.push({ name:g.dataset.name, type:g.dataset.type, x:t.matrix.e, y:t.matrix.f,
+        w:parseFloat(g.dataset.w), h:parseFloat(g.dataset.h), token:g.dataset.token||'',
+        groupId:g.dataset.groupId||'' });
+    });
+    if (!boxes.length) { alert('Nothing to save.'); return; }
+    // Build the saved HTML: full page with tool data embedded
+    const toolData = JSON.stringify({ template:name, tools:boxes });
+    // Remove any old savedToolData script, then inject fresh one before <script id="savedToolData">var _savedTools={"template":"Factory-MCP-2x2-Admin-Sample.1.0","tools":[{"name":"Save Dashboard","type":"box","x":925.6918334960938,"y":395.4094543457031,"w":194.14148968390302,"h":42.590553624803356,"token":"Save Irrigation Table","groupId":"grp-5"},{"name":"Restore Dashboard","type":"box","x":65.17283630371094,"y":395.05450439453125,"w":209.88269155016548,"h":42.590553624803356,"token":"read irrigation table","groupId":"grp-5"},{"name":"refresh irrigation","type":"box","x":280.3025207519531,"y":395.05450439453125,"w":209.88269155016548,"h":42.590553624803356,"token":"get-irrigation-detail","groupId":"grp-5"},{"name":"Update Irrigation Record","type":"box","x":495.4324035644531,"y":395.4094543457031,"w":209.88269155016548,"h":42.590553624803356,"token":"Update Irrigation","groupId":"grp-5"},{"name":"Post Irrigation Records","type":"box","x":710.5620727539062,"y":395.4094543457031,"w":209.88269155016548,"h":42.590553624803356,"token":"post irrligations","groupId":"grp-5"},{"name":"Prompt","type":"text","x":70.76327514648438,"y":307.2549133300781,"w":860.2259064778029,"h":42.94547362129616,"token":"","groupId":"grp-5"},{"name":" Send","type":"button","x":934.2366943359375,"y":307.1557312011719,"w":185.59668530171783,"h":43.89981747954718,"token":"","groupId":"grp-5"},{"name":"Dropdown","type":"dropdown","x":-99.72219848632812,"y":-35,"w":194.44444444444443,"h":34,"token":"","groupId":""},{"name":"Plantings","type":"grid","x":708.1087646484375,"y":152.36611938476562,"w":229.050696967198,"h":147.09289695053465,"token":"get-plantings","groupId":"grp-5"},{"name":" Ranches","type":"grid","x":458.0616760253906,"y":153.28546142578125,"w":244.32074343167787,"h":146.17356634459384,"token":"get-ranches","groupId":"grp-5"},{"name":"tokens","type":"grid","x":68.67552947998047,"y":152.36611938476562,"w":383.6599174200567,"h":146.17356634459384,"token":"","groupId":"grp-5"},{"name":"Text","type":"text","x":12.777777671813965,"y":-87,"w":249.99999999999991,"h":80,"token":"","groupId":""},{"name":"Text","type":"text","x":68.36238861083984,"y":352.0098876953125,"w":1051.4709847870827,"h":36.76082959809247,"token":"","groupId":"grp-5"},{"name":"Tabs","type":"tabs","x":450.27777099609375,"y":-62,"w":277.77777777777777,"h":34,"token":"","groupId":""},{"name":"Agents only","type":"tabs","x":278.48956298828125,"y":125.85518646240234,"w":177.4546462711954,"h":30,"token":"Filter Agents","groupId":"grp-5"},{"name":"API Tokens","type":"tabs","x":67.63169860839844,"y":125,"w":213.98942638585328,"h":30,"token":"Filter API only","groupId":"grp-5"},{"name":"Label","type":"label","x":712.7777709960938,"y":-61,"w":138.88888888888889,"h":28,"token":"","groupId":""},{"name":"Label","type":"label","x":701.6666870117188,"y":-33,"w":138.88888888888889,"h":28,"token":"","groupId":""},{"name":"Label","type":"label","x":81.5,"y":59,"w":138.88888888888889,"h":28,"token":"","groupId":""}]};</script>
+</body>
+    let html = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+    html = html.replace(/<!-- @@@@ /DESIGNER_SCRIPT @@@@ -->
+
+</body></html>

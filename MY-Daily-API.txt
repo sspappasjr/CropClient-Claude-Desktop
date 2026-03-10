@@ -1,0 +1,47 @@
+Hello Team, 
+
+Welcome to the next installment of 
+
+           MyDaily-API  
+   our most important First Project
+
+Here is the best team in ever. 
+  Steve  ........Our CEO and Archltect.
+  George .... Our AI /developer / Analyst
+  Mac .......... Our Project Lead / Macgyver 
+  Gus  .......... Our Best Buddy Genious / LLM
+
+We will have a guest apprearance from
+    Lilly ........... Our First AI Assist / Teacher
+ She is a gift from MobileFrame as we both
+    Install OpenAI 
+ the goal is to lwarn from her how to share our tools Nicely. 
+
+
+  T
+  Here we will put the goal of the team as we create
+The Best Darn Crop Client Service site every
+    Design, Developed and Maintained 
+ To help Our Growers be the best they can be
+
+ My Daily will have a section for each of our project 
+   on the this Desktop  in the MyDaily  md file. 
+
+ Lets have one ffor each project like 
+   MyDaily-API  our most important First Project
+   MyDaily-Factory  our coolest start at the neural network 
+   MyDaily-Butler our way of being bigl shots and Skill do our work 
+
+When you read this I would like each team member to contribute to keeping the daily current with quick list of  
+     Todays Tasks,  Napkins Added,  Chat  Summary
+        feel ffree to keep the Dailys Clean and restarted each Chat.
+        each project will have a 
+     DailyLogs folder .for saving the old as the new logs are added. 
+
+Note: Context is kept small and logs are only digested when needed
+
+Your Ideas are very welcome as we create this new and  (hope fully ) helpful system.
+
+ Happy Trails Steve  P
+
+ 

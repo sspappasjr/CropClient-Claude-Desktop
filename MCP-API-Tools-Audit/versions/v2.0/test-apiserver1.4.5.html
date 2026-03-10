@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!--
+    ============================================================
+    TEST-APISERVER 1.4.5 - ClientAI Cockpit
+    ------------------------------------------------------------
+    CHANGES FROM 1.4.4:
+      S1 — Full cockpit: 3 columns full width
+        Col 1: Tabs [API][JSON][CRUD] above token list (dynamic from GET /tools)
+                Numbered clickable rows, scrollable
+                Description bar spans full width below all 3 columns
+        Col 2: Ranches — scrollable clickable list
+        Col 3: Plantings — scrollable clickable list
+      S2 — top to bottom:
+        Chat Log (always on top)
+        Description bar (updates when token clicked in S1)
+        Prompt field + SEND (side by side)
+        [Clear Fields] [Clear Results] [Save File] [steve.json] [Restore File]
+      LOGON popup:
+        Email, Password, Save/Restore filename (editable, defaults to steve.json)
+        LOGON button
+      S4 — JSON (staged params or result, unchanged)
+
+    VERSION: 1.4.5  DATE: 2.28.2026
+    SOURCE:  test-apiserver1.4.4.html
+    TARGET:  APIServer2.0.js on localhost:3101 or api.cropclient.com
+    ============================================================
+    -->
+    <title>API Server Tester v1.4.5 - ClientAI</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1500px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        header {
+            background: linear-gradient(135deg, #2e7d32 0%, #4caf50 100%);
+            color: white; padding: 16px 20px; text-align: center;
+        }
+        header h1 { font-size: 1.6em; margin-bottom: 4px; }
+        header p  { opacity: 0.9; font-size: 0.88em; }
+        .main-content { padding: 16px; }
+
+        /* SERVER INFO BAR */
+        .server-info {
+            background: #e8f5e9; border-left: 4px solid #4caf50;
+            padding: 10px 14px; margin-bottom: 16px; border-radius: 4px;
+            font-size: 0.85em;
+        }
+        .server-info strong { color: #2e7d32; }
+
+        /* TOP 60/40 */
+        .top-split {
+            display: grid;
+            grid-template-columns: 60% 40%;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        /* ── S1 COMMAND PANEL (top-left 60%) ── */
+        .s1-panel {
+            background: #fff3e0;
+            border: 3px solid #ff9800;
+            border-radius: 8px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: 420px;
+            max-height: 420px;
+        }
+
+        /* S1 header bar */
+        .s1-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #ff9800;
+            padding: 9px 14px;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+        .s1-header h3 { color: white; font-size: 1em; margin: 0; white-space: nowrap; }
+        .s1-creds { display: flex; align-items: center; gap: 7px; font-size: 0.82em; color: white; }
+        .s1-creds .label { opacity: 0.9; white-space: nowrap; }
+        .s1-creds .cred-email {
+            background: rgba(255,255,255,0.22); padding: 3px 8px;
+            border-radius: 4px; font-family: 'Courier New', monospace;
+            font-size: 0.9em; white-space: nowrap;
+        }
+        .btn-logon {
+            background: linear-gradient(135deg, #00796b 0%, #009688 100%);
+            border: none; border-radius: 5px; color: white;
+            padding: 5px 12px; font-size: 0.8em; font-weight: 600;
+            cursor: pointer; white-space: nowrap;
+        }
+
+        /* S1 URL row */
+        .s1-url-row {
+            display: flex; gap: 8px; align-items: flex-end;
+            padding: 10px 14px 0 14px;
+            flex-shrink: 0;
+        }
+        .s1-url-row input {
+            flex: 1; padding: 7px 9px;
+            border: 2px solid #ddd; border-radius: 4px;
+            font-family: 'Courier New', monospace; font-size: 0.85em;
+        }
+        .s1-url-row input:focus { outline: none; border-color: #ff9800; }
+        .preset-btn {
+            padding: 7px 11px; border: none; border-radius: 5px;
+            cursor: pointer; font-weight: 600; font-size: 0.8em;
+            color: white; white-space: nowrap;
+        }
+        .preset-btn.local  { background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%); }
+        .preset-btn.online { background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%); }
+
+        /* S1 three-column cockpit — fixed, never expands */
+        .s1-cockpit {
+            display: grid;
+            grid-template-columns: 38% 31% 31%;
+            gap: 0;
+            flex-shrink: 0;
+            padding: 10px 14px 0 14px;
+        }
+
+        /* Column headers */
+        .col-header {
+            font-size: 0.82em; font-weight: 700;
+            color: #f57c00; padding: 4px 6px 6px 6px;
+            border-bottom: 2px solid #ffcc80;
+            margin-bottom: 4px;
+        }
+
+        /* Tabs above token column */
+        .token-tabs {
+            display: flex; gap: 4px;
+            padding: 0 0 6px 0;
+        }
+        .tab-btn {
+            padding: 4px 12px; border: 2px solid #ddd;
+            border-radius: 5px 5px 0 0; cursor: pointer;
+            font-size: 0.78em; font-weight: 700;
+            background: #f5f5f5; color: #666;
+            transition: all 0.15s;
+        }
+        .tab-btn.active {
+            background: #ff9800; color: white; border-color: #ff9800;
+        }
+
+        /* Scrollable column lists — FIXED HEIGHT, never grows */
+        .col-scroll {
+            overflow-y: auto;
+            height: 180px;
+            max-height: 180px;
+            min-height: 180px;
+            padding-right: 4px;
+        }
+
+        /* Token rows */
+        .token-row {
+            display: flex; align-items: center;
+            padding: 6px 8px; margin-bottom: 3px;
+            border-radius: 5px; cursor: pointer;
+            font-size: 0.82em; font-weight: 600;
+            border: 1px solid transparent;
+            transition: background 0.1s;
+        }
+        .token-row:active { opacity: 0.8; }
+        .token-row .num {
+            color: #bbb; font-size: 0.78em; margin-right: 6px;
+            min-width: 18px; text-align: right;
+        }
+        .token-row.api-token  { background: #e3f2fd; color: #1565c0; border-color: #bbdefb; }
+        .token-row.json-token { background: #fff8e1; color: #e65100; border-color: #ffe082; }
+        .token-row.crud-token { background: #f3e5f5; color: #6a1b9a; border-color: #ce93d8; }
+
+        /* Ranch / Planting rows */
+        .list-row {
+            display: flex; align-items: center;
+            padding: 6px 8px; margin-bottom: 3px;
+            border-radius: 5px; cursor: pointer;
+            font-size: 0.82em;
+            border: 1px solid #e0e0e0;
+            background: white; color: #333;
+        }
+        .list-row:active  { background: #f5f5f5; }
+        .list-row.selected { background: #c8e6c9; border-color: #4caf50; font-weight: 600; }
+        .list-row .row-num { color: #bbb; font-size: 0.78em; margin-right: 6px; min-width: 18px; text-align: right; }
+
+        .col-empty { font-size: 0.78em; color: #bbb; padding: 8px 6px; font-style: italic; }
+
+        /* S1 description bar — full width, fixed height */
+        .s1-desc {
+            margin: 8px 14px 10px 14px;
+            background: #fff8e1;
+            border: 1px solid #ffe082;
+            border-radius: 5px;
+            padding: 7px 10px;
+            font-size: 0.82em;
+            color: #5d4037;
+            height: 42px;
+            min-height: 42px;
+            max-height: 42px;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+        .s1-desc .desc-label { font-weight: 700; color: #e65100; margin-right: 6px; }
+
+        /* ── S2 CHAT LOG (top-right 40%) ── */
+        .s2-panel {
+            background: #fafafa;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .s2-header {
+            background: #f1f8e9;
+            border-bottom: 2px solid #4caf50;
+            padding: 9px 14px;
+            font-size: 1em; font-weight: 700; color: #2e7d32;
+            flex-shrink: 0;
+        }
+        .chat-log {
+            background: #263238; color: #aed581;
+            font-family: 'Courier New', monospace;
+            padding: 10px; flex: 1;
+            overflow-y: auto; min-height: 0;
+            font-size: 0.8em; line-height: 1.5;
+        }
+        .chat-log .success { color: #81c784; }
+        .chat-log .error   { color: #ef5350; }
+        .chat-log .info    { color: #64b5f6; }
+
+        /* S2 prompt + send row */
+        .s2-prompt-row {
+            display: flex; gap: 6px; align-items: stretch;
+            padding: 8px 10px 0 10px;
+            flex-shrink: 0;
+        }
+        .s2-prompt-row input {
+            flex: 1; padding: 8px 10px;
+            border: 2px solid #4caf50; border-radius: 5px;
+            font-family: 'Courier New', monospace; font-size: 0.85em;
+            background: white;
+        }
+        .s2-prompt-row input:focus { outline: none; border-color: #2e7d32; }
+        .btn-send {
+            background: linear-gradient(135deg, #4caf50 0%, #388e3c 100%);
+            border: none; border-radius: 5px; color: white;
+            padding: 8px 20px; font-size: 0.9em; font-weight: 700;
+            cursor: pointer; white-space: nowrap;
+        }
+
+        /* S2 bottom action row */
+        .s2-action-row {
+            display: flex; gap: 5px; align-items: center;
+            padding: 8px 10px 10px 10px;
+            flex-shrink: 0;
+            flex-wrap: wrap;
+        }
+        .btn-sm {
+            padding: 6px 12px; border: none; border-radius: 5px;
+            cursor: pointer; font-weight: 600; font-size: 0.78em; color: white;
+        }
+        .btn-clear  { background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%); }
+        .btn-save   { background: linear-gradient(135deg, #4caf50 0%, #388e3c 100%); }
+        .btn-restore{ background: linear-gradient(135deg, #9c27b0 0%, #7b1fa2 100%); }
+        .btn-export { background: linear-gradient(135deg, #1a237e 0%, #3949ab 100%); }
+        .save-file-input {
+            padding: 5px 8px; border: 2px solid #4caf50; border-radius: 5px;
+            font-family: 'Courier New', monospace; font-size: 0.78em;
+            width: 100px; background: white;
+        }
+        .save-file-input:focus { outline: none; border-color: #2e7d32; }
+
+        /* BOTTOM 60/40 */
+        .split-container {
+            display: grid;
+            grid-template-columns: 60% 40%;
+            gap: 16px;
+        }
+
+        /* S3 DATA GRID */
+        .data-grid-panel {
+            background: #fafafa; border: 2px solid #e0e0e0;
+            border-radius: 8px; padding: 14px;
+        }
+        .data-grid-panel h2 {
+            color: #2e7d32; font-size: 1em; margin-bottom: 10px;
+            border-bottom: 2px solid #4caf50; padding-bottom: 7px;
+        }
+        .data-grid {
+            background: white; border: 1px solid #ddd;
+            border-radius: 5px; overflow-x: auto;
+            max-height: 380px; overflow-y: auto;
+        }
+        .data-grid table { width: 100%; border-collapse: collapse; font-size: 0.85em; }
+        .data-grid th {
+            background: linear-gradient(135deg, #2e7d32 0%, #4caf50 100%);
+            color: white; padding: 8px 12px; text-align: left;
+            font-weight: 600; position: sticky; top: 0; z-index: 10;
+            white-space: nowrap;
+        }
+        .data-grid td { padding: 7px 12px; border-bottom: 1px solid #eee; white-space: nowrap; }
+        .data-grid tr:hover    { background: #e8f5e9; cursor: pointer; }
+        .data-grid tr.selected { background: #c8e6c9; }
+        .data-grid .empty-state { padding: 30px; text-align: center; color: #999; font-style: italic; font-size: 0.88em; }
+
+        /* S4 JSON PANEL */
+        .json-panel {
+            background: #fafafa; border: 2px solid #3949ab;
+            border-radius: 8px; display: flex; flex-direction: column;
+        }
+        .json-panel h2 {
+            color: #3949ab; font-size: 1em;
+            padding: 9px 14px; border-bottom: 2px solid #3949ab;
+            margin: 0; background: #e8eaf6;
+        }
+        .json-display {
+            background: #1a1a2e; color: #90caf9;
+            font-family: 'Courier New', monospace;
+            padding: 10px; flex: 1;
+            min-height: 260px; max-height: 380px;
+            overflow-y: auto; font-size: 0.79em;
+            line-height: 1.6; white-space: pre-wrap;
+        }
+
+        /* LOGON MODAL */
+        .modal-overlay {
+            display: none; position: fixed; top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); z-index: 1000;
+            align-items: center; justify-content: center;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal-box {
+            background: white; border-radius: 10px;
+            padding: 26px; width: 360px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        }
+        .modal-box h3 { color: #2e7d32; margin-bottom: 16px; font-size: 1.1em; }
+        .modal-field { margin-bottom: 13px; }
+        .modal-field label { display: block; font-weight: 600; color: #555; margin-bottom: 4px; font-size: 0.88em; }
+        .modal-field input {
+            width: 100%; padding: 9px;
+            border: 2px solid #ddd; border-radius: 5px; font-size: 0.92em;
+        }
+        .modal-field input:focus { outline: none; border-color: #4caf50; }
+        .modal-actions { display: flex; gap: 8px; margin-top: 16px; }
+        .modal-actions button {
+            flex: 1; padding: 11px; border: none; border-radius: 5px;
+            cursor: pointer; font-weight: 600; font-size: 0.92em; color: white;
+        }
+        .btn-do-logon { background: linear-gradient(135deg, #4caf50 0%, #388e3c 100%); }
+        .btn-cancel   { background: linear-gradient(135deg, #9e9e9e 0%, #757575 100%); }
+    </style>
+</head>
+<body>
+
+<!-- LOGON MODAL -->
+<div class="modal-overlay" id="logonModal">
+    <div class="modal-box">
+        <h3>&#128272; CropManage Logon</h3>
+        <div class="modal-field">
+            <label>Email:</label>
+            <input type="text" id="modalEmail" value="stevep@sspnet.com" placeholder="Email address">
+        </div>
+        <div class="modal-field">
+            <label>Password:</label>
+            <input type="password" id="modalPassword" value="gosteve1!" placeholder="Password">
+        </div>
+        <div class="modal-field">
+            <label>Save / Restore File:</label>
+            <input type="text" id="saveFilename" value="steve.json" placeholder="e.g. steve.json">
+        </div>
+        <div class="modal-actions">
+            <button class="btn-do-logon" onclick="doLogon()">&#128273; LOGON</button>
+            <button class="btn-cancel"   onclick="closeLogon()">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <header>
+        <h1>&#129514; API Server Tester v1.4.5 &middot; ClientAI</h1>
+        <p>Test APIServer2.0.js &middot; Dynamic MCP Tools &middot; Cockpit Layout</p>
+    </header>
+
+    <div class="main-content">
+
+        <div class="server-info">
+            <strong>Data Dir:</strong> C:\AICode\crop-client-services\api-server\data\
+            &nbsp;|&nbsp;
+            <strong>v1.4.5</strong> &middot; Dynamic tokens from /tools &middot; Cockpit S1 &middot; Chat Log S2 &middot; JSON S4
+        </div>
+
+        <!-- TOP ROW: S1 (60%) + S2 (40%) -->
+        <div class="top-split">
+
+            <!-- ── S1 COMMAND PANEL ── -->
+            <div class="s1-panel">
+
+                <!-- Header: title | credentials + LOGON -->
+                <div class="s1-header">
+                    <h3>&#9889; S1 &mdash; Command Panel</h3>
+                    <div class="s1-creds">
+                        <span class="label">credentials:</span>
+                        <span class="cred-email" id="credDisplay">stevep@sspnet.com</span>
+                        <button class="btn-logon" onclick="showLogon()">&#128273; LOGON</button>
+                    </div>
+                </div>
+
+                <!-- Server URL + presets -->
+                <div class="s1-url-row">
+                    <input type="text" id="serverUrl" value="http://localhost:3101"
+                           placeholder="http://localhost:3101 or https://api.cropclient.com">
+                    <button class="preset-btn local"  onclick="setServerLocal()">&#128205; Local</button>
+                    <button class="preset-btn online" onclick="setServerProduction()">&#127760; Online</button>
+                </div>
+
+                <!-- Three-column cockpit -->
+                <div class="s1-cockpit">
+
+                    <!-- COL 1: Tabs + Token List -->
+                    <div style="border-right: 1px solid #ffcc80; padding-right: 10px;">
+                        <div class="token-tabs">
+                            <button class="tab-btn active" id="tab-api"  onclick="switchTab('api')">API</button>
+                            <button class="tab-btn"        id="tab-json" onclick="switchTab('json')">JSON</button>
+                            <button class="tab-btn"        id="tab-crud" onclick="switchTab('crud')">CRUD</button>
+                        </div>
+                        <div class="col-scroll" id="tokenList">
+                            <div class="col-empty">Loading tools...</div>
+                        </div>
+                    </div>
+
+                    <!-- COL 2: Ranches -->
+                    <div style="padding: 0 8px; border-right: 1px solid #ffcc80;">
+                        <div class="col-header">&#127968; Ranches</div>
+                        <div class="col-scroll" id="ranchList">
+                            <div class="col-empty">Run get_ranches</div>
+                        </div>
+                    </div>
+
+                    <!-- COL 3: Plantings -->
+                    <div style="padding: 0 0 0 8px;">
+                        <div class="col-header">&#127807; Plantings</div>
+                        <div class="col-scroll" id="plantingList">
+                            <div class="col-empty">Select a ranch</div>
+                        </div>
+                    </div>
+
+                </div><!-- end s1-cockpit -->
+
+                <!-- Description bar — full width -->
+                <div class="s1-desc" id="toolDesc">
+                    <span class="desc-label">&#8505;</span>Click a token to see its description and stage the prompt.
+                </div>
+
+            </div><!-- end S1 -->
+
+            <!-- ── S2 CHAT LOG ── -->
+            <div class="s2-panel">
+                <div class="s2-header">&#128172; S2 &mdash; Chat Log</div>
+
+                <!-- Chat log — takes all available space -->
+                <div class="chat-log" id="chatLog" style="flex:1;">
+                    <span class="info">Ready. Click a token in S1, then SEND...</span>
+                </div>
+
+                <!-- Prompt + SEND -->
+                <div class="s2-prompt-row">
+                    <input type="text" id="toolName" value="" placeholder="Click a token in S1 to stage...">
+                    <button class="btn-send" onclick="sendCustomCall()">&#128228; SEND</button>
+                </div>
+
+                <!-- Action row: Clear | Clear | Save | filename | Restore | ClientAI -->
+                <div class="s2-action-row">
+                    <button class="btn-sm btn-clear"   onclick="clearFields()">Clear Fields</button>
+                    <button class="btn-sm btn-clear"   onclick="clearResults()">Clear Results</button>
+                    <button class="btn-sm btn-save"    onclick="saveCurrent()">&#128190; Save File</button>
+                    <input  class="save-file-input"    id="saveFileDisplay" type="text" value="steve.json" placeholder="filename.json">
+                    <button class="btn-sm btn-restore" onclick="restoreCurrent()">&#128229; Restore File</button>
+                    <button class="btn-sm btn-export"  onclick="saveClientAI()">&#129504; ClientAI</button>
+                </div>
+
+            </div><!-- end S2 -->
+
+        </div><!-- end top-split -->
+
+        <!-- BOTTOM ROW: S3 (60%) + S4 (40%) -->
+        <div class="split-container">
+
+            <!-- S3 DATA GRID -->
+            <div class="data-grid-panel">
+                <h2>&#128202; S3 &mdash; Data Grid &middot; Server Response</h2>
+                <div class="data-grid" id="dataGrid">
+                    <div class="empty-state">No data loaded. Click SEND to view results.</div>
+                </div>
+            </div>
+
+            <!-- S4 JSON PANEL -->
+            <div class="json-panel">
+                <h2>{ } S4 &mdash; JSON</h2>
+                <div class="json-display" id="jsonDisplay">Waiting for token staging or send result...</div>
+            </div>
+
+        </div>
+
+    </div><!-- end main-content -->
+</div><!-- end container -->
+
+<script>
+    // ============================================================
+    // STATE
+    // ============================================================
+    let ranchGuid       = null;
+    let plantingId      = null;
+    let currentGridData = null;
+    let gridContext     = null;
+    let activeTab       = 'api';
+    let allTools        = []; // loaded from GET /tools
+
+    // Tool grouping by name prefix
+    function getToolTab(name) {
+        if (name.startsWith('json_') || name === 'data_operation') return 'json';
+        if (name.startsWith('get_') || name.startsWith('post_') ||
+            name.startsWith('update_') || name.startsWith('batch_') ||
+            name.startsWith('load_')) return 'api';
+        return 'crud';
+    }
+
+    // ============================================================
+    // LOAD TOOLS FROM SERVER  GET /tools
+    // ============================================================
+    async function loadToolsFromServer() {
+        const serverUrl = document.getElementById('serverUrl').value.trim();
+        if (!serverUrl) return;
+        try {
+            const response = await fetch(serverUrl + '/tools');
+            if (!response.ok) throw new Error('HTTP ' + response.status);
+            const data = await response.json();
+            allTools = data.tools || [];
+            log('Loaded ' + allTools.length + ' tools from server', 'success');
+            renderTokenList();
+        } catch (e) {
+            log('Could not load tools from server: ' + e.message, 'error');
+            // Fall back to built-in list
+            allTools = getBuiltinTools();
+            renderTokenList();
+        }
+    }
+
+    // Built-in fallback tool list (matches known APIServer2.0 tools)
+    function getBuiltinTools() {
+        return [
+            { name: 'get_token',                description: 'Authenticate with CropManage API and obtain access token.' },
+            { name: 'get_ranches',              description: 'Fetch all ranches from CropManage API.' },
+            { name: 'get_plantings',            description: 'Fetch all plantings for a specific ranch.' },
+            { name: 'get_irrigation_details',   description: 'Fetch irrigation event details for a specific planting.' },
+            { name: 'load_into_displayRecords', description: 'Fetch irrigation events and transform to displayRecords format.' },
+            { name: 'post_new_irrigation',      description: 'POST a new irrigation event to CropManage.' },
+            { name: 'update_irrigation',        description: 'Update an existing irrigation event in CropManage.' },
+            { name: 'batch_post_queue',         description: 'Process all pending irrigation records (status=-1).' },
+            { name: 'json_write',               description: 'Write (create/overwrite) a JSON file on the MCP server.' },
+            { name: 'json_read',                description: 'Read a JSON file from the MCP server data directory.' },
+            { name: 'json_update',              description: 'Update a JSON file by shallow-merging an object.' },
+            { name: 'json_delete',              description: 'Delete a JSON file from the MCP server data directory.' },
+            { name: 'json_list',                description: 'List JSON files in a directory on the MCP server.' },
+            { name: 'json_exists',              description: 'Check whether a JSON file exists on the MCP server.' },
+            { name: 'data_operation',           description: 'Generic JSON table operation: {action, table, data}.' }
+        ];
+    }
+
+    // ============================================================
+    // RENDER TOKEN LIST (filtered by active tab)
+    // ============================================================
+    function renderTokenList() {
+        const container = document.getElementById('tokenList');
+        container.innerHTML = '';
+        const filtered = allTools.filter(t => getToolTab(t.name) === activeTab);
+        if (filtered.length === 0) {
+            container.innerHTML = '<div class="col-empty">No ' + activeTab.toUpperCase() + ' tools</div>';
+            return;
+        }
+        filtered.forEach(function(tool, idx) {
+            const row = document.createElement('div');
+            const tabClass = activeTab === 'api' ? 'api-token' : activeTab === 'json' ? 'json-token' : 'crud-token';
+            row.className = 'token-row ' + tabClass;
+            row.innerHTML = '<span class="num">' + (idx + 1) + '.</span>' + tool.name;
+            row.title = tool.description;
+            row.addEventListener('click', function() {
+                // Show description in S1 desc bar
+                document.getElementById('toolDesc').innerHTML =
+                    '<span class="desc-label">&#8505;</span>' + tool.description;
+                // Stage the prompt
+                stageToken(tool.name);
+            });
+            container.appendChild(row);
+        });
+    }
+
+    // ============================================================
+    // TAB SWITCH
+    // ============================================================
+    function switchTab(tab) {
+        activeTab = tab;
+        ['api','json','crud'].forEach(function(t) {
+            document.getElementById('tab-' + t).classList.toggle('active', t === tab);
+        });
+        renderTokenList();
+    }
+
+    // ============================================================
+    // STAGE TOKEN — sets Tool Name + S4 JSON params
+    // ============================================================
+    function stageToken(toolName) {
+        document.getElementById('toolName').value = toolName;
+        // Build default params based on tool name
+        let params = {};
+        switch(toolName) {
+            case 'get_token':
+                params = { username: document.getElementById('modalEmail').value || 'stevep@sspnet.com',
+                           password: document.getElementById('modalPassword').value || 'gosteve1!' };
+                break;
+            case 'get_ranches':            params = {}; break;
+            case 'get_plantings':          params = { ranchGuid: ranchGuid || 'ENTER_RANCH_GUID_HERE' }; break;
+            case 'get_irrigation_details': params = { plantingId: plantingId || 'ENTER_PLANTING_ID_HERE' }; break;
+            case 'load_into_displayRecords': params = { plantingId: plantingId || 'ENTER_PLANTING_ID_HERE' }; break;
+            case 'post_new_irrigation':    params = { plantingId: plantingId || 'ENTER_PLANTING_ID_HERE', scheduledDate: '12/28/24', recommendedInches: 1.5, appliedHours: 5.0, irrigationMethod: 'Sprinkler' }; break;
+            case 'update_irrigation':      params = { eventId: 'ENTER_EVENT_ID_HERE', appliedHours: 6.0, mgrHours: 5.5 }; break;
+            case 'batch_post_queue':       params = { records: [{ id: 1, plantingId: plantingId || 'ENTER_PLANTING_ID', scheduledDate: '12/28/24', hours: 5.0, status: -1, isNew: true }] }; break;
+            case 'json_write':             params = { filepath: 'test.json', data: { testName: 'API Server Test', timestamp: new Date().toISOString(), version: '1.4.5', values: [1,2,3] } }; break;
+            case 'json_read':              params = { filepath: 'test.json' }; break;
+            case 'json_update':            params = { filepath: 'test.json', updates: { updated: true, lastModified: new Date().toISOString() } }; break;
+            case 'json_delete':            params = { filepath: 'test.json' }; break;
+            case 'json_exists':            params = { filepath: 'test.json' }; break;
+            case 'json_list':              params = { directory: '/.' }; break;
+            case 'data_operation':         params = { action: 'read', table: 'test' }; break;
+            default:                       params = {};
+        }
+        showJson('STAGED -> ' + toolName, params);
+        // silent stage — no log
+    }
+
+    // ============================================================
+    // S2 - CHAT LOG
+    // ============================================================
+    function log(text, type = 'info') {
+        const area = document.getElementById('chatLog');
+        const div  = document.createElement('div');
+        div.className = type; div.textContent = text;
+        area.appendChild(div);
+        area.scrollTop = area.scrollHeight;
+    }
+
+    // ============================================================
+    // S4 - JSON PANEL
+    // ============================================================
+    function showJson(label, data) {
+        document.getElementById('jsonDisplay').textContent = '// ' + label + '\n' + JSON.stringify(data, null, 2);
+    }
+
+    // ============================================================
+    // LOGON POPUP
+    // ============================================================
+    function showLogon() {
+        document.getElementById('logonModal').classList.add('active');
+        setTimeout(() => document.getElementById('modalEmail').focus(), 100);
+    }
+    function closeLogon() {
+        document.getElementById('logonModal').classList.remove('active');
+    }
+    async function doLogon() {
+        const email    = document.getElementById('modalEmail').value.trim();
+        const password = document.getElementById('modalPassword').value.trim();
+        const filename = document.getElementById('saveFilename').value.trim() || 'steve.json';
+        if (!email || !password) { log('Email and password required.', 'error'); return; }
+        closeLogon();
+        document.getElementById('credDisplay').textContent  = email;
+        document.getElementById('saveFileDisplay').value    = filename;
+        log('Logging in as ' + email + '...', 'info');
+        stageToken('get_token');
+        await sendCustomCall();
+    }
+
+    // ============================================================
+    // FETCH / SEND
+    // ============================================================
+    async function sendCustomCall() {
+        const serverUrl = document.getElementById('serverUrl').value.trim();
+        const toolName  = document.getElementById('toolName').value.trim();
+        if (!serverUrl || !toolName) { log('Server URL and Tool Name required!', 'error'); return; }
+
+        let args = {};
+        const rawJson  = document.getElementById('jsonDisplay').textContent;
+        const jsonText = rawJson.replace(/^\/\/[^\n]*\n/, '').trim();
+        const skipValues = ['Waiting for token staging or send result...','Cleared.','Fields cleared.'];
+        if (jsonText && !skipValues.includes(jsonText)) {
+            try { args = JSON.parse(jsonText); }
+            catch (e) { log('Invalid JSON in S4: ' + e.message, 'error'); return; }
+        }
+
+        log('-> Calling ' + toolName + '...', 'info');
+        try {
+            const response = await fetch(serverUrl + '/tools/' + toolName, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(args)
+            });
+            const result = await response.json();
+            showJson('RESULT <- ' + toolName, result);
+
+            if (result.success || response.ok) {
+                log(toolName + ': SUCCESS', 'success');
+
+                if      (result.ranches)        { renderDataGrid(result.ranches);        gridContext = 'ranches';     renderRanchList(result.ranches); }
+                else if (result.plantings)      { renderDataGrid(result.plantings);      gridContext = 'plantings';   renderPlantingList(result.plantings); }
+                else if (result.displayRecords) { renderDataGrid(result.displayRecords);  gridContext = 'irrigations'; }
+                else if (result.events)         { renderDataGrid(result.events);          gridContext = 'irrigations'; }
+                else if (result.records)        { renderDataGrid(result.records);         gridContext = 'irrigations'; }
+                else if (result.data)           { renderDataGrid(result.data);            gridContext = null; }
+                else                            { renderDataGrid(result);                 gridContext = null; }
+
+                if (toolName === 'get_token') log('Token acquired', 'success');
+                if (toolName === 'get_ranches' && result.ranches && result.ranches.length > 0) {
+                    ranchGuid = result.ranches[0].Ranch_External_GUID;
+                    log('Ranch GUID captured. Click a ranch to load plantings.', 'success');
+                }
+                if (toolName === 'get_plantings' && result.plantings && result.plantings.length > 0) {
+                    plantingId = result.plantings[0].Id;
+                    log('Planting ID captured. Click a planting to load irrigation.', 'success');
+                }
+            } else {
+                log(toolName + ': FAILED - ' + (result.error || result.message), 'error');
+                renderDataGrid(result); gridContext = null;
+            }
+        } catch (error) { log('FETCH ERROR: ' + error.message, 'error'); }
+    }
+
+    // ============================================================
+    // RANCH LIST (S1 Col 2)
+    // ============================================================
+    function renderRanchList(ranches) {
+        const container = document.getElementById('ranchList');
+        container.innerHTML = '';
+        if (!ranches || ranches.length === 0) {
+            container.innerHTML = '<div class="col-empty">No ranches found</div>'; return;
+        }
+        ranches.forEach(function(ranch, idx) {
+            const guid = ranch['Ranch_External_GUID'] || ranch['ranch_external_guid'];
+            const name = ranch['Name'] || ranch['name'] || ('Ranch ' + (idx+1));
+            const row = document.createElement('div');
+            row.className = 'list-row';
+            row.innerHTML = '<span class="row-num">' + (idx+1) + '.</span>' + name;
+            row.addEventListener('click', function() {
+                document.querySelectorAll('#ranchList .list-row').forEach(r => r.classList.remove('selected'));
+                row.classList.add('selected');
+                document.getElementById('plantingList').innerHTML = '<div class="col-empty">Loading...</div>';
+                if (guid) {
+                    ranchGuid = guid;
+                    log('Ranch: ' + name, 'info');
+                    stageToken('get_plantings');
+                    sendCustomCall();
+                } else { log('No Ranch GUID found.', 'error'); }
+            });
+            container.appendChild(row);
+        });
+    }
+
+    // ============================================================
+    // PLANTING LIST (S1 Col 3)
+    // ============================================================
+    function renderPlantingList(plantings) {
+        const container = document.getElementById('plantingList');
+        container.innerHTML = '';
+        if (!plantings || plantings.length === 0) {
+            container.innerHTML = '<div class="col-empty">No plantings found</div>'; return;
+        }
+        plantings.forEach(function(planting, idx) {
+            const pid  = planting['Id'] || planting['id'];
+            const name = planting['Name'] || planting['name'] || planting['Commodity'] || ('Planting ' + (idx+1));
+            const row = document.createElement('div');
+            row.className = 'list-row';
+            row.innerHTML = '<span class="row-num">' + (idx+1) + '.</span>' + name;
+            row.addEventListener('click', function() {
+                document.querySelectorAll('#plantingList .list-row').forEach(r => r.classList.remove('selected'));
+                row.classList.add('selected');
+                if (pid) {
+                    plantingId = pid;
+                    log('Planting: ' + name + ' (ID: ' + pid + ')', 'info');
+                    stageToken('get_irrigation_details');
+                    sendCustomCall();
+                } else { log('No Planting ID found.', 'error'); }
+            });
+            container.appendChild(row);
+        });
+    }
+
+    // ============================================================
+    // S3 DATA GRID
+    // ============================================================
+    function renderDataGrid(data) {
+        const gc = document.getElementById('dataGrid');
+        currentGridData = data;
+        gc.innerHTML = '';
+        if (data === null || data === undefined) { gc.innerHTML = '<div class="empty-state">No data returned.</div>'; return; }
+
+        if (Array.isArray(data) && data.length > 0 && typeof data[0] === 'object') {
+            const table = document.createElement('table');
+            const thead = document.createElement('thead'); const hRow = document.createElement('tr');
+            const keys  = Object.keys(data[0]);
+            keys.forEach(k => { const th = document.createElement('th'); th.textContent = k; hRow.appendChild(th); });
+            thead.appendChild(hRow); table.appendChild(thead);
+            const tbody = document.createElement('tbody');
+            data.forEach(function(row, idx) {
+                const tr = document.createElement('tr');
+                keys.forEach(k => {
+                    const td = document.createElement('td'); const v = row[k];
+                    if (typeof v === 'object' && v !== null) { const s = JSON.stringify(v); td.textContent = s.length > 60 ? s.substring(0,60)+'...' : s; }
+                    else td.textContent = (v !== null && v !== undefined) ? v : '';
+                    tr.appendChild(td);
+                });
+                tr.addEventListener('click', function() {
+                    tbody.querySelectorAll('tr').forEach(r => r.classList.remove('selected'));
+                    tr.classList.add('selected');
+                    log('Row ' + (idx+1) + ' selected.', 'info');
+                });
+                tbody.appendChild(tr);
+            });
+            table.appendChild(tbody); gc.appendChild(table); return;
+        }
+
+        if (typeof data === 'object' && !Array.isArray(data)) {
+            const table = document.createElement('table'); const tbody = document.createElement('tbody');
+            Object.keys(data).forEach(k => {
+                const tr=document.createElement('tr'); const tdK=document.createElement('td'); const tdV=document.createElement('td');
+                tdK.textContent=k; tdK.style.fontWeight='600'; tdK.style.background='#f5f5f5'; tdK.style.width='35%';
+                const v=data[k]; if(typeof v==='object'&&v!==null){const s=JSON.stringify(v);tdV.textContent=s.length>120?s.substring(0,120)+'...':s;}
+                else tdV.textContent=(v!==null&&v!==undefined)?v:'';
+                tr.appendChild(tdK); tr.appendChild(tdV); tbody.appendChild(tr);
+            });
+            table.appendChild(tbody); gc.appendChild(table); return;
+        }
+
+        const table=document.createElement('table'); const tbody=document.createElement('tbody');
+        const tr=document.createElement('tr'); const td=document.createElement('td');
+        td.style.padding='12px'; td.textContent=String(data);
+        tr.appendChild(td); tbody.appendChild(tr); table.appendChild(tbody); gc.appendChild(table);
+    }
+
+    // ============================================================
+    // CLEAR
+    // ============================================================
+    function clearFields() {
+        document.getElementById('toolName').value = '';
+        document.getElementById('jsonDisplay').textContent = 'Fields cleared.';
+        document.getElementById('toolDesc').innerHTML = '<span class="desc-label">&#8505;</span>Click a token to see its description.';
+        log('Fields cleared.', 'info');
+    }
+    function clearResults() {
+        document.getElementById('chatLog').innerHTML = '<span class="info">Log cleared.</span>';
+        document.getElementById('dataGrid').innerHTML = '<div class="empty-state">No data loaded.</div>';
+        document.getElementById('jsonDisplay').textContent = 'Cleared.';
+        document.getElementById('ranchList').innerHTML = '<div class="col-empty">Run get_ranches</div>';
+        document.getElementById('plantingList').innerHTML = '<div class="col-empty">Select a ranch</div>';
+        gridContext = null;
+    }
+
+    // ============================================================
+    // SERVER PRESETS
+    // ============================================================
+    function setServerLocal()      { document.getElementById('serverUrl').value='http://localhost:3101';      log('Server -> localhost:3101','success'); loadToolsFromServer(); }
+    function setServerProduction() { document.getElementById('serverUrl').value='http://api.cropclient.com'; log('Server -> api.cropclient.com','success'); loadToolsFromServer(); }
+
+    // ============================================================
+    // SAVE / RESTORE
+    // ============================================================
+    function saveCurrent() {
+        const filename = document.getElementById('saveFileDisplay').value.trim();
+        const table    = filename.replace('.json','');
+        if (!table)           { log('Enter a filename!', 'error'); return; }
+        if (!currentGridData) { log('No data in grid to save!', 'error'); return; }
+        stageToken('data_operation');
+        showJson('STAGED -> data_operation (save)', { action: 'write', table: table, data: currentGridData });
+        document.getElementById('toolName').value = 'data_operation';
+        log('Ready to save as [' + filename + '] - click SEND', 'success');
+    }
+    function restoreCurrent() {
+        const filename = document.getElementById('saveFileDisplay').value.trim();
+        const table    = filename.replace('.json','');
+        if (!table) { log('Enter a filename!', 'error'); return; }
+        showJson('STAGED -> data_operation (restore)', { action: 'read', table: table });
+        document.getElementById('toolName').value = 'data_operation';
+        log('Ready to restore [' + filename + '] - click SEND', 'success');
+    }
+
+    // ============================================================
+    // ClientAI EXPORT
+    // ============================================================
+    function saveClientAI() {
+        const blob = new Blob(['<!DOCTYPE html>\n' + document.documentElement.outerHTML], { type: 'text/html' });
+        const url  = URL.createObjectURL(blob);
+        const a    = document.createElement('a');
+        a.href = url; a.download = 'test.apiserver.1.4.5.ClientAI.html'; a.click();
+        URL.revokeObjectURL(url);
+        log('ClientAI exported: test.apiserver.1.4.5.ClientAI.html', 'success');
+    }
+
+    // ============================================================
+    // ON LOAD
+    // ============================================================
+    window.addEventListener('DOMContentLoaded', function() {
+        log('API Server Tester v1.4.5 - ClientAI Ready!', 'success');
+        log('Loading tools from server...', 'info');
+        loadToolsFromServer();
+    });
+</script>
+</body>
+</html>

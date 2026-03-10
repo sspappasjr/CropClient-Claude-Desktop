@@ -1,0 +1,892 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PageBuilder - Template Injector</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #2E7D32 0%, #4CAF50 100%);
+            padding: 20px;
+            height: 100vh;
+            overflow: hidden;
+        }
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            height: calc(100vh - 40px);
+            display: flex;
+            flex-direction: column;
+        }
+        .header {
+            background: #2E7D32;
+            color: white;
+            padding: 20px;
+            border-radius: 8px 8px 0 0;
+        }
+        .header h1 {
+            margin: 0 0 10px 0;
+        }
+        .building-name {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .building-name label {
+            font-size: 1.1rem;
+            font-weight: bold;
+        }
+        .building-name input {
+            padding: 8px 15px;
+            border: 2px solid white;
+            border-radius: 5px;
+            font-size: 1rem;
+            background: rgba(255,255,255,0.9);
+            min-width: 300px;
+        }
+        .content {
+            display: grid;
+            grid-template-columns: 600px 1fr;
+            gap: 20px;
+            padding: 20px;
+            flex: 1;
+            overflow: hidden;
+        }
+        .control-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            overflow: auto;
+        }
+        .upload-template {
+            padding: 15px;
+            background: #e3f2fd;
+            border-radius: 5px;
+            border: 2px solid #2196F3;
+        }
+        .upload-template h2 {
+            color: #1976d2;
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+        }
+        .file-input {
+            width: 100%;
+            padding: 10px;
+            border: 2px dashed #ccc;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .grid-container {
+            flex: 1;
+            overflow: auto;
+        }
+        .component-grid {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+        .component-grid th {
+            background: #4CAF50;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: bold;
+            position: sticky;
+            top: 0;
+        }
+        .component-grid td {
+            padding: 12px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .component-grid tr:hover {
+            background: #f5f5f5;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: bold;
+        }
+        .status-found {
+            background: #e8f5e9;
+            color: #2E7D32;
+        }
+        .status-waiting {
+            background: #fff3e0;
+            color: #f57c00;
+        }
+        .status-loaded {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+        .upload-btn {
+            padding: 6px 15px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+        .upload-btn:hover {
+            background: #45a049;
+        }
+        .upload-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .delete-btn {
+            padding: 6px 15px;
+            background: #f44336;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            margin-left: 5px;
+        }
+        .delete-btn:hover {
+            background: #d32f2f;
+        }
+        .save-as-section {
+            padding: 15px;
+            background: #e8f5e9;
+            border-radius: 5px;
+            border: 2px solid #4CAF50;
+        }
+        .save-as-section label {
+            display: block;
+            font-weight: bold;
+            color: #2E7D32;
+            margin-bottom: 5px;
+        }
+        .save-as-section input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #4CAF50;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        .btn {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            border-radius: 5px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .btn-primary {
+            background: #4CAF50;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #45a049;
+        }
+        .btn-primary:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .btn-success {
+            background: #2196F3;
+            color: white;
+        }
+        .btn-success:hover {
+            background: #1976d2;
+        }
+        .btn-success:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .btn-scan {
+            background: #81D4FA;
+            color: #01579B;
+        }
+        .btn-scan:hover {
+            background: #4FC3F7;
+        }
+        .btn-scan:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            color: white;
+        }
+        .status-section {
+            background: #E1F5FE;
+            color: #0277BD;
+        }
+        .mark-btn {
+            padding: 6px 15px;
+            background: #81D4FA;
+            color: #01579B;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: bold;
+        }
+        .mark-btn:hover {
+            background: #4FC3F7;
+        }
+        .preview-panel {
+            border: 2px solid #e0e0e0;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        .hidden-upload {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>PageBuilder - Template Injector</h1>
+            <div class="building-name">
+                <label>Building:</label>
+                <input type="text" id="appName" placeholder="Enter application name">
+            </div>
+        </div>
+
+        <div class="content">
+            <div class="control-panel">
+                <div class="upload-template">
+                    <h2>Load Template</h2>
+                    <input type="file" class="file-input" id="templateUpload" accept=".html">
+                </div>
+
+                <div class="grid-container">
+                    <table class="component-grid" id="componentGrid">
+                        <thead>
+                            <tr>
+                                <th>Name/Type</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="gridBody">
+                            <tr>
+                                <td colspan="3" style="text-align: center; color: #999; padding: 40px;">
+                                    Load a template to begin...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="save-as-section">
+                    <label>Save As:</label>
+                    <input type="text" id="saveAsName" placeholder="filename.html">
+                </div>
+
+                <div class="action-buttons">
+                    <button class="btn btn-primary" id="injectBtn" disabled>Inject All</button>
+                    <button class="btn btn-success" id="saveBtn" disabled>Save As</button>
+                    <button class="btn btn-scan" id="scanBtn" disabled>Scan Sections</button>
+                </div>
+                <div class="action-buttons" style="margin-top: 8px;">
+                    <button class="btn btn-scan" id="markTopBtn" disabled>📌 Mark Top</button>
+                    <button class="btn btn-scan" id="markBottomBtn" disabled>📌 Mark Bottom</button>
+                </div>
+            </div>
+
+            <div class="preview-panel">
+                <iframe id="previewFrame"></iframe>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // State tracking - tracks everything we find
+        const state = {
+            templateName: '',
+            templateContent: '',
+            css: { found: false, content: '', position: -1 },
+            script: { found: false, content: '', position: -1 },
+            markers: []
+        };
+
+        const components = {};
+        let finalHTML = '';
+
+        const templateUpload = document.getElementById('templateUpload');
+        const appNameInput = document.getElementById('appName');
+        const saveAsInput = document.getElementById('saveAsName');
+        const gridBody = document.getElementById('gridBody');
+        const injectBtn = document.getElementById('injectBtn');
+        const saveBtn = document.getElementById('saveBtn');
+        const previewFrame = document.getElementById('previewFrame');
+
+        const scanBtn      = document.getElementById('scanBtn');
+        const markTopBtn   = document.getElementById('markTopBtn');
+        const markBottomBtn = document.getElementById('markBottomBtn');
+
+        templateUpload.addEventListener('change', handleTemplateUpload);
+        injectBtn.addEventListener('click', injectComponents);
+        saveBtn.addEventListener('click', saveAsFile);
+        scanBtn.addEventListener('click', scanForSections);
+        markTopBtn.addEventListener('click', markTopSection);
+        markBottomBtn.addEventListener('click', markBottomSection);
+
+        function handleTemplateUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            state.templateName = file.name;
+            
+            // Extract name without extension
+            const baseName = file.name.replace(/\.[^/.]+$/, "");
+            appNameInput.value = baseName;
+            saveAsInput.value = file.name;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                state.templateContent = e.target.result;
+                followMarkers();
+                // Preview: delay so buttons wire up first
+                setTimeout(() => {
+                    const blob = new Blob([state.templateContent], { type: 'text/html' });
+                    previewFrame.src = URL.createObjectURL(blob);
+                }, 50);
+            };
+            reader.readAsText(file);
+        }
+
+        function followMarkers() {
+            // Find CSS marker (not the existing style block)
+            const cssMarkerMatch = state.templateContent.match(/<!-- @@@@@@ INJECT: CSS @@@@@@ -->/);
+            if (cssMarkerMatch) {
+                state.css.found = false; // Marker exists but needs upload
+                state.css.position = cssMarkerMatch.index;
+            }
+
+            // Find injection markers
+            const regex = /<!-- @@@@@@ INJECT: (\w+) @@@@@@ -->/g;
+            let match;
+            state.markers = [];
+
+            while ((match = regex.exec(state.templateContent)) !== null) {
+                state.markers.push({
+                    name: match[1],
+                    marker: match[0],
+                    position: match.index,
+                    loaded: false
+                });
+            }
+
+            buildGrid();
+            
+            // Enable Inject button if markers found
+            if (state.markers.length > 0) {
+                injectBtn.disabled = false;
+            }
+            // Always enable Scan + locators + Save As if template loaded
+            scanBtn.disabled = false;
+            markTopBtn.disabled = false;
+            markBottomBtn.disabled = false;
+            saveBtn.disabled = false;
+            // Save As saves current template state (with markers, before injection)
+            finalHTML = state.templateContent;
+        }
+
+        function buildGrid() {
+            // Restore normal 3-column headers
+            document.querySelector('.component-grid thead tr').innerHTML =
+                '<th>Name/Type</th><th>Status</th><th>Action</th>';
+            gridBody.innerHTML = '';
+
+            // Template row
+            addGridRow('Template', state.templateName, 'found', null);
+
+            // CSS row
+            addGridRow('CSS Section', state.css.found ? 'Found' : 'Not Found', 
+                state.css.found ? 'found' : 'waiting', null);
+
+            // Marker rows
+            state.markers.forEach((marker, index) => {
+                addGridRow(`${marker.name} Component`, marker.loaded ? 'Loaded' : 'Waiting', 
+                    marker.loaded ? 'loaded' : 'waiting', 
+                    createUploadButton(marker.name, index));
+            });
+
+            // Script row
+            addGridRow('Script Section', state.script.found ? 'Found' : 'Not Found',
+                state.script.found ? 'found' : 'waiting', null);
+        }
+
+        function addGridRow(name, status, statusClass, actionFn) {
+            const row = document.createElement('tr');
+            
+            const nameCell = document.createElement('td');
+            nameCell.textContent = name;
+            nameCell.style.fontWeight = 'bold';
+
+            const statusCell = document.createElement('td');
+            const badge = document.createElement('span');
+            badge.className = `status-badge status-${statusClass}`;
+            badge.textContent = status;
+            statusCell.appendChild(badge);
+
+            const actionCell = document.createElement('td');
+            if (actionFn) {
+                actionFn(actionCell);
+            }
+
+            row.appendChild(nameCell);
+            row.appendChild(statusCell);
+            row.appendChild(actionCell);
+            gridBody.appendChild(row);
+        }
+
+        function createUploadButton(markerName, index) {
+            return (cell) => {
+                const btn = document.createElement('button');
+                btn.className = 'upload-btn';
+                btn.textContent = state.markers[index].loaded ? 'Replace' : 'Upload';
+                cell.appendChild(btn);
+
+                // Add delete button if loaded
+                if (state.markers[index].loaded) {
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.className = 'delete-btn';
+                    deleteBtn.textContent = 'Delete';
+                    deleteBtn.onclick = () => deleteComponent(markerName, index);
+                    cell.appendChild(deleteBtn);
+                }
+
+                const hiddenInput = document.createElement('input');
+                hiddenInput.type = 'file';
+                hiddenInput.className = 'hidden-upload';
+                hiddenInput.accept = '.html';
+                hiddenInput.onchange = (e) => handleComponentUpload(e, markerName, index);
+                cell.appendChild(hiddenInput);
+                
+                // Make button click trigger the input
+                btn.onclick = () => hiddenInput.click();
+            };
+        }
+
+        function handleComponentUpload(event, markerName, index) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                components[markerName] = e.target.result;
+                state.markers[index].loaded = true;
+                buildGrid();
+                checkReady();
+            };
+            reader.readAsText(file);
+        }
+
+        function deleteComponent(markerName, index) {
+            delete components[markerName];
+            state.markers[index].loaded = false;
+            buildGrid();
+            checkReady();
+        }
+
+        function checkReady() {
+            // Enable Save As after at least 1 upload
+            const anyLoaded = state.markers.some(m => m.loaded);
+            saveBtn.disabled = !anyLoaded;
+            
+            // Disable Inject if all markers injected
+            const allInjected = state.markers.every(m => m.loaded);
+            injectBtn.disabled = allInjected ? false : (state.markers.length === 0);
+        }
+
+        function injectComponents() {
+            finalHTML = state.templateContent;
+
+            // MARKER-PRESERVING INJECTION
+            // Wraps injected content with BEGIN/END markers for audit trail and re-injection
+            state.markers.forEach(marker => {
+                const componentContent = components[marker.name] || '<p>Component not loaded</p>';
+                
+                // Define the end marker for this injection point
+                const endMarker = `<!-- @@@@@@ END INJECT: ${marker.name} @@@@@@ -->`;
+                
+                // Check if this marker was already injected (has END marker)
+                const alreadyInjected = finalHTML.includes(endMarker);
+                
+                if (alreadyInjected) {
+                    // RE-INJECTION: Replace entire block (BEGIN marker + old content + END marker)
+                    const escapedBeginMarker = marker.marker.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                    const escapedEndMarker = endMarker.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                    const blockRegex = new RegExp(
+                        `${escapedBeginMarker}[\\s\\S]*?${escapedEndMarker}`,
+                        'g'
+                    );
+                    const replacement = `${marker.marker}\n${componentContent}\n${endMarker}`;
+                    finalHTML = finalHTML.replace(blockRegex, replacement);
+                } else {
+                    // FIRST INJECTION: Wrap component with BEGIN/END markers
+                    const replacement = `${marker.marker}\n${componentContent}\n${endMarker}`;
+                    finalHTML = finalHTML.replace(marker.marker, replacement);
+                }
+            });
+
+            // CHANGE CONTROL: swap @@@@@@ → ~~~~~~ on injected markers
+            // @@@@@@ = pending injection, ~~~~~~ = done / change-controlled
+            finalHTML = finalHTML.replace(/@@@@@@/g, '~~~~~~');
+
+            // Preview
+            const blob = new Blob([finalHTML], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            previewFrame.src = url;
+
+            saveBtn.disabled = false;
+        }
+
+        // ============================================================
+        // SECTION PATTERNS — hoisted so scan + marker both use them
+        // ============================================================
+        const SECTION_PATTERNS = [
+            { regex: /<!--\s*S(\d+):\s*(.+?)\s*-->/, label: (m) => `S${m[1]}: ${m[2]}` },
+            { regex: /<!--\s*Script:\s*(.+?)\s*-->/, label: (m) => `Script: ${m[1]}` },
+            { regex: /\/\/\s*FUNCTIONS\s*[-–]\s*(.+)/, label: (m) => `Functions: ${m[1]}` },
+            { regex: /\/\/\s*VARIABLES\s*[-–]\s*(.+)/, label: (m) => `Variables: ${m[1]}` },
+            { regex: /\/\/\s*Script:\s*(.+)/, label: (m) => `Script: ${m[1]}` },
+            { regex: /<!--\s*@{4,}\s*([A-Z_]+)\s/, label: (m) => `Component: ${m[1]}` },
+            { regex: /<script(\s[^>]*)?>/, label: () => 'Script Block' },
+            { regex: /<style(\s[^>]*)?>/, label: () => 'Style Block' }
+        ];
+
+        // ============================================================
+        // SCAN SECTIONS — finds section patterns even without markers
+        // ============================================================
+        function scanForSections() {
+            if (!state.templateContent) return;
+
+            const found = [];
+            const lines = state.templateContent.split('\n');
+
+            lines.forEach((line, idx) => {
+                // Skip lines that are already markers (pending @@ or done ~~)
+                if (line.includes('@@@@@@') || line.includes('~~~~~~')) return;
+                for (const p of SECTION_PATTERNS) {
+                    const m = line.match(p.regex);
+                    if (m) {
+                        const name = p.label ? p.label(m) : m[1];
+                        // Derive expected slot name (S1, S2, etc.)
+                        const sNum = name.match(/^S(\d+):/);
+                        const expectedSlot = sNum ? `S${sNum[1]}` : null;
+                        // Check state.markers (reliable) — not just the prev line
+                        const inMarkers = expectedSlot
+                            ? state.markers.some(mk => mk.name === expectedSlot)
+                            : false;
+                        const prevLine = idx > 0 ? lines[idx - 1] : '';
+                        const prevSlotMatch = prevLine.match(/@@@@@@ INJECT: (\w+) @@@@@@/);
+                        const alreadyMarked = inMarkers || prevLine.includes('@@@@@@ INJECT');
+                        const slotName = expectedSlot || (prevSlotMatch ? prevSlotMatch[1] : null);
+                        found.push({
+                            name: name.trim(),
+                            lineNum: idx + 1,
+                            lineContent: line.trim(),
+                            alreadyMarked,
+                            slotName: alreadyMarked ? slotName : null
+                        });
+                        break;
+                    }
+                }
+            });
+
+            // Switch grid to factory lineup headers
+            document.querySelector('.component-grid thead tr').innerHTML =
+                '<th>Section</th><th>Status</th><th>Mark</th><th>Upload</th><th>Design</th><th>Save</th>';
+
+            gridBody.innerHTML = '';
+
+            found.forEach((section) => {
+                const marked   = section.alreadyMarked;
+                const uploaded = marked && components[section.slotName];
+                const status   = uploaded ? 'Uploaded ✓' : marked ? 'Marked ✓' : 'Detected';
+                const statusClass = uploaded ? 'loaded' : marked ? 'found' : 'section';
+
+                const row = document.createElement('tr');
+
+                // Name cell
+                const nameCell = document.createElement('td');
+                nameCell.style.fontWeight = 'bold';
+                nameCell.style.fontSize = '0.85rem';
+                nameCell.textContent = `L${section.lineNum}: ${section.name}`;
+                row.appendChild(nameCell);
+
+                // Status cell
+                const statusCell = document.createElement('td');
+                const badge = document.createElement('span');
+                badge.className = `status-badge status-${statusClass}`;
+                badge.textContent = status;
+                statusCell.appendChild(badge);
+                row.appendChild(statusCell);
+
+                // MARK button — full color if not yet marked, dim if already marked
+                const markCell = document.createElement('td');
+                const markBtn = document.createElement('button');
+                markBtn.className = 'mark-btn';
+                markBtn.textContent = marked ? '✓' : 'Mark';
+                markBtn.style.background = marked ? '#A5D6A7' : '#81D4FA';
+                markBtn.style.color     = marked ? '#2E7D32' : '#01579B';
+                markBtn.style.opacity   = marked ? '0.55'    : '1';
+                if (!marked) markBtn.onclick = () => addMarkerAtLine(section, markBtn, markCell);
+                markCell.appendChild(markBtn);
+                row.appendChild(markCell);
+
+                // UPLOAD button — full color if marked, dim if not
+                const uploadCell = document.createElement('td');
+                const uploadBtn = document.createElement('button');
+                uploadBtn.className = 'upload-btn';
+                uploadBtn.textContent = uploaded ? 'Replace' : 'Upload';
+                uploadBtn.style.background = marked ? '#4CAF50' : '#e0e0e0';
+                uploadBtn.style.color      = marked ? 'white'   : '#aaa';
+                if (marked) {
+                    const hiddenInput = document.createElement('input');
+                    hiddenInput.type = 'file';
+                    hiddenInput.className = 'hidden-upload';
+                    hiddenInput.accept = '.html';
+                    hiddenInput.onchange = (e) => {
+                        const file = e.target.files[0];
+                        if (!file) return;
+                        const reader = new FileReader();
+                        reader.onload = (ev) => {
+                            components[section.slotName] = ev.target.result;
+                            scanForSections(); // refresh grid
+                        };
+                        reader.readAsText(file);
+                    };
+                    uploadBtn.onclick = () => hiddenInput.click();
+                    uploadCell.appendChild(hiddenInput);
+                }
+                uploadCell.appendChild(uploadBtn);
+                row.appendChild(uploadCell);
+
+                // DESIGN button — full color if marked, dim if not
+                const designCell = document.createElement('td');
+                const designBtn = document.createElement('button');
+                designBtn.className = 'mark-btn';
+                designBtn.textContent = 'Design';
+                designBtn.style.background = marked ? '#E3F2FD' : '#f5f5f5';
+                designBtn.style.color      = marked ? '#1565C0' : '#bbb';
+                if (marked) {
+                    designBtn.onclick = () => {
+                        const content = components[section.slotName] || extractSection(section.slotName);
+                        if (content) {
+                            const blob = new Blob([content], { type: 'text/html' });
+                            previewFrame.src = URL.createObjectURL(blob);
+                        }
+                    };
+                }
+                designCell.appendChild(designBtn);
+                row.appendChild(designCell);
+
+                // SAVE button — full color if marked, dim if not
+                const saveCell = document.createElement('td');
+                const saveSecBtn = document.createElement('button');
+                saveSecBtn.className = 'mark-btn';
+                saveSecBtn.textContent = '💾 Save';
+                saveSecBtn.style.background = marked ? '#C8E6C9' : '#f5f5f5';
+                saveSecBtn.style.color      = marked ? '#2E7D32' : '#bbb';
+                if (marked) saveSecBtn.onclick = () => saveSectionAsFile(section.slotName);
+                saveCell.appendChild(saveSecBtn);
+                row.appendChild(saveCell);
+
+                gridBody.appendChild(row);
+            });
+
+            if (found.length === 0) {
+                const row = document.createElement('tr');
+                row.innerHTML = `<td colspan="3" style="text-align:center;color:#999;padding:20px">No section patterns found. Template may already use custom markers.</td>`;
+                gridBody.appendChild(row);
+            }
+        }
+
+        function addMarkerAtLine(section, btn, cell) {
+            // Short slot name: S1, S2 etc. or uppercased name
+            const sMatch = section.name.match(/^S(\d+):/);
+            const slotName = sMatch
+                ? `S${sMatch[1]}`
+                : section.name.replace(/[^a-zA-Z0-9]/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '').toUpperCase();
+
+            const beginMarker = `<!-- @@@@@@ INJECT: ${slotName} @@@@@@ -->`;
+            const endMarker   = `<!-- @@@@@@ END INJECT: ${slotName} @@@@@@ -->`;
+
+            const lines = state.templateContent.split('\n');
+
+            // Find where this section ENDS — look for next section pattern
+            let endLineIdx = lines.length;
+            for (let i = section.lineNum; i < lines.length; i++) {
+                for (const p of SECTION_PATTERNS) {
+                    if (lines[i].match(p.regex)) {
+                        endLineIdx = i;
+                        break;
+                    }
+                }
+                if (endLineIdx !== lines.length) break;
+            }
+
+            // Insert END marker before next section (or end of file)
+            lines.splice(endLineIdx, 0, endMarker);
+            // Insert BEGIN marker before this section (after END insert to keep idx correct)
+            lines.splice(section.lineNum - 1, 0, beginMarker);
+
+            state.templateContent = lines.join('\n');
+            section.alreadyMarked = true;
+            section.slotName = slotName;
+
+            // Update button
+            btn.textContent = 'Marked ✓';
+            btn.disabled = true;
+            btn.style.background = '#A5D6A7';
+            btn.style.color = '#2E7D32';
+
+            // Add Save Section button next to marker button
+            const saveBtn = document.createElement('button');
+            saveBtn.className = 'mark-btn';
+            saveBtn.textContent = '💾 Save Section';
+            saveBtn.style.marginLeft = '5px';
+            saveBtn.style.background = '#C8E6C9';
+            saveBtn.style.color = '#2E7D32';
+            saveBtn.onclick = () => saveSectionAsFile(slotName);
+            cell.appendChild(saveBtn);
+
+            // Update marker state then stay on factory lineup (not buildGrid)
+            const regex2 = /<!-- @@@@@@ INJECT: (\w+) @@@@@@ -->/g;
+            let m2;
+            state.markers = [];
+            while ((m2 = regex2.exec(state.templateContent)) !== null) {
+                state.markers.push({ name: m2[1], marker: m2[0], position: m2.index, loaded: false });
+            }
+            finalHTML = state.templateContent;
+            saveBtn.disabled = false;
+            scanForSections();
+        }
+
+        // Extract section content between markers (for Design preview or Save)
+        function extractSection(slotName) {
+            const beginMarker = `<!-- @@@@@@ INJECT: ${slotName} @@@@@@ -->`;
+            const endMarker   = `<!-- @@@@@@ END INJECT: ${slotName} @@@@@@ -->`;
+            const startIdx = state.templateContent.indexOf(beginMarker);
+            const endIdx   = state.templateContent.indexOf(endMarker);
+            if (startIdx === -1 || endIdx === -1) return null;
+            return state.templateContent.slice(startIdx + beginMarker.length, endIdx).trim();
+        }
+
+        // Download section as .html
+        function saveSectionAsFile(slotName) {
+            const beginMarker = `<!-- @@@@@@ INJECT: ${slotName} @@@@@@ -->`;
+            const endMarker   = `<!-- @@@@@@ END INJECT: ${slotName} @@@@@@ -->`;
+
+            const startIdx = state.templateContent.indexOf(beginMarker);
+            const endIdx   = state.templateContent.indexOf(endMarker);
+
+            if (startIdx === -1 || endIdx === -1) {
+                alert('Markers not found for ' + slotName + '. Add Marker first.');
+                return;
+            }
+
+            const sectionContent = state.templateContent
+                .slice(startIdx + beginMarker.length, endIdx)
+                .trim();
+
+            const blob = new Blob([sectionContent], { type: 'text/html' });
+            const url  = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href  = url;
+            link.download = slotName + '.html';
+            link.click();
+        }
+
+        // Mark Top — prompts: Header or CSS
+        function markTopSection() {
+            if (!state.templateContent) return;
+
+            const type = prompt('Mark top section as:\n  1 = CSS\n  2 = Header\n\nType CSS or HEADER:', 'CSS');
+            if (!type) return;
+
+            const slotName = type.trim().toUpperCase() === 'HEADER' ? 'HEADER' : 'CSS';
+            const marker = `<!-- @@@@@@ INJECT: ${slotName} @@@@@@ -->`;
+
+            let insertBefore;
+            if (slotName === 'CSS') {
+                // Insert just before </style>
+                insertBefore = '</style>';
+            } else {
+                // Insert just after <body> opening tag
+                insertBefore = state.templateContent.match(/<body[^>]*>/i)?.[0];
+                insertBefore = insertBefore ? insertBefore + '\n' : '<body>';
+            }
+
+            const idx = slotName === 'CSS'
+                ? state.templateContent.lastIndexOf('</style>')
+                : state.templateContent.search(/<body[^>]*>/i) + (state.templateContent.match(/<body[^>]*>/i)?.[0]?.length || 6);
+
+            if (idx === -1) {
+                alert('Could not find insertion point for ' + slotName);
+                return;
+            }
+
+            state.templateContent =
+                state.templateContent.slice(0, idx) +
+                '\n' + marker + '\n' +
+                state.templateContent.slice(idx);
+
+            followMarkers();
+            alert(`✓ ${slotName} marker added. Reload Scan to see it.`);
+        }
+
+        // Mark Bottom — always Script, no prompt
+        function markBottomSection() {
+            if (!state.templateContent) return;
+
+            const marker = `<!-- @@@@@@ INJECT: SCRIPT @@@@@@ -->`;
+
+            // Find the last script-close tag and insert before it
+            // Split string so HTML parser doesn't close this script block early
+            const idx = state.templateContent.lastIndexOf('</' + 'script>');
+            if (idx === -1) {
+                alert('No </' + 'script> tag found in template.');
+                return;
+            }
+
+            state.templateContent =
+                state.templateContent.slice(0, idx) +
+                '\n' + marker + '\n' +
+                state.templateContent.slice(idx);
+
+            followMarkers();
+            alert('✓ SCRIPT marker added. Reload Scan to see it.');
+        }
+
+        function saveAsFile() {
+            const blob = new Blob([finalHTML], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = saveAsInput.value || state.templateName;
+            link.click();
+        }
+    </script>
+</body>
+</html>

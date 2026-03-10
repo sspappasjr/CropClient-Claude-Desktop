@@ -209,6 +209,35 @@
         .btn-success:hover {
             background: #1976d2;
         }
+        .btn-scan {
+            background: #81D4FA;
+            color: #01579B;
+        }
+        .btn-scan:hover {
+            background: #4FC3F7;
+        }
+        .btn-scan:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            color: white;
+        }
+        .status-section {
+            background: #E1F5FE;
+            color: #0277BD;
+        }
+        .mark-btn {
+            padding: 6px 15px;
+            background: #81D4FA;
+            color: #01579B;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: bold;
+        }
+        .mark-btn:hover {
+            background: #4FC3F7;
+        }
         .preview-panel {
             border: 2px solid #e0e0e0;
             border-radius: 5px;
@@ -268,6 +297,7 @@
                 <div class="action-buttons">
                     <button class="btn btn-primary" id="injectBtn" disabled>Inject All</button>
                     <button class="btn btn-success" id="saveBtn" disabled>Save As</button>
+                    <button class="btn btn-scan" id="scanBtn" disabled>Scan Sections</button>
                 </div>
             </div>
 
@@ -298,9 +328,12 @@
         const saveBtn = document.getElementById('saveBtn');
         const previewFrame = document.getElementById('previewFrame');
 
+        const scanBtn = document.getElementById('scanBtn');
+
         templateUpload.addEventListener('change', handleTemplateUpload);
         injectBtn.addEventListener('click', injectComponents);
         saveBtn.addEventListener('click', saveAsFile);
+        scanBtn.addEventListener('click', scanForSections);
 
         function handleTemplateUpload(event) {
             const file = event.target.files[0];
@@ -349,6 +382,8 @@
             if (state.markers.length > 0) {
                 injectBtn.disabled = false;
             }
+            // Always enable Scan if template loaded
+            scanBtn.disabled = false;
         }
 
         function buildGrid() {
@@ -495,6 +530,90 @@
             previewFrame.src = url;
 
             saveBtn.disabled = false;
+        }
+
+        // ============================================================
+        // SCAN SECTIONS — finds section patterns even without markers
+        // ============================================================
+        function scanForSections() {
+            if (!state.templateContent) return;
+
+            const found = [];
+            const lines = state.templateContent.split('\n');
+
+            const patterns = [
+                { regex: /<!--\s*S(\d+):\s*(.+?)\s*-->/, label: (m) => `S${m[1]}: ${m[2]}` },
+                { regex: /<!--\s*Script:\s*(.+?)\s*-->/, label: (m) => `Script: ${m[1]}` },
+                { regex: /\/\/\s*={4,}\s*\n.*?\/\/\s*FUNCTIONS\s*[-–]\s*(.+)/s, label: null },
+                { regex: /\/\/\s*FUNCTIONS\s*[-–]\s*(.+)/, label: (m) => `Functions: ${m[1]}` },
+                { regex: /\/\/\s*VARIABLES\s*[-–]\s*(.+)/, label: (m) => `Variables: ${m[1]}` },
+                { regex: /\/\/\s*Script:\s*(.+)/, label: (m) => `Script: ${m[1]}` },
+                { regex: /<!--\s*@{4}\s*([A-Z_]+)\s/, label: (m) => `Component: ${m[1]}` }
+            ];
+
+            lines.forEach((line, idx) => {
+                for (const p of patterns) {
+                    const m = line.match(p.regex);
+                    if (m) {
+                        const name = p.label ? p.label(m) : m[1];
+                        // Skip if already has an INJECT marker right before it
+                        const prevLine = idx > 0 ? lines[idx - 1] : '';
+                        const alreadyMarked = prevLine.includes('@@@@@@ INJECT');
+                        found.push({
+                            name: name.trim(),
+                            lineNum: idx + 1,
+                            lineContent: line.trim(),
+                            alreadyMarked
+                        });
+                        break;
+                    }
+                }
+            });
+
+            // Show results in grid
+            gridBody.innerHTML = '';
+            addGridRow('Template', state.templateName, 'found', null);
+            addGridRow(`Sections Found: ${found.length}`, `${state.markers.length} already marked`, 'section', null);
+
+            found.forEach((section) => {
+                const status = section.alreadyMarked ? 'Marked ✓' : 'Detected';
+                const statusClass = section.alreadyMarked ? 'found' : 'section';
+                const actionFn = section.alreadyMarked ? null : (cell) => {
+                    const btn = document.createElement('button');
+                    btn.className = 'mark-btn';
+                    btn.textContent = 'Add Marker';
+                    btn.onclick = () => addMarkerAtLine(section, btn);
+                    cell.appendChild(btn);
+                };
+                addGridRow(`Line ${section.lineNum}: ${section.name}`, status, statusClass, actionFn);
+            });
+
+            if (found.length === 0) {
+                const row = document.createElement('tr');
+                row.innerHTML = `<td colspan="3" style="text-align:center;color:#999;padding:20px">No section patterns found. Template may already be clean or use custom markers.</td>`;
+                gridBody.appendChild(row);
+            }
+        }
+
+        function addMarkerAtLine(section, btn) {
+            // Build the slot name from section name (alphanumeric only)
+            const slotName = section.name.replace(/[^a-zA-Z0-9]/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '').toUpperCase();
+            const marker = `<!-- @@@@@@ INJECT: ${slotName} @@@@@@ -->`;
+
+            // Insert marker before the detected line in the template
+            const lines = state.templateContent.split('\n');
+            lines.splice(section.lineNum - 1, 0, marker);
+            state.templateContent = lines.join('\n');
+
+            // Update line numbers for remaining sections (shift down by 1)
+            section.alreadyMarked = true;
+            btn.textContent = 'Marked ✓';
+            btn.disabled = true;
+            btn.style.background = '#A5D6A7';
+            btn.style.color = '#2E7D32';
+
+            // Re-run followMarkers to pick up the new marker
+            followMarkers();
         }
 
         function saveAsFile() {

@@ -1,0 +1,109 @@
+Hello Team,
+
+                           MyDaily-Desktop
+                      v2.0 today is 2.25.2026
+===================== Static Background=============================
+This file will intoduce the Team.
+  Steve  ........Our CEO and Archltect.( coach)
+  George .... Our AI /developer / Analyst
+  Mac .......... Our Project Lead / Macgyver
+  Gus  .......... Our Best Buddy Genious / LLM
+
+       OUR GOAL is to create the best ever
+              IT MCP Tool Audit App
+   The long term goal is to help growers rock at reporting water budgets
+===================== Current  Project==================================
+We are workiing on
+      MCP: APIserver.js v2.0 ...  Our CropManage API mcp tool
+      This is the crown jewel that will service the grower community.
+       It contains Water Requirements from UC Agriculture.
+       A valuable resource for responding to state mandates for water budgets
+
+        Today we update the API to version 2.0. It is the last change we have to make                            to get it ready for all of its applications including AI Assist. 
+         What wil be changed today is the token named:
+               "get_irrigation_details" to automatically call
+               "load_into_displayRecords" AUTOMATICALLY
+         What the API is made to deliver to our applications is the irrigation record. 
+         That is the record that the users are presented in the online application
+              
+          The record is only returned when with "load_into_displayRecords" 
+          All the other table  are work tables we needed to recreate irrigations. 
+               The node server to be changed is:   apiserver1.6 >>
+                The new node server will be saved and called: apiserver2.0 <<
+                The new harness aill be changed and created is v2.0
+                 Source app  to change is:
+                      CropClient-MCP-API-Tools-Audit-Q-v1.6 >>
+                 The new that is changed and saved will be called:
+                        CropClient-MCP-API-Tools-Audit-Q-v2.0 <<
+                 All other files in the folder that end in v1.6 will be updated >>
+                        All the new updated files with be saved as v2.0 <<
+          This new release will be deployed to pre-test  UAT with apideploy.v2.0 <<
+         This is the app we are coding with the following goal:
+           <<Goal is to have a harness app to test the APIserver tokens>>
+          Demo sample agents to create new and update irrigation record
+           Give it a server install so allow user to test it anywhere
+===================== Daily Update ==================================
+     Keep this Current                 ***NOTES ***                       This changes ALL the time
+     Mac: Create MyDailyNapkin.Today.txt for detailed specs and snippets as needed
+=================================================================
+    CURRENT STATUS: (George) 2.28.2026
+        test-apiserver1.4.2.html — LAYOUT REDESIGN IN PROGRESS
+        - S1/S2 top columns changed to 50/50
+        - S1 (top-left): Server URL, Local/Online presets, Tool Name (prompt display),
+          JSON Params textarea, all token staging buttons, SAVE/RESTORE, Credentials
+        - S2 (top-right): JSON Params MOVED here with full styling intact,
+          SEND, Clear Fields, Clear Results, Save File buttons grouped together
+        - Tool Name field repurposed as selection prompt — shows Ranch/Planting
+          selection from S3 grid clicks (e.g. "Ranch: Ranch 1 | Planting: 1B")
+        - Click Ranch row in S3 grid → auto-fires get_plantings
+        - Click Planting row in S3 grid → auto-fires get_irrigation_details
+        - All sections marked with component boundary comments:
+            S1  → COMPONENT: command-panel.js
+            S2  → COMPONENT: params-send-panel.js
+            S3  → COMPONENT: data-grid.js
+            S4  → COMPONENT: status-log.js
+            fetch engine → COMPONENT: api-component2.0.js
+            token staging → COMPONENT: token-staging.js
+
+        COMPONENT ARCHITECTURE PLAN (Coach + George 2.28.2026):
+        - Each section (S1-S4) is designed as a future standalone script
+        - They live together in the harness for now — harness-tested as a unit
+        - When ready each component gets pulled out and made reusable independently
+        - One master component will eventually wire them all together for any app
+        - This is the pattern: Design → Harness Test → Extract → Reuse
+        - Lilly and all future AI Assists will consume these same components
+
+        - GEORGE FILE RULE: Always use dot notation for versions e.g. 1.4.1
+          Never use commas in filenames — tools cannot handle them
+        - GEORGE TOOL RULE: bash tool runs Linux — cannot access Windows paths
+          Use filesystem tools for all Windows file reads/writes
+
+    NEXT STEPS:
+  George 1. Complete test-apiserver1.4.2.html with new layout + click auto-fire
+  George 2. Review 1.4.2 with Coach — confirm component boundaries look right
+    Team 3. Extract each S1-S4 section into its own component script
+    Team 4. irrigation-component must be INJECTED into APIServer for Lilly CRUD
+     Mac  5. Verify 2.0 ready for Lilly (OpenAI AI Assist demo)
+     Mac  6. Keep Butler moving forward with skills design
+     Mac  7. Create S&S plan walkthrough
+
+=============!!!===REMEMBER FOLKS=======!!!=======================
+TEAM: Never forget to update MyDaily during the day.
+             Very simple context but hits the issues right to the point.
+             Replace the old with the new update DATE, STATUS & NEXT
+             Once not needed move the old to its verslion history v(#)
+
+ AND AS ALWAYS ...  Happy Trails to You ... 
+   Steve  Pappas (coach)
+
+p.s. Please use the v1,2,3 folder to put replaced unused files
+       Replace "today" with date on old name and then move it version folder
+       They are there to keep history in case we need to find old context
+      ( MAC nice to make a skill that does this file name replace hey ?)
+
+we will have a guest apprearance from
+    Lilly ........... Our First AI Assist / Teacher 
+       note: the AI 2.0 must be complete first !!!  <<
+ she is a gift from MobileFrame as we both
+    install OpenAI to Learn from her
+      how to share our tools Nicely.

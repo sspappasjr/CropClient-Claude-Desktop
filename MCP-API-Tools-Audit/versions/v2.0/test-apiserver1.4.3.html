@@ -1,0 +1,953 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!--
+    ============================================================
+    TEST-APISERVER 1.4.3 - ClientAI Component Export
+    ------------------------------------------------------------
+    CHANGES FROM 1.4.2:
+      - App named: ClientAI
+      - 🤖 ClientAI button (was 💾 Save File) downloads one JS file:
+            test.apiserver.1.4.3.ClientAI.js
+        containing all three components clearly marked:
+            1. command-panel.js     (S1 — URL, presets, tool name, staging buttons)
+            2. params-send-panel.js (S2 — JSON params, SEND, Clear, ClientAI)
+            3. data-grid.js         (S3 — render, row-click auto-fire)
+        These are the AI tools to be designed, harness-tested,
+        extracted, and made reusable for any CropClient application.
+
+    COMPONENT ARCHITECTURE (Design → Harness Test → Extract → Reuse):
+      S1  → COMPONENT: command-panel.js
+      S2  → COMPONENT: params-send-panel.js
+      S3  → COMPONENT: data-grid.js
+      S4  → COMPONENT: status-log.js
+      fetch engine   → COMPONENT: api-component2.0.js
+      token staging  → COMPONENT: token-staging.js
+      All components live together here for harness testing.
+      When proven, each is extracted and made independently reusable.
+      One master component will wire them for any app (Lilly, Dashboard, etc.)
+
+    VERSION: 1.4.3  DATE: 2.28.2026
+    SOURCE:  test-apiserver1.4.2.html
+    TARGET SERVER: APIServer2.0.js on localhost:3101 or api.cropclient.com
+    ============================================================
+    -->
+    <title>API Server Tester v1.4.3 · ClientAI</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        header {
+            background: linear-gradient(135deg, #2e7d32 0%, #4caf50 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        header h1 { font-size: 1.8em; margin-bottom: 5px; }
+        header p { opacity: 0.9; font-size: 0.95em; }
+        .main-content { padding: 20px; }
+        .button-group { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 15px; }
+        .test-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9em;
+            transition: transform 0.2s, box-shadow 0.2s;
+            color: white;
+        }
+        .test-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+        .test-btn:active { transform: translateY(0); }
+        .test-btn.json { background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%); }
+        .test-btn.api  { background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%); }
+        .test-btn.send { background: linear-gradient(135deg, #4caf50 0%, #388e3c 100%); font-size: 1.1em; padding: 15px 40px; width: 100%; }
+        .test-btn.clear { background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%); flex: 1; }
+        .test-btn.clientai { background: linear-gradient(135deg, #1a237e 0%, #3949ab 100%); flex: 1; }
+        .server-info {
+            background: #e8f5e9;
+            border-left: 4px solid #4caf50;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+        .server-info strong { color: #2e7d32; }
+        .credentials {
+            background: #fff3e0;
+            border-left: 4px solid #ff9800;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 4px;
+        }
+        .credentials input {
+            padding: 8px;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            margin: 5px 10px 5px 0;
+            width: 220px;
+        }
+        .field-group { margin-bottom: 15px; }
+        .field-group label {
+            display: block;
+            font-weight: 600;
+            color: #2e7d32;
+            margin-bottom: 5px;
+            font-size: 0.95em;
+        }
+        .field-group input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+        .field-group input[type="text"]:focus { outline: none; border-color: #4caf50; }
+        .field-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            min-height: 160px;
+            resize: vertical;
+        }
+        .field-group textarea:focus { outline: none; border-color: #4caf50; }
+
+        /* ── SERVER URL ROW with Local/Online presets inline ── */
+        .url-row { display: flex; gap: 10px; align-items: flex-end; margin-bottom: 15px; }
+        .url-row .field-group { flex: 1; margin-bottom: 0; }
+        .url-row .preset-btns { display: flex; gap: 6px; }
+        .preset-btn {
+            padding: 10px 14px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.85em;
+            color: white;
+            white-space: nowrap;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .preset-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+        .preset-btn.local  { background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%); }
+        .preset-btn.online { background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%); }
+
+        /* ── TOP 50/50 LAYOUT ── */
+        .top-split {
+            display: grid;
+            grid-template-columns: 50% 50%;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        /* ── S1: COMMAND PANEL (top-left) ── */
+        /* COMPONENT: command-panel.js */
+        .interactive-panel {
+            background: #fff3e0;
+            border: 3px solid #ff9800;
+            border-radius: 8px;
+            padding: 20px;
+            height: 100%;
+        }
+        .interactive-panel h3 { color: #f57c00; margin-bottom: 15px; }
+        .tool-buttons-section { margin-top: 15px; padding-top: 15px; border-top: 2px solid #ff9800; }
+        .tool-buttons-section h4 { color: #f57c00; margin-bottom: 10px; font-size: 0.95em; }
+
+        /* ── S2: PARAMS + SEND PANEL (top-right) ── */
+        /* COMPONENT: params-send-panel.js */
+        .params-send-panel {
+            background: #fff3e0;
+            border: 3px solid #ff9800;
+            border-radius: 8px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .params-send-panel h3 { color: #f57c00; margin-bottom: 0; }
+        .send-btn-row { display: flex; gap: 8px; flex-wrap: wrap; }
+
+        /* ── BOTTOM SPLIT 60/40 ── */
+        .split-container {
+            display: grid;
+            grid-template-columns: 60% 40%;
+            gap: 20px;
+        }
+
+        /* ── S3: DATA GRID (bottom-left) ── */
+        /* COMPONENT: data-grid.js */
+        .data-grid-panel {
+            background: #fafafa;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+        }
+        .data-grid-panel h2 {
+            color: #2e7d32;
+            font-size: 1.3em;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #4caf50;
+            padding-bottom: 8px;
+        }
+        .data-grid {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            overflow-x: auto;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        .data-grid table { width: 100%; border-collapse: collapse; font-size: 0.85em; }
+        .data-grid th {
+            background: linear-gradient(135deg, #2e7d32 0%, #4caf50 100%);
+            color: white;
+            padding: 10px;
+            text-align: left;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        .data-grid td { padding: 8px 10px; border-bottom: 1px solid #eee; }
+        .data-grid tr:hover { background: #e8f5e9; cursor: pointer; }
+        .data-grid tr.selected { background: #c8e6c9; }
+        .data-grid .empty-state { padding: 40px; text-align: center; color: #999; font-style: italic; }
+
+        /* ── S4: MESSAGE LOG (bottom-right) ── */
+        /* COMPONENT: status-log.js */
+        .message-log-panel {
+            background: #fafafa;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+        }
+        .message-log-panel h2 {
+            color: #2e7d32;
+            font-size: 1.3em;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #4caf50;
+            padding-bottom: 8px;
+        }
+        .message-log {
+            background: #263238;
+            color: #aed581;
+            font-family: 'Courier New', monospace;
+            padding: 15px;
+            border-radius: 6px;
+            min-height: 280px;
+            max-height: 280px;
+            overflow-y: auto;
+            font-size: 0.85em;
+            line-height: 1.5;
+        }
+        .message-log .success { color: #81c784; }
+        .message-log .error   { color: #ef5350; }
+        .message-log .info    { color: #64b5f6; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <h1>🧪 API Server Tester v1.4.3 · ClientAI</h1>
+        <p>Test APIServer2.0.js · 15 MCP Tools · ClientAI Component Export</p>
+    </header>
+
+    <div class="main-content">
+
+        <div class="server-info">
+            <strong>Data Directory:</strong> C:\AICode\crop-client-services\api-server\data\
+            &nbsp;&nbsp;|&nbsp;&nbsp;
+            <strong>Version:</strong> 1.4.3 · ClientAI — 🤖 button exports all 3 components as one JS file
+        </div>
+
+        <div class="top-split">
+
+            <!-- ============================================================
+                 S1 — COMMAND PANEL (top-left)
+                 COMPONENT: command-panel.js
+                 Contains: Server URL + Local/Online presets, Tool Name
+                 (selection prompt from S3 grid clicks), token staging
+                 buttons (JSON + CropManage), SAVE/RESTORE, Credentials.
+                 ============================================================ -->
+            <div class="interactive-panel">
+                <h3>⚡ S1 — Command Panel</h3>
+
+                <!-- SERVER URL + LOCAL/ONLINE PRESETS
+                     COMPONENT: command-panel.js → setServer() -->
+                <div class="url-row">
+                    <div class="field-group">
+                        <label>Server URL:</label>
+                        <input type="text" id="serverUrl" value="http://localhost:3101"
+                               placeholder="http://localhost:3101 or https://api.cropclient.com">
+                    </div>
+                    <div class="preset-btns">
+                        <button class="preset-btn local"  onclick="setServerLocal()">📍 Local</button>
+                        <button class="preset-btn online" onclick="setServerProduction()">🌐 Online</button>
+                    </div>
+                </div>
+
+                <!-- TOOL NAME — SELECTION PROMPT
+                     COMPONENT: command-panel.js → updateSelectionPrompt()
+                     Shows Ranch / Planting selected in S3, e.g.:
+                       "Ranch: Ranch 1  |  Planting: 1B"
+                     Also updated by setFields() when staging buttons clicked. -->
+                <div class="field-group">
+                    <label>Tool Name / Selection:</label>
+                    <input type="text" id="toolName" value="json_write"
+                           placeholder="Click a Ranch or Planting in the grid below...">
+                </div>
+
+                <!-- TOKEN STAGING — JSON Tools
+                     COMPONENT: token-staging.js → loadXxx() → setFields() -->
+                <div class="tool-buttons-section">
+                    <h4>📁 Quick Load JSON Tools:</h4>
+                    <div class="button-group">
+                        <button class="test-btn json" onclick="loadJsonWrite()">json_write</button>
+                        <button class="test-btn json" onclick="loadJsonRead()">json_read</button>
+                        <button class="test-btn json" onclick="loadJsonUpdate()">json_update</button>
+                        <button class="test-btn json" onclick="loadJsonDelete()">json_delete</button>
+                        <button class="test-btn json" onclick="loadJsonExists()">json_exists</button>
+                        <button class="test-btn json" onclick="loadJsonList()">json_list</button>
+                        <button class="test-btn json" onclick="loadDataOperation()">data_operation</button>
+                    </div>
+                </div>
+
+                <!-- TOKEN STAGING — CropManage API Tools
+                     COMPONENT: token-staging.js → loadXxx() → setFields()
+                     get_irrigation_details v2.0: ONE CALL — server auto-chains
+                     to loadIntoDisplayRecords internally. -->
+                <div class="tool-buttons-section">
+                    <h4>🌐 CropManage API Tools:</h4>
+                    <div class="credentials">
+                        <strong>Credentials:</strong><br>
+                        <input type="text"     id="username"     placeholder="Username" value="stevep@sspnet.com">
+                        <input type="password" id="password"     placeholder="Password" value="gosteve1!">
+                        <br>
+                        <strong>Save/Restore User:</strong><br>
+                        <input type="text"     id="saveUsername" placeholder="Save as..." value="steve">
+                    </div>
+                    <div class="button-group">
+                        <button class="test-btn api" onclick="loadGetToken()">get_token</button>
+                        <button class="test-btn api" onclick="loadGetRanches()">get_ranches</button>
+                        <button class="test-btn api" onclick="loadGetPlantings()">get_plantings</button>
+                        <button class="test-btn api" onclick="loadGetIrrigationDetails()">get_irrigation_details</button>
+                        <button class="test-btn api" onclick="loadDisplayRecords()">load_into_displayRecords</button>
+                        <button class="test-btn api" onclick="loadPostIrrigation()">post_new_irrigation</button>
+                        <button class="test-btn api" onclick="loadUpdateIrrigation()">update_irrigation</button>
+                        <button class="test-btn api" onclick="loadBatchPost()">batch_post_queue</button>
+                        <button class="test-btn json" onclick="saveCurrent()"
+                                style="background:linear-gradient(135deg,#4caf50 0%,#388e3c 100%);">💾 SAVE</button>
+                        <button class="test-btn json" onclick="restoreCurrent()"
+                                style="background:linear-gradient(135deg,#9c27b0 0%,#7b1fa2 100%);">📥 RESTORE</button>
+                    </div>
+                </div>
+
+            </div><!-- end S1 -->
+
+            <!-- ============================================================
+                 S2 — PARAMS + SEND PANEL (top-right)
+                 COMPONENT: params-send-panel.js
+                 Contains: JSON Params textarea, SEND, Clear Fields,
+                 Clear Results, 🤖 ClientAI (exports all 3 components).
+                 ============================================================ -->
+            <div class="params-send-panel">
+                <h3>📤 S2 — Params &amp; Send</h3>
+
+                <!-- JSON PARAMS — editable payload
+                     COMPONENT: params-send-panel.js → jsonData textarea
+                     Populated by loadXxx() staging in S1.
+                     Editable before SEND. JSON.parse'd into fetch body on SEND. -->
+                <div class="field-group" style="flex:1;">
+                    <label>JSON Params — Edit before sending:</label>
+                    <textarea id="jsonData" style="min-height:200px;">{
+  "filepath": "test.json",
+  "data": {
+    "testName": "API Server Test",
+    "timestamp": "2026-02-13T20:00:00Z",
+    "values": [1, 2, 3]
+  }
+}</textarea>
+                </div>
+
+                <!-- SEND + ACTION BUTTONS
+                     COMPONENT: api-component2.0.js → callTool()
+                     🤖 ClientAI → downloads test.apiserver.1.4.3.ClientAI.js
+                     with all 3 components (S1, S2, S3) as one file. -->
+                <button class="test-btn send" onclick="sendCustomCall()">📤 SEND</button>
+                <div class="send-btn-row">
+                    <button class="test-btn clear"    onclick="clearFields()">Clear Fields</button>
+                    <button class="test-btn clear"    onclick="clearResults()">Clear Results</button>
+                    <button class="test-btn clientai" onclick="saveClientAI()">🤖 ClientAI</button>
+                </div>
+
+            </div><!-- end S2 -->
+
+        </div><!-- end top-split -->
+
+        <!-- BOTTOM ROW: S3 (60%) + S4 (40%) -->
+        <div class="split-container">
+
+            <!-- ============================================================
+                 S3 — DATA GRID (bottom-left)
+                 COMPONENT: data-grid.js
+                 Click Ranch row   → auto-stages + fires get_plantings
+                 Click Planting row → auto-stages + fires get_irrigation_details
+                 gridContext tracks what is displayed so clicks know what to do.
+                 ============================================================ -->
+            <div class="data-grid-panel">
+                <h2>📊 S3 — Data Grid · Server Response</h2>
+                <div class="data-grid" id="dataGrid">
+                    <div class="empty-state">No data loaded. Click SEND to view results.</div>
+                </div>
+            </div>
+
+            <!-- ============================================================
+                 S4 — STATUS LOG (bottom-right)
+                 COMPONENT: status-log.js
+                 Status only: success ✅, error ❌, info ℹ️
+                 ============================================================ -->
+            <div class="message-log-panel">
+                <h2>💬 S4 — Status Log</h2>
+                <div class="message-log" id="messageLog">
+                    <span class="info">Ready. Stage a token in S1, then SEND in S2...</span>
+                </div>
+            </div>
+
+        </div><!-- end split-container -->
+
+    </div><!-- end main-content -->
+</div><!-- end container -->
+
+<script>
+    // ============================================================
+    // STATE VARIABLES
+    // COMPONENT: api-component2.0.js
+    // ============================================================
+    let ranchGuid       = null;
+    let plantingId      = null;
+    let currentGridData = null;
+    let gridContext     = null; // 'ranches' | 'plantings' | 'irrigations' | null
+
+    // ============================================================
+    // S4 — STATUS LOG
+    // COMPONENT: status-log.js → log()
+    // ============================================================
+    function log(text, type = 'info') {
+        const area = document.getElementById('messageLog');
+        const div  = document.createElement('div');
+        div.className   = type;
+        div.textContent = text;
+        area.appendChild(div);
+        area.scrollTop = area.scrollHeight;
+    }
+
+    // ============================================================
+    // TOKEN STAGING: setFields()
+    // COMPONENT: token-staging.js → setFields()
+    // ============================================================
+    function setFields(toolName, data) {
+        document.getElementById('toolName').value = toolName;
+        document.getElementById('jsonData').value = JSON.stringify(data, null, 2);
+    }
+
+    // ============================================================
+    // SELECTION PROMPT
+    // COMPONENT: command-panel.js → updateSelectionPrompt()
+    // ============================================================
+    function updateSelectionPrompt(parts) {
+        document.getElementById('toolName').value = parts.join('  |  ');
+    }
+
+    // ============================================================
+    // FETCH / SEND — core engine
+    // COMPONENT: api-component2.0.js → callTool()
+    // THE CONTRACT: POST ${serverUrl}/tools/${toolName} with JSON body
+    // ============================================================
+    async function sendCustomCall() {
+        const serverUrl = document.getElementById('serverUrl').value.trim();
+        const toolName  = document.getElementById('toolName').value.trim();
+        const jsonText  = document.getElementById('jsonData').value.trim();
+
+        if (!serverUrl || !toolName) { log('❌ Server URL and Tool Name required!', 'error'); return; }
+
+        let args = {};
+        if (jsonText) {
+            try { args = JSON.parse(jsonText); }
+            catch (e) { log(`❌ Invalid JSON: ${e.message}`, 'error'); return; }
+        }
+
+        log(`→ Calling ${toolName} on ${serverUrl}...`, 'info');
+
+        try {
+            const response = await fetch(`${serverUrl}/tools/${toolName}`, {
+                method:  'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body:    JSON.stringify(args)
+            });
+            const result = await response.json();
+
+            if (result.success || response.ok) {
+                log(`✅ ${toolName}: SUCCESS`, 'success');
+
+                if      (result.ranches)   { renderDataGrid(result.ranches);   gridContext = 'ranches'; }
+                else if (result.plantings) { renderDataGrid(result.plantings); gridContext = 'plantings'; }
+                else if (result.events)    { renderDataGrid(result.events);    gridContext = 'irrigations'; }
+                else if (result.records)   { renderDataGrid(result.records);   gridContext = 'irrigations'; }
+                else if (result.data)      { renderDataGrid(result.data);      gridContext = null; }
+                else                       { renderDataGrid(result);           gridContext = null; }
+
+                if (toolName === 'get_ranches' && result.ranches?.length > 0) {
+                    ranchGuid = result.ranches[0].Ranch_External_GUID;
+                    log(`📌 Ranch GUID captured: ${ranchGuid}`, 'success');
+                    log(`💡 Click a Ranch row to auto-fire get_plantings`, 'info');
+                }
+                if (toolName === 'get_plantings' && result.plantings?.length > 0) {
+                    plantingId = result.plantings[0].Id;
+                    log(`📌 Planting ID captured: ${plantingId}`, 'success');
+                    log(`💡 Click a Planting row to auto-fire get_irrigation_details`, 'info');
+                }
+            } else {
+                log(`❌ ${toolName}: FAILED — ${result.error || result.message}`, 'error');
+                renderDataGrid(result);
+                gridContext = null;
+            }
+        } catch (error) {
+            log(`❌ FETCH ERROR: ${error.message}`, 'error');
+        }
+    }
+
+    // ============================================================
+    // S3 — RENDER DATA GRID + ROW CLICK AUTO-FIRE
+    // COMPONENT: data-grid.js → renderDataGrid() + onRowClick()
+    // ============================================================
+    function renderDataGrid(data) {
+        const gridContainer = document.getElementById('dataGrid');
+        currentGridData = data;
+        gridContainer.innerHTML = '';
+
+        if (data === null || data === undefined) {
+            gridContainer.innerHTML = '<div class="empty-state">No data returned.</div>';
+            return;
+        }
+
+        if (Array.isArray(data) && data.length > 0 && typeof data[0] === 'object') {
+            const table = document.createElement('table');
+            const thead = document.createElement('thead');
+            const hRow  = document.createElement('tr');
+            const keys  = Object.keys(data[0]);
+            keys.forEach(k => { const th = document.createElement('th'); th.textContent = k; hRow.appendChild(th); });
+            thead.appendChild(hRow);
+            table.appendChild(thead);
+
+            const tbody = document.createElement('tbody');
+            data.forEach((row, idx) => {
+                const tr = document.createElement('tr');
+                keys.forEach(k => {
+                    const td = document.createElement('td');
+                    const v  = row[k];
+                    td.textContent = (typeof v === 'object' && v !== null) ? JSON.stringify(v) : (v ?? '');
+                    tr.appendChild(td);
+                });
+
+                // ROW CLICK AUTO-FIRE
+                // COMPONENT: data-grid.js → onRowClick()
+                tr.addEventListener('click', () => {
+                    tbody.querySelectorAll('tr').forEach(r => r.classList.remove('selected'));
+                    tr.classList.add('selected');
+
+                    if (gridContext === 'ranches') {
+                        const guid = row['Ranch_External_GUID'] || row['ranch_external_guid'];
+                        const name = row['Name'] || row['name'] || `Ranch ${idx + 1}`;
+                        if (guid) {
+                            ranchGuid = guid;
+                            updateSelectionPrompt([`Ranch: ${name}`]);
+                            log(`🏡 Ranch selected: ${name}`, 'info');
+                            log(`→ Auto-firing get_plantings...`, 'info');
+                            setFields('get_plantings', { ranchGuid: guid });
+                            sendCustomCall();
+                        } else { log('⚠️ No Ranch_External_GUID found in this row.', 'error'); }
+
+                    } else if (gridContext === 'plantings') {
+                        const pid  = row['Id'] || row['id'];
+                        const name = row['Name'] || row['name'] || row['Commodity'] || `Planting ${idx + 1}`;
+                        if (pid) {
+                            plantingId = pid;
+                            const ranchLabel = document.getElementById('toolName').value.split('|')[0].trim();
+                            updateSelectionPrompt([ranchLabel, `Planting: ${name}`]);
+                            log(`🌱 Planting selected: ${name} (ID: ${pid})`, 'info');
+                            log(`→ Auto-firing get_irrigation_details...`, 'info');
+                            setFields('get_irrigation_details', { plantingId: pid });
+                            sendCustomCall();
+                        } else { log('⚠️ No Id found in this planting row.', 'error'); }
+
+                    } else {
+                        log(`📋 Row ${idx + 1} selected.`, 'info');
+                    }
+                });
+
+                tbody.appendChild(tr);
+            });
+            table.appendChild(tbody);
+            gridContainer.appendChild(table);
+            return;
+        }
+
+        if (typeof data === 'object' && !Array.isArray(data)) {
+            const table = document.createElement('table');
+            const tbody = document.createElement('tbody');
+            Object.keys(data).forEach(k => {
+                const tr = document.createElement('tr');
+                const tdK = document.createElement('td'); tdK.textContent = k; tdK.style.fontWeight = '600'; tdK.style.background = '#f5f5f5';
+                const tdV = document.createElement('td');
+                const v = data[k];
+                tdV.innerHTML = (typeof v === 'object' && v !== null) ? `<pre style="margin:0;font-size:0.85em;">${JSON.stringify(v, null, 2)}</pre>` : (v ?? '');
+                tr.appendChild(tdK); tr.appendChild(tdV); tbody.appendChild(tr);
+            });
+            table.appendChild(tbody); gridContainer.appendChild(table);
+            return;
+        }
+
+        if (Array.isArray(data)) {
+            const table = document.createElement('table');
+            const tbody = document.createElement('tbody');
+            data.forEach((item, i) => {
+                const tr = document.createElement('tr');
+                const tdI = document.createElement('td'); tdI.textContent = i; tdI.style.fontWeight = '600'; tdI.style.background = '#f5f5f5'; tdI.style.width = '50px';
+                const tdV = document.createElement('td');
+                tdV.innerHTML = (typeof item === 'object' && item !== null) ? `<pre style="margin:0;font-size:0.85em;">${JSON.stringify(item, null, 2)}</pre>` : (item ?? '');
+                tr.appendChild(tdI); tr.appendChild(tdV); tbody.appendChild(tr);
+            });
+            table.appendChild(tbody); gridContainer.appendChild(table);
+            return;
+        }
+
+        const pre = document.createElement('pre');
+        pre.style.padding = '15px';
+        pre.textContent = String(data);
+        gridContainer.appendChild(pre);
+    }
+
+    // ============================================================
+    // CLEAR HELPERS
+    // COMPONENT: params-send-panel.js + status-log.js
+    // ============================================================
+    function clearFields() {
+        document.getElementById('toolName').value = '';
+        document.getElementById('jsonData').value = '{}';
+        log('🧹 Fields cleared.', 'info');
+    }
+    function clearResults() {
+        document.getElementById('messageLog').innerHTML = '<span class="info">Log cleared.</span>';
+        document.getElementById('dataGrid').innerHTML   = '<div class="empty-state">No data loaded.</div>';
+        gridContext = null;
+    }
+
+    // ============================================================
+    // SERVER PRESETS
+    // COMPONENT: command-panel.js → setServer()
+    // ============================================================
+    function setServerLocal()      { document.getElementById('serverUrl').value = 'http://localhost:3101';       log('📍 Server → localhost:3101', 'success'); }
+    function setServerProduction() { document.getElementById('serverUrl').value = 'http://api.cropclient.com';  log('🌐 Server → api.cropclient.com', 'success'); }
+
+    // ============================================================
+    // TOKEN STAGING — JSON Tools
+    // COMPONENT: token-staging.js
+    // ============================================================
+    function loadJsonWrite()      { setFields('json_write',      { filepath: 'test.json', data: { testName: 'API Server Test', timestamp: new Date().toISOString(), version: '1.4.3', values: [1,2,3] } }); }
+    function loadJsonRead()       { setFields('json_read',       { filepath: 'test.json' }); }
+    function loadJsonUpdate()     { setFields('json_update',     { filepath: 'test.json', updates: { updated: true, lastModified: new Date().toISOString() } }); }
+    function loadJsonDelete()     { setFields('json_delete',     { filepath: 'test.json' }); }
+    function loadJsonExists()     { setFields('json_exists',     { filepath: 'test.json' }); }
+    function loadJsonList()       { setFields('json_list',       { directory: '/.' }); }
+    function loadDataOperation()  { setFields('data_operation',  { action: 'read', table: 'test' }); }
+
+    // ============================================================
+    // TOKEN STAGING — CropManage API Tools
+    // COMPONENT: token-staging.js
+    // get_irrigation_details v2.0: ONE CALL — server auto-chains
+    // to loadIntoDisplayRecords internally.
+    // ============================================================
+    function loadGetToken() {
+        setFields('get_token', { username: document.getElementById('username').value, password: document.getElementById('password').value });
+    }
+    function loadGetRanches()           { setFields('get_ranches', {}); }
+    function loadGetPlantings()         { if (!ranchGuid) log('⚠️ No Ranch GUID. Run get_ranches first or click a Ranch row.', 'error'); setFields('get_plantings',            { ranchGuid:  ranchGuid  || 'ENTER_RANCH_GUID_HERE' }); }
+    function loadGetIrrigationDetails() { if (!plantingId) log('⚠️ No Planting ID. Run get_plantings first or click a Planting row.', 'error'); setFields('get_irrigation_details', { plantingId: plantingId || 'ENTER_PLANTING_ID_HERE' }); }
+    function loadDisplayRecords()       { if (!plantingId) log('⚠️ No Planting ID.', 'error'); setFields('load_into_displayRecords',  { plantingId: plantingId || 'ENTER_PLANTING_ID_HERE' }); }
+    function loadPostIrrigation()       { if (!plantingId) log('⚠️ No Planting ID.', 'error'); setFields('post_new_irrigation',       { plantingId: plantingId || 'ENTER_PLANTING_ID_HERE', scheduledDate: '12/28/24', recommendedInches: 1.5, appliedHours: 5.0, irrigationMethod: 'Sprinkler' }); }
+    function loadUpdateIrrigation()     { setFields('update_irrigation',  { eventId: 'ENTER_EVENT_ID_HERE', appliedHours: 6.0, mgrHours: 5.5 }); }
+    function loadBatchPost()            { setFields('batch_post_queue',   { records: [{ id: 1, plantingId: plantingId || 'ENTER_PLANTING_ID', scheduledDate: '12/28/24', hours: 5.0, status: -1, isNew: true }] }); }
+
+    // ============================================================
+    // SAVE / RESTORE
+    // COMPONENT: token-staging.js
+    // ============================================================
+    async function saveCurrent() {
+        const saveUser = document.getElementById('saveUsername').value.trim();
+        if (!saveUser)        { log('❌ Enter a username to save!', 'error'); return; }
+        if (!currentGridData) { log('❌ No data in grid to save!',  'error'); return; }
+        setFields('data_operation', { action: 'write', table: saveUser, data: currentGridData });
+        log(`💾 Ready to save as [${saveUser}] — click SEND to confirm`, 'success');
+    }
+    async function restoreCurrent() {
+        const saveUser = document.getElementById('saveUsername').value.trim();
+        if (!saveUser) { log('❌ Enter a username to restore!', 'error'); return; }
+        setFields('data_operation', { action: 'read', table: saveUser });
+        log(`📥 Ready to restore from [${saveUser}] — click SEND to load`, 'success');
+    }
+
+    // ============================================================
+    // 🤖 ClientAI — exports all 3 components as one JS file
+    // COMPONENT: params-send-panel.js → saveClientAI()
+    // Downloads: test.apiserver.1.4.3.ClientAI.js
+    // Contains:
+    //   1. command-panel.js     (S1)
+    //   2. params-send-panel.js (S2)
+    //   3. data-grid.js         (S3)
+    // These are the AI tools to be designed, harness-tested,
+    // extracted, and made reusable for any CropClient application.
+    // ============================================================
+    function saveClientAI() {
+        const js = `
+// ================================================================
+// ClientAI Components — test.apiserver.1.4.3.ClientAI.js
+// Generated: ${new Date().toISOString()}
+// Source:    test-apiserver1.4.3.html
+//
+// This file contains 3 harness-tested components ready for extraction:
+//   1. command-panel.js     — S1: URL, presets, tool name, staging buttons
+//   2. params-send-panel.js — S2: JSON params, SEND, Clear, ClientAI
+//   3. data-grid.js         — S3: render + row-click auto-fire
+//
+// ARCHITECTURE: Design → Harness Test → Extract → Reuse
+// Each component will be extracted and made independently reusable.
+// One master component will wire them for any app (Lilly, Dashboard, etc.)
+// ================================================================
+
+
+// ================================================================
+// COMPONENT 1: command-panel.js
+// S1 — Command Panel (top-left)
+// Responsibilities:
+//   - Server URL input + Local/Online preset buttons
+//   - Tool Name field (repurposed as selection prompt)
+//   - Token staging buttons: JSON tools + CropManage API tools
+//   - SAVE / RESTORE (data_operation token)
+//   - Credentials inputs
+// ================================================================
+
+function setServerLocal() {
+    document.getElementById('serverUrl').value = 'http://localhost:3101';
+    log('📍 Server → localhost:3101', 'success');
+}
+
+function setServerProduction() {
+    document.getElementById('serverUrl').value = 'http://api.cropclient.com';
+    log('🌐 Server → api.cropclient.com', 'success');
+}
+
+function updateSelectionPrompt(parts) {
+    // Updates Tool Name field to show Ranch / Planting selection from S3 grid
+    // e.g. "Ranch: Ranch 1  |  Planting: 1B"
+    document.getElementById('toolName').value = parts.join('  |  ');
+}
+
+// Token staging: setFields() populates Tool Name + JSON Params (S2)
+function setFields(toolName, data) {
+    document.getElementById('toolName').value = toolName;
+    document.getElementById('jsonData').value = JSON.stringify(data, null, 2);
+}
+
+// JSON Tool staging functions
+function loadJsonWrite()     { setFields('json_write',     { filepath: 'test.json', data: { testName: 'API Server Test', timestamp: new Date().toISOString(), version: '1.4.3', values: [1,2,3] } }); }
+function loadJsonRead()      { setFields('json_read',      { filepath: 'test.json' }); }
+function loadJsonUpdate()    { setFields('json_update',    { filepath: 'test.json', updates: { updated: true, lastModified: new Date().toISOString() } }); }
+function loadJsonDelete()    { setFields('json_delete',    { filepath: 'test.json' }); }
+function loadJsonExists()    { setFields('json_exists',    { filepath: 'test.json' }); }
+function loadJsonList()      { setFields('json_list',      { directory: '/.' }); }
+function loadDataOperation() { setFields('data_operation', { action: 'read', table: 'test' }); }
+
+// CropManage API tool staging functions
+function loadGetToken()           { setFields('get_token',              { username: document.getElementById('username').value, password: document.getElementById('password').value }); }
+function loadGetRanches()         { setFields('get_ranches',            {}); }
+function loadGetPlantings()       { setFields('get_plantings',          { ranchGuid:  ranchGuid  || 'ENTER_RANCH_GUID_HERE' }); }
+function loadGetIrrigationDetails() { setFields('get_irrigation_details', { plantingId: plantingId || 'ENTER_PLANTING_ID_HERE' }); }
+function loadDisplayRecords()     { setFields('load_into_displayRecords', { plantingId: plantingId || 'ENTER_PLANTING_ID_HERE' }); }
+function loadPostIrrigation()     { setFields('post_new_irrigation',    { plantingId: plantingId || 'ENTER_PLANTING_ID_HERE', scheduledDate: '12/28/24', recommendedInches: 1.5, appliedHours: 5.0, irrigationMethod: 'Sprinkler' }); }
+function loadUpdateIrrigation()   { setFields('update_irrigation',      { eventId: 'ENTER_EVENT_ID_HERE', appliedHours: 6.0, mgrHours: 5.5 }); }
+function loadBatchPost()          { setFields('batch_post_queue',       { records: [{ id: 1, plantingId: plantingId || 'ENTER_PLANTING_ID', scheduledDate: '12/28/24', hours: 5.0, status: -1, isNew: true }] }); }
+
+// SAVE / RESTORE — grid data via data_operation token
+async function saveCurrent() {
+    const saveUser = document.getElementById('saveUsername').value.trim();
+    if (!saveUser || !currentGridData) return;
+    setFields('data_operation', { action: 'write', table: saveUser, data: currentGridData });
+}
+async function restoreCurrent() {
+    const saveUser = document.getElementById('saveUsername').value.trim();
+    if (!saveUser) return;
+    setFields('data_operation', { action: 'read', table: saveUser });
+}
+
+
+// ================================================================
+// COMPONENT 2: params-send-panel.js
+// S2 — Params & Send Panel (top-right)
+// Responsibilities:
+//   - JSON Params textarea (editable payload, populated by S1 staging)
+//   - SEND button → triggers sendCustomCall()
+//   - Clear Fields / Clear Results
+//   - 🤖 ClientAI → exports this file
+// ================================================================
+
+// STATE — managed by api-component2.0.js when extracted
+let ranchGuid       = null;
+let plantingId      = null;
+let currentGridData = null;
+let gridContext     = null; // 'ranches' | 'plantings' | 'irrigations' | null
+
+// FETCH / SEND — THE CONTRACT every client must implement:
+//   POST \${serverUrl}/tools/\${toolName} with JSON body
+async function sendCustomCall() {
+    const serverUrl = document.getElementById('serverUrl').value.trim();
+    const toolName  = document.getElementById('toolName').value.trim();
+    const jsonText  = document.getElementById('jsonData').value.trim();
+    if (!serverUrl || !toolName) { log('❌ Server URL and Tool Name required!', 'error'); return; }
+    let args = {};
+    if (jsonText) {
+        try { args = JSON.parse(jsonText); }
+        catch (e) { log('❌ Invalid JSON: ' + e.message, 'error'); return; }
+    }
+    log('→ Calling ' + toolName + ' on ' + serverUrl + '...', 'info');
+    try {
+        const response = await fetch(serverUrl + '/tools/' + toolName, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(args)
+        });
+        const result = await response.json();
+        if (result.success || response.ok) {
+            log('✅ ' + toolName + ': SUCCESS', 'success');
+            if      (result.ranches)   { renderDataGrid(result.ranches);   gridContext = 'ranches'; }
+            else if (result.plantings) { renderDataGrid(result.plantings); gridContext = 'plantings'; }
+            else if (result.events)    { renderDataGrid(result.events);    gridContext = 'irrigations'; }
+            else if (result.records)   { renderDataGrid(result.records);   gridContext = 'irrigations'; }
+            else if (result.data)      { renderDataGrid(result.data);      gridContext = null; }
+            else                       { renderDataGrid(result);           gridContext = null; }
+            if (toolName === 'get_ranches'   && result.ranches?.length > 0)   { ranchGuid  = result.ranches[0].Ranch_External_GUID; log('📌 Ranch GUID: ' + ranchGuid, 'success'); }
+            if (toolName === 'get_plantings' && result.plantings?.length > 0) { plantingId = result.plantings[0].Id; log('📌 Planting ID: ' + plantingId, 'success'); }
+        } else {
+            log('❌ ' + toolName + ': FAILED — ' + (result.error || result.message), 'error');
+            renderDataGrid(result); gridContext = null;
+        }
+    } catch (error) { log('❌ FETCH ERROR: ' + error.message, 'error'); }
+}
+
+function clearFields() {
+    document.getElementById('toolName').value = '';
+    document.getElementById('jsonData').value = '{}';
+    log('🧹 Fields cleared.', 'info');
+}
+function clearResults() {
+    document.getElementById('messageLog').innerHTML = '<span class="info">Log cleared.</span>';
+    document.getElementById('dataGrid').innerHTML   = '<div class="empty-state">No data loaded.</div>';
+    gridContext = null;
+}
+
+
+// ================================================================
+// COMPONENT 3: data-grid.js
+// S3 — Data Grid (bottom-left)
+// Responsibilities:
+//   - Render server response as HTML table
+//   - Ranch row click   → capture GUID → auto-fire get_plantings
+//   - Planting row click → capture Id  → auto-fire get_irrigation_details
+//   - Update Tool Name selection prompt on each click
+//   - gridContext state controls which auto-fire runs
+// ================================================================
+
+// S4 status log utility (status-log.js)
+function log(text, type = 'info') {
+    const area = document.getElementById('messageLog');
+    const div  = document.createElement('div');
+    div.className = type; div.textContent = text;
+    area.appendChild(div); area.scrollTop = area.scrollHeight;
+}
+
+function renderDataGrid(data) {
+    const gridContainer = document.getElementById('dataGrid');
+    currentGridData = data; gridContainer.innerHTML = '';
+    if (data === null || data === undefined) { gridContainer.innerHTML = '<div class="empty-state">No data returned.</div>'; return; }
+    if (Array.isArray(data) && data.length > 0 && typeof data[0] === 'object') {
+        const table = document.createElement('table');
+        const thead = document.createElement('thead'); const hRow = document.createElement('tr');
+        const keys  = Object.keys(data[0]);
+        keys.forEach(k => { const th = document.createElement('th'); th.textContent = k; hRow.appendChild(th); });
+        thead.appendChild(hRow); table.appendChild(thead);
+        const tbody = document.createElement('tbody');
+        data.forEach((row, idx) => {
+            const tr = document.createElement('tr');
+            keys.forEach(k => { const td = document.createElement('td'); const v = row[k]; td.textContent = (typeof v === 'object' && v !== null) ? JSON.stringify(v) : (v ?? ''); tr.appendChild(td); });
+            tr.addEventListener('click', () => {
+                tbody.querySelectorAll('tr').forEach(r => r.classList.remove('selected')); tr.classList.add('selected');
+                if (gridContext === 'ranches') {
+                    const guid = row['Ranch_External_GUID'] || row['ranch_external_guid'];
+                    const name = row['Name'] || row['name'] || 'Ranch ' + (idx + 1);
+                    if (guid) { ranchGuid = guid; updateSelectionPrompt(['Ranch: ' + name]); log('🏡 Ranch: ' + name, 'info'); log('→ Auto-firing get_plantings...', 'info'); setFields('get_plantings', { ranchGuid: guid }); sendCustomCall(); }
+                    else { log('⚠️ No Ranch_External_GUID in this row.', 'error'); }
+                } else if (gridContext === 'plantings') {
+                    const pid  = row['Id'] || row['id'];
+                    const name = row['Name'] || row['name'] || row['Commodity'] || 'Planting ' + (idx + 1);
+                    if (pid) { plantingId = pid; const rl = document.getElementById('toolName').value.split('|')[0].trim(); updateSelectionPrompt([rl, 'Planting: ' + name]); log('🌱 Planting: ' + name + ' (ID: ' + pid + ')', 'info'); log('→ Auto-firing get_irrigation_details...', 'info'); setFields('get_irrigation_details', { plantingId: pid }); sendCustomCall(); }
+                    else { log('⚠️ No Id in this planting row.', 'error'); }
+                } else { log('📋 Row ' + (idx + 1) + ' selected.', 'info'); }
+            });
+            tbody.appendChild(tr);
+        });
+        table.appendChild(tbody); gridContainer.appendChild(table); return;
+    }
+    if (typeof data === 'object' && !Array.isArray(data)) {
+        const table = document.createElement('table'); const tbody = document.createElement('tbody');
+        Object.keys(data).forEach(k => { const tr = document.createElement('tr'); const tdK = document.createElement('td'); const tdV = document.createElement('td'); tdK.textContent = k; tdK.style.fontWeight = '600'; tdK.style.background = '#f5f5f5'; const v = data[k]; tdV.innerHTML = (typeof v === 'object' && v !== null) ? '<pre style="margin:0;font-size:0.85em;">' + JSON.stringify(v, null, 2) + '</pre>' : (v ?? ''); tr.appendChild(tdK); tr.appendChild(tdV); tbody.appendChild(tr); });
+        table.appendChild(tbody); gridContainer.appendChild(table); return;
+    }
+    const pre = document.createElement('pre'); pre.style.padding = '15px'; pre.textContent = String(data); gridContainer.appendChild(pre);
+}
+`;
+        const blob = new Blob([js], { type: 'text/javascript' });
+        const url  = URL.createObjectURL(blob);
+        const a    = document.createElement('a');
+        a.href     = url;
+        a.download = 'test.apiserver.1.4.3.ClientAI.js';
+        a.click();
+        URL.revokeObjectURL(url);
+        log('🤖 ClientAI exported: test.apiserver.1.4.3.ClientAI.js', 'success');
+        log('📦 Contains: command-panel.js + params-send-panel.js + data-grid.js', 'info');
+    }
+
+    // ============================================================
+    // ON LOAD
+    // ============================================================
+    window.addEventListener('DOMContentLoaded', () => {
+        log('✅ API Server Tester v1.4.3 · ClientAI Ready!', 'success');
+        log('📍 Default: localhost:3101', 'info');
+        log('💡 get_ranches → click Ranch row → get_plantings auto-fires', 'info');
+        log('💡 get_plantings → click Planting row → get_irrigation_details auto-fires', 'info');
+        log('🤖 Click ClientAI button to export all 3 components as one JS file', 'info');
+    });
+</script>
+</body>
+</html>

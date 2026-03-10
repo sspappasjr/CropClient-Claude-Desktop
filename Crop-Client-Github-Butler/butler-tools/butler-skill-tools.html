@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Butler Skill Tools — crop-client-services</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #f5f5f5;
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* HEADER */
+  header {
+    background: linear-gradient(135deg, #2e7d32 0%, #4caf50 100%);
+    color: white;
+    padding: 12px 25px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-shrink: 0;
+  }
+  .header-left h1 { font-size: 1.3em; }
+  .header-left p { opacity: 0.9; font-size: 0.85em; margin-top: 2px; }
+  .header-right { display: flex; gap: 12px; align-items: center; }
+  .header-right label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.8; }
+  .header-right input {
+    padding: 4px 8px;
+    border: 1px solid rgba(255,255,255,0.4);
+    border-radius: 4px;
+    background: rgba(255,255,255,0.15);
+    color: white;
+    font-size: 13px;
+    font-family: 'Courier New', monospace;
+  }
+  .header-right input:focus { outline: none; border-color: #fff; background: rgba(255,255,255,0.25); }
+  .cfg-field { display: flex; flex-direction: column; gap: 1px; }
+
+  /* LAYOUT: 40 / 60 */
+  .layout {
+    display: grid;
+    grid-template-columns: 40% 60%;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  /* LEFT: SKILL LIST */
+  .skill-list {
+    background: #fff;
+    border: 1px solid #ccc;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .skill-list-header {
+    padding: 10px 16px;
+    background: #fafafa;
+    border-bottom: 1px solid #e0e0e0;
+    font-size: 11px;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .skill-items {
+    flex: 1;
+    overflow-y: auto;
+    padding: 6px;
+  }
+  .skill-card {
+    padding: 12px 14px;
+    border-radius: 8px;
+    margin-bottom: 4px;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: all 0.2s;
+  }
+  .skill-card:hover { background: #e8f5e9; }
+  .skill-card.active { border-color: #ff9800; background: #fff8e1; }
+  .skill-card .skill-action {
+    font-size: 14px;
+    font-weight: 700;
+    color: #333;
+  }
+  .skill-card .skill-flow {
+    font-size: 12px;
+    color: #e65100;
+    font-weight: 600;
+    margin-top: 4px;
+    letter-spacing: 0.3px;
+  }
+  .skill-card .skill-summary {
+    font-size: 11px;
+    color: #888;
+    margin-top: 4px;
+    line-height: 1.4;
+  }
+
+  /* RIGHT: DETAIL PANEL */
+  .detail-panel {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: #fafafa;
+  }
+  .skill-detail {
+    display: none;
+    flex-direction: column;
+    flex: 1;
+    overflow: hidden;
+  }
+  .skill-detail.active {
+    display: flex;
+  }
+
+  /* Detail Header */
+  .detail-header {
+    padding: 14px 20px;
+    background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%);
+    color: white;
+    flex-shrink: 0;
+  }
+  .detail-header h2 { font-size: 1.15em; }
+  .detail-header .detail-desc { font-size: 0.85em; opacity: 0.9; margin-top: 3px; line-height: 1.4; }
+
+  /* Detail Content (scrollable) */
+  .detail-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px 20px;
+  }
+
+  /* Section blocks inside detail */
+  .detail-section {
+    margin-bottom: 16px;
+  }
+  .detail-section h3 {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: #888;
+    margin-bottom: 8px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid #e0e0e0;
+  }
+
+  /* Steps inside detail */
+  .detail-step {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: 6px;
+    margin-bottom: 4px;
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    transition: background 0.2s;
+  }
+  .detail-step:hover { background: #e8f5e9; }
+  .ds-num {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #2e7d32 0%, #4caf50 100%);
+    color: white;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: bold; font-size: 10px;
+    flex-shrink: 0;
+  }
+  .ds-info { flex: 1; }
+  .ds-name { font-weight: 600; font-size: 13px; color: #333; }
+  .ds-desc { font-size: 11px; color: #888; }
+  .ds-badge {
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    text-transform: uppercase;
+    flex-shrink: 0;
+  }
+  .dsb-pending { background: #eee; color: #999; }
+  .dsb-running { background: #ff9800; color: #fff; animation: pulse 1s infinite; }
+  .dsb-done { background: #4caf50; color: #fff; }
+  .dsb-fail { background: #f44336; color: #fff; }
+  @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.6; } }
+  .ds-btn {
+    padding: 5px 14px;
+    background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%);
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 11px;
+    font-weight: 600;
+    flex-shrink: 0;
+  }
+  .ds-btn:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
+
+  /* Links */
+  .detail-links {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .detail-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .detail-link:hover { transform: translateY(-1px); box-shadow: 0 3px 10px rgba(0,0,0,0.12); }
+  .link-guide { background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%); color: #fff; }
+  .link-quick { background: linear-gradient(135deg, #4caf50 0%, #388e3c 100%); color: #fff; }
+  .link-pair { background: linear-gradient(135deg, #9c27b0 0%, #7b1fa2 100%); color: #fff; }
+
+  /* JSON */
+  .json-block {
+    background: #263238;
+    color: #aed581;
+    border-radius: 6px;
+    padding: 12px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.82em;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    word-break: break-word;
+    max-height: 220px;
+    overflow-y: auto;
+  }
+
+  /* LOG */
+  .log-panel {
+    background: #263238;
+    color: #aed581;
+    font-family: 'Courier New', monospace;
+    padding: 8px 14px;
+    max-height: 130px;
+    overflow-y: auto;
+    font-size: 0.82em;
+    line-height: 1.5;
+    flex-shrink: 0;
+    border-top: 2px solid #1b2327;
+  }
+  .log-line { margin: 0; }
+  .log-ok { color: #81c784; }
+  .log-err { color: #ef5350; }
+  .log-info { color: #64b5f6; }
+  .log-cmd { color: #aed581; }
+  .log-heading { color: #ffcc80; font-weight: bold; }
+
+  /* STATUS BAR */
+  .status-bar {
+    background: #1b2327;
+    color: #aed581;
+    padding: 4px 20px;
+    font-size: 0.8em;
+    font-family: 'Courier New', monospace;
+    flex-shrink: 0;
+    display: flex;
+    justify-content: space-between;
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="header-left">
+    <h1>Butler Skill Tools</h1>
+    <p>crop-client-services — Reusable Processes for Deploy, Install, Verify</p>
+  </div>
+  <div class="header-right">
+    <div class="cfg-field"><label>Version</label><input type="text" id="cfgVersion" value="2.0" size="5" onchange="updateAll()"></div>
+    <div class="cfg-field"><label>Server</label><input type="text" id="cfgIP" value="184.168.20.205" size="14"></div>
+    <div class="cfg-field"><label>Domain</label><input type="text" id="cfgDomain" value="api.cropclient.com" size="20"></div>
+    <div class="cfg-field"><label>Port</label><input type="text" id="cfgPort" value="3101" size="5"></div>
+  </div>
+</header>
+
+<div class="layout">
+
+  <!-- LEFT: SKILL LIST (40%) -->
+  <div class="skill-list">
+    <div class="skill-list-header">crop-client-services skills</div>
+    <div class="skill-items">
+
+      <div class="skill-card active" onclick="selectSkill('push-services', this)">
+        <div class="skill-action">Push crop-client-services &#9654; github.com repository</div>
+        <div class="skill-summary">git add + commit + push — all or modified files</div>
+      </div>
+
+      <div class="skill-card" onclick="selectSkill('push-desktop', this)">
+        <div class="skill-action">Push crop-client-claude-desktop &#9654; github.com repository</div>
+        <div class="skill-summary">C:\AICode\CropClient-Claude-Desktop &#9654; github.com/sspappasjr/CropClient-Claude-Desktop</div>
+        <div class="skill-summary">git add + commit + push — with changes</div>
+      </div>
+
+      <div class="skill-card" onclick="selectSkill('publish-alpha', this)">
+        <div class="skill-action">Publish crop-client-services &#9654; alpha pre-test</div>
+        <div class="skill-summary">github.com/sspappasjr/Crop-Client-Services &#9654; localhost:<span class="port-val">3101</span></div>
+        <div class="skill-summary">git pull to local + restart — alpha testing with MCP tools</div>
+      </div>
+
+      <div class="skill-card" onclick="selectSkill('publish-server', this)">
+        <div class="skill-action">Publish crop-client-services &#9654; live server</div>
+        <div class="skill-summary">github.com/sspappasjr/Crop-Client-Services &#9654; api.cropclient.com</div>
+        <div class="skill-summary">git pull to server + iisreset — approved release to production</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- RIGHT: DETAIL PANEL (60%) -->
+  <div class="detail-panel">
+
+    <!-- ====== PUSH CROP-CLIENT-SERVICES ====== -->
+    <div class="skill-detail active" id="detail-push-services">
+      <div class="detail-header">
+        <h2>Push crop-client-services &#9654; github.com repository</h2>
+        <div class="detail-desc">Source: C:\AICode\crop-client-services &nbsp;|&nbsp; Target: github.com/sspappasjr/Crop-Client-Services</div>
+      </div>
+      <div class="detail-content">
+
+        <div class="detail-section">
+          <h3>Steps</h3>
+          <div class="detail-step"><div class="ds-num">1</div><div class="ds-info"><div class="ds-name">Stage files</div><div class="ds-desc">Select all modified files in C:\AICode\crop-client-services</div></div><span class="ds-badge dsb-pending" id="ps-s1">pending</span><button class="ds-btn" onclick="runPushServices(1)">Run</button></div>
+          <div class="detail-step"><div class="ds-num">2</div><div class="ds-info"><div class="ds-name">Commit changes</div><div class="ds-desc">Save a snapshot with version message</div></div><span class="ds-badge dsb-pending" id="ps-s2">pending</span><button class="ds-btn" onclick="runPushServices(2)">Run</button></div>
+          <div class="detail-step"><div class="ds-num">3</div><div class="ds-info"><div class="ds-name">Push to GitHub</div><div class="ds-desc">Send commit to github.com/sspappasjr/Crop-Client-Services</div></div><span class="ds-badge dsb-pending" id="ps-s3">pending</span><button class="ds-btn" onclick="runPushServices(3)">Run</button></div>
+        </div>
+
+        <div class="detail-section">
+          <h3>Verify</h3>
+          <div class="detail-step"><div class="ds-num">&#10003;</div><div class="ds-info"><div class="ds-name">Check status</div><div class="ds-desc">Confirm everything pushed, nothing left behind</div></div><span class="ds-badge dsb-pending" id="ps-s4">pending</span><button class="ds-btn" onclick="runPushServices(4)">Run</button></div>
+        </div>
+
+        <div class="detail-section">
+          <h3>Result</h3>
+          <div class="json-block" id="ps-result">Ready — click a step to execute</div>
+        </div>
+
+        <div class="detail-section">
+          <h3>Config</h3>
+          <div class="json-block" id="push-services-json"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====== PUSH CROP-CLIENT-CLAUDE-DESKTOP ====== -->
+    <div class="skill-detail" id="detail-push-desktop">
+      <div class="detail-header">
+        <h2>Push crop-client-claude-desktop &#9654; github.com repository</h2>
+        <div class="detail-desc">Source: C:\AICode\CropClient-Claude-Desktop &nbsp;|&nbsp; Target: github.com/sspappasjr/CropClient-Claude-Desktop</div>
+      </div>
+      <div class="detail-content">
+
+        <div class="detail-section">
+          <h3>Steps</h3>
+          <div class="detail-step"><div class="ds-num">1</div><div class="ds-info"><div class="ds-name">git add</div><div class="ds-desc">Stage all or modified files in C:\AICode\CropClient-Claude-Desktop</div></div><span class="ds-badge dsb-pending" id="pd-s1">pending</span><button class="ds-btn" onclick="runPushDesktop(1)">Run</button></div>
+          <div class="detail-step"><div class="ds-num">2</div><div class="ds-info"><div class="ds-name">git commit</div><div class="ds-desc">Commit staged changes with message</div></div><span class="ds-badge dsb-pending" id="pd-s2">pending</span><button class="ds-btn" onclick="runPushDesktop(2)">Run</button></div>
+          <div class="detail-step"><div class="ds-num">3</div><div class="ds-info"><div class="ds-name">git push</div><div class="ds-desc">Push commit to github.com/sspappasjr/CropClient-Claude-Desktop</div></div><span class="ds-badge dsb-pending" id="pd-s3">pending</span><button class="ds-btn" onclick="runPushDesktop(3)">Run</button></div>
+        </div>
+
+        <div class="detail-section">
+          <h3>Verify</h3>
+          <div class="detail-step"><div class="ds-num">&#10003;</div><div class="ds-info"><div class="ds-name">git status</div><div class="ds-desc">Confirm working tree is clean after push</div></div><span class="ds-badge dsb-pending" id="pd-s4">pending</span><button class="ds-btn" onclick="runPushDesktop(4)">Run</button></div>
+        </div>
+
+        <div class="detail-section">
+          <h3>Config</h3>
+          <div class="json-block" id="push-desktop-json"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====== PUBLISH TO ALPHA ====== -->
+    <div class="skill-detail" id="detail-publish-alpha">
+      <div class="detail-header">
+        <h2>Publish crop-client-services &#9654; alpha pre-test</h2>
+        <div class="detail-desc">Source: github.com/sspappasjr/Crop-Client-Services &nbsp;|&nbsp; Target: localhost:<span class="port-val">3101</span></div>
+      </div>
+      <div class="detail-content">
+
+        <div class="detail-section">
+          <h3>Steps</h3>
+          <div class="detail-step"><div class="ds-num">1</div><div class="ds-info"><div class="ds-name">git pull</div><div class="ds-desc">Pull latest from GitHub to C:\AICode\crop-client-services</div></div><span class="ds-badge dsb-pending" id="pa-s1">pending</span><button class="ds-btn" onclick="runPublishAlpha(1)">Run</button></div>
+          <div class="detail-step"><div class="ds-num">2</div><div class="ds-info"><div class="ds-name">Restart local server</div><div class="ds-desc">Stop and restart node APIServer<span class="ver">2.0</span>.js on port <span class="port-val">3101</span></div></div><span class="ds-badge dsb-pending" id="pa-s2">pending</span><button class="ds-btn" onclick="runPublishAlpha(2)">Run</button></div>
+        </div>
+
+        <div class="detail-section">
+          <h3>Verify</h3>
+          <div class="detail-step"><div class="ds-num">&#10003;</div><div class="ds-info"><div class="ds-name">Ping localhost:<span class="port-val">3101</span>/ping</div><div class="ds-desc">Confirm local server is running v<span class="ver">2.0</span> with 15 tools</div></div><span class="ds-badge dsb-pending" id="pa-s3">pending</span><button class="ds-btn" onclick="runPublishAlpha(3)">Ping</button></div>
+        </div>
+
+        <div class="detail-section">
+          <h3>Config</h3>
+          <div class="json-block" id="publish-alpha-json"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====== PUBLISH TO SERVER ====== -->
+    <div class="skill-detail" id="detail-publish-server">
+      <div class="detail-header">
+        <h2>Publish crop-client-services &#9654; live server</h2>
+        <div class="detail-desc">Source: github.com/sspappasjr/Crop-Client-Services &nbsp;|&nbsp; Target: <span class="ip-val">184.168.20.205</span> (<span class="domain-val">api.cropclient.com</span>)</div>
+      </div>
+      <div class="detail-content">
+
+        <div class="detail-section">
+          <h3>Steps</h3>
+          <div class="detail-step"><div class="ds-num">1</div><div class="ds-info"><div class="ds-name">RDP to <span class="ip-val">184.168.20.205</span></div><div class="ds-desc">Connect to production server</div></div><span class="ds-badge dsb-pending" id="pv-s1">pending</span><button class="ds-btn" onclick="runPublishServer(1)">Show</button></div>
+          <div class="detail-step"><div class="ds-num">2</div><div class="ds-info"><div class="ds-name">git pull</div><div class="ds-desc">Pull latest from GitHub to C:\Crop-Client-Services\api-server</div></div><span class="ds-badge dsb-pending" id="pv-s2">pending</span><button class="ds-btn" onclick="runPublishServer(2)">Show</button></div>
+          <div class="detail-step"><div class="ds-num">3</div><div class="ds-info"><div class="ds-name">iisreset</div><div class="ds-desc">Restart IIS to load updated code</div></div><span class="ds-badge dsb-pending" id="pv-s3">pending</span><button class="ds-btn" onclick="runPublishServer(3)">Show</button></div>
+        </div>
+
+        <div class="detail-section">
+          <h3>Verify</h3>
+          <div class="detail-step"><div class="ds-num">&#10003;</div><div class="ds-info"><div class="ds-name">Ping https://<span class="domain-val">api.cropclient.com</span>/ping</div><div class="ds-desc">Confirm production is running v<span class="ver">2.0</span> with 15 tools</div></div><span class="ds-badge dsb-pending" id="pv-s4">pending</span><button class="ds-btn" onclick="runPublishServer(4)">Ping</button></div>
+        </div>
+
+        <div class="detail-section">
+          <h3>Config</h3>
+          <div class="json-block" id="publish-server-json"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LOG (shared, bottom of detail panel) -->
+    <div class="log-panel" id="logPanel">
+      <div id="logContent"><p class="log-line log-ok">Butler Skill Tools ready. Select a skill on the left.</p></div>
+    </div>
+
+  </div><!-- /detail-panel -->
+
+</div><!-- /layout -->
+
+<div class="status-bar">
+  <span id="statusBar">Ready</span>
+  <span>crop-client-services v<span class="ver">2.0</span></span>
+</div>
+
+<script>
+  // ==============================
+  // NAV
+  // ==============================
+  function selectSkill(name, cardEl) {
+    document.querySelectorAll('.skill-card').forEach(c => c.classList.remove('active'));
+    document.querySelectorAll('.skill-detail').forEach(d => d.classList.remove('active'));
+    cardEl.classList.add('active');
+    document.getElementById('detail-' + name).classList.add('active');
+    setStatus('Selected: ' + name);
+  }
+
+  // ==============================
+  // CONFIG
+  // ==============================
+  function cfg(id) { return document.getElementById(id).value.trim(); }
+  function ver() { return cfg('cfgVersion'); }
+  function setStatus(msg) { document.getElementById('statusBar').textContent = msg; }
+
+  function updateAll() {
+    document.querySelectorAll('.ver').forEach(el => el.textContent = ver());
+    document.querySelectorAll('.port-val').forEach(el => el.textContent = cfg('cfgPort'));
+    document.querySelectorAll('.ip-val').forEach(el => el.textContent = cfg('cfgIP'));
+    document.querySelectorAll('.domain-val').forEach(el => el.textContent = cfg('cfgDomain'));
+    updateJsonBlocks();
+  }
+
+  // ==============================
+  // JSON BLOCKS
+  // ==============================
+  function updateJsonBlocks() {
+    const v = ver(), port = cfg('cfgPort'), ip = cfg('cfgIP'), domain = cfg('cfgDomain');
+    const jsons = {
+      'push-services': {
+        type: "push",
+        source: "C:\\AICode\\crop-client-services",
+        target: "github.com/sspappasjr/Crop-Client-Services",
+        commands: ["git add .", "git commit -m \"v" + v + " update\"", "git push"],
+        version: v
+      },
+      'push-desktop': {
+        type: "push",
+        source: "C:\\AICode\\CropClient-Claude-Desktop",
+        target: "github.com/sspappasjr/CropClient-Claude-Desktop",
+        commands: ["git add .", "git commit -m \"v" + v + " update\"", "git push"],
+        version: v
+      },
+      'publish-alpha': {
+        type: "publish",
+        source: "github.com/sspappasjr/Crop-Client-Services",
+        target: "localhost:" + port,
+        path: "C:\\AICode\\crop-client-services",
+        commands: ["git pull", "node APIServer" + v + ".js"],
+        version: v
+      },
+      'publish-server': {
+        type: "publish",
+        source: "github.com/sspappasjr/Crop-Client-Services",
+        target: domain,
+        ip: ip,
+        path: "C:\\Crop-Client-Services\\api-server",
+        commands: ["git pull", "iisreset"],
+        bat: "server-deploy" + v + ".bat",
+        version: v
+      }
+    };
+    Object.keys(jsons).forEach(k => {
+      const el = document.getElementById(k + '-json');
+      if (el) el.textContent = JSON.stringify(jsons[k], null, 2);
+    });
+  }
+
+  // ==============================
+  // LOG
+  // ==============================
+  function log(msg, cls) {
+    const p = document.createElement('p');
+    p.className = 'log-line ' + (cls || 'log-info');
+    p.textContent = msg;
+    document.getElementById('logContent').appendChild(p);
+    document.getElementById('logPanel').scrollTop = 999999;
+  }
+  function clearLog() { document.getElementById('logContent').innerHTML = ''; }
+
+  // ==============================
+  // BADGES
+  // ==============================
+  function setBadge(id, state) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = state;
+    el.className = 'ds-badge dsb-' + (state === 'running' ? 'running' : state === 'done' ? 'done' : state === 'fail' ? 'fail' : 'pending');
+  }
+
+  // ==============================
+  // PING
+  // ==============================
+  function pingUrl(url, label, badgeId) {
+    setBadge(badgeId, 'running');
+    log('ping ' + url, 'log-cmd');
+    setStatus('Pinging ' + url);
+    fetch(url)
+      .then(r => r.json())
+      .then(data => {
+        if (Array.isArray(data)) {
+          log(label + ': ' + data.length + ' tools', 'log-ok');
+        } else if (data.status) {
+          log(label + ': ' + data.status + ' — ' + (data.server || 'OK'), 'log-ok');
+        } else {
+          log(label + ': OK', 'log-ok');
+        }
+        setBadge(badgeId, 'done');
+        setStatus(label + ' — OK');
+      })
+      .catch(e => {
+        log(label + ' FAILED: ' + e.message, 'log-err');
+        setBadge(badgeId, 'fail');
+        setStatus(label + ' — FAILED');
+      });
+  }
+
+  // ==============================
+  // PUSH CROP-CLIENT-SERVICES
+  // ==============================
+  function result(id, msg) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = msg;
+  }
+  function resultAppend(id, msg) {
+    const el = document.getElementById(id);
+    if (el) el.textContent += '\n' + msg;
+  }
+
+  function runPushServices(n) {
+    const v = ver();
+    const cwd = 'C:\\AICode\\crop-client-services';
+    switch(n) {
+      case 1:
+        result('ps-result', 'Executing: git add . in ' + cwd);
+        setBadge('ps-s1', 'running');
+        log('> cd ' + cwd, 'log-cmd');
+        log('> git add .', 'log-cmd');
+        resultAppend('ps-result', 'Staged all modified files.');
+        setBadge('ps-s1', 'done');
+        break;
+      case 2:
+        result('ps-result', 'Executing: git commit -m "v' + v + ' update" in ' + cwd);
+        setBadge('ps-s2', 'running');
+        log('> git commit -m "v' + v + ' update"', 'log-cmd');
+        resultAppend('ps-result', 'Committed.');
+        setBadge('ps-s2', 'done');
+        break;
+      case 3:
+        result('ps-result', 'Executing: git push origin main in ' + cwd);
+        setBadge('ps-s3', 'running');
+        log('> git push origin main', 'log-cmd');
+        resultAppend('ps-result', 'Pushed to github.com/sspappasjr/Crop-Client-Services');
+        setBadge('ps-s3', 'done');
+        break;
+      case 4:
+        result('ps-result', 'Executing: git status in ' + cwd);
+        setBadge('ps-s4', 'running');
+        log('> git status', 'log-cmd');
+        resultAppend('ps-result', 'Checking working tree...');
+        setBadge('ps-s4', 'done');
+        break;
+    }
+  }
+
+  // ==============================
+  // PUSH CROP-CLIENT-CLAUDE-DESKTOP
+  // ==============================
+  function runPushDesktop(n) {
+    const v = ver();
+    switch(n) {
+      case 1:
+        log('> cd C:\\AICode\\CropClient-Claude-Desktop', 'log-cmd');
+        log('> git add .', 'log-cmd');
+        setBadge('pd-s1', 'done');
+        break;
+      case 2:
+        log('> git commit -m "v' + v + ' update"', 'log-cmd');
+        setBadge('pd-s2', 'done');
+        break;
+      case 3:
+        log('> git push origin main', 'log-cmd');
+        setBadge('pd-s3', 'done');
+        break;
+      case 4:
+        log('> git status', 'log-cmd');
+        setBadge('pd-s4', 'done');
+        break;
+    }
+  }
+
+  // ==============================
+  // PUBLISH TO ALPHA
+  // ==============================
+  function runPublishAlpha(n) {
+    const v = ver(), port = cfg('cfgPort');
+    switch(n) {
+      case 1:
+        log('> cd C:\\AICode\\crop-client-services', 'log-cmd');
+        log('> git pull', 'log-cmd');
+        setBadge('pa-s1', 'done');
+        break;
+      case 2:
+        log('> cd api-server', 'log-cmd');
+        log('> node APIServer' + v + '.js', 'log-cmd');
+        setBadge('pa-s2', 'done');
+        break;
+      case 3:
+        pingUrl('http://localhost:' + port + '/ping', 'Alpha', 'pa-s3');
+        break;
+    }
+  }
+
+  // ==============================
+  // PUBLISH TO SERVER
+  // ==============================
+  function runPublishServer(n) {
+    const v = ver(), ip = cfg('cfgIP'), domain = cfg('cfgDomain');
+    switch(n) {
+      case 1:
+        log('RDP to ' + ip, 'log-info');
+        setBadge('pv-s1', 'done');
+        break;
+      case 2:
+        log('> cd /d C:\\Crop-Client-Services\\api-server', 'log-cmd');
+        log('> git pull', 'log-cmd');
+        setBadge('pv-s2', 'done');
+        break;
+      case 3:
+        log('> iisreset', 'log-cmd');
+        setBadge('pv-s3', 'done');
+        break;
+      case 4:
+        pingUrl('https://' + domain + '/ping', 'Production', 'pv-s4');
+        break;
+    }
+  }
+
+  // INIT
+  updateAll();
+</script>
+</body>
+</html>

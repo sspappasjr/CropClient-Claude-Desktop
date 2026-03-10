@@ -1,0 +1,34 @@
+
+steve (coach) 
+we are creating 
+   our CRUD tools as a viable MCP tools injected into our 
+   new   Client-AI-Component.js
+
+in doing so we are using the code from and existing Audit harness 
+
+the goal is to  put all if the code for this new set of MCP tools in one place
+that place iw existing component inside this harness named
+i have included the line number where i saw this component 771-1014
+@@@@ IRRIGATION_COMPONENT v1.1 id:irrigation-mcp @@@@ 
+
+please put this component it is usual sequence. the order is ( i think )
+
+MCP Tools and Registry and Tool Caller 
+existing code already here
+anything else needed by MCP injection 
+<!-- @@@@ IRRIGATION_COMPONENT v1.1 id:irrigation-mcp @@@@ 
+
+here is where i found what i think is code need to complete our mcp component
+Tools in the dashboard are at these line number 
+
+// MCP TOOLS REGISTRY  1047+1065 last is 
+// ========================================
+// FUNCTIONS - MCP Tool Caller
+// ========================================
+
+ taken from:
+CropClient-MCP-API-Tools-Audit-Q-v1.6.html
+
+the steps to create this new component. are :   
+
+

@@ -1,0 +1,155 @@
+{
+  "template": "Factory-MCP-2x2-Designer-Admin-Audit.v1.1",
+  "tools": [
+    {
+      "name": "Json Grid",
+      "type": "grid",
+      "x": 42,
+      "y": 42,
+      "w": 200,
+      "h": 678,
+      "token": "Pictures of each tool",
+      "groupId": ""
+    },
+    {
+      "name": "design grid ",
+      "type": "box",
+      "x": 244,
+      "y": 45,
+      "w": 457,
+      "h": 332,
+      "token": "with the names of all the tools ",
+      "groupId": ""
+    },
+    {
+      "name": " S!  harness",
+      "type": "grid",
+      "x": 717,
+      "y": 46,
+      "w": 457,
+      "h": 332,
+      "token": "turned into tools ",
+      "groupId": ""
+    },
+    {
+      "name": "Button",
+      "type": "button",
+      "x": 249,
+      "y": 336,
+      "w": 71.61290322580646,
+      "h": 37,
+      "token": "",
+      "groupId": "grp-1"
+    },
+    {
+      "name": "Button",
+      "type": "button",
+      "x": 323.4774169921875,
+      "y": 336,
+      "w": 71.61290322580646,
+      "h": 37,
+      "token": "",
+      "groupId": "grp-1"
+    },
+    {
+      "name": "Button",
+      "type": "button",
+      "x": 397.954833984375,
+      "y": 336,
+      "w": 71.61290322580646,
+      "h": 37,
+      "token": "",
+      "groupId": "grp-1"
+    },
+    {
+      "name": "Button",
+      "type": "button",
+      "x": 472.4322509765625,
+      "y": 336,
+      "w": 71.61290322580646,
+      "h": 37,
+      "token": "",
+      "groupId": "grp-1"
+    },
+    {
+      "name": "Button",
+      "type": "button",
+      "x": 546.90966796875,
+      "y": 336,
+      "w": 71.61290322580646,
+      "h": 37,
+      "token": "",
+      "groupId": "grp-1"
+    },
+    {
+      "name": "Button",
+      "type": "button",
+      "x": 621.3870849609375,
+      "y": 336,
+      "w": 71.61290322580646,
+      "h": 37,
+      "token": "",
+      "groupId": "grp-1"
+    },
+    {
+      "name": "Button",
+      "type": "button",
+      "x": 747.1483764648438,
+      "y": 337,
+      "w": 97.25806527773553,
+      "h": 34,
+      "token": "",
+      "groupId": "grp-3"
+    },
+    {
+      "name": "Button",
+      "type": "button",
+      "x": 848.2967529296875,
+      "y": 337,
+      "w": 97.25806527773553,
+      "h": 34,
+      "token": "",
+      "groupId": "grp-3"
+    },
+    {
+      "name": "Button",
+      "type": "button",
+      "x": 949.4451293945312,
+      "y": 337,
+      "w": 97.25806527773553,
+      "h": 34,
+      "token": "",
+      "groupId": "grp-3"
+    },
+    {
+      "name": "Button",
+      "type": "button",
+      "x": 1050.593505859375,
+      "y": 337,
+      "w": 97.25806527773553,
+      "h": 34,
+      "token": "",
+      "groupId": "grp-3"
+    },
+    {
+      "name": "Grid",
+      "type": "grid",
+      "x": 275,
+      "y": 105,
+      "w": 121,
+      "h": 181,
+      "token": "",
+      "groupId": ""
+    },
+    {
+      "name": "Grid",
+      "type": "grid",
+      "x": 734,
+      "y": 99,
+      "w": 121,
+      "h": 181,
+      "token": "",
+      "groupId": ""
+    }
+  ]
+}

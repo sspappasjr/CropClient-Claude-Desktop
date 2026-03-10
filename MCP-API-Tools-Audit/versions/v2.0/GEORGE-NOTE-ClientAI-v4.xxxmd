@@ -1,0 +1,105 @@
+# George — Client-AI-Component Plan v4
+## Date: 3.5.2026 — George fixed both engines, Mac injects them
+
+---
+
+## What Happened
+
+George reviewed the mcp-engine bugs from v3 and confirmed them.
+George also owns ai-engine.js and updated it for Karen (Anthropic) support.
+Both files are fixed and ready. Mac's job: inject them into Client-AI-Component.js.
+
+---
+
+## Two Fixed Files in AIToolKit
+
+### mcp-engine.js (v2.0)
+**3 bugs fixed:**
+1. `mcpEngineStaging` now takes `target` as first arg and captures `serverUrl` via Presets
+2. `mcpEngineSend` takes a single staged object — no more loose args
+3. `mcpEngineSend` has try/catch — no more naked crashes on bad server response
+
+**Chain is now:** `mcpEngineStaging('production', 'get_token', {username, password})` → `mcpEngineSend(staged)`
+
+### ai-engine.js (v2.0)
+**Karen (Anthropic) support added:**
+- New module: `aiEnginePresets(provider)` — returns endpoint, model, auth header config for 'lilly' or 'karen'
+- `aiEngineSend` is provider-aware — correct request shape for each API
+- `aiEngineReader` handles both response shapes (Karen's `content[].type:"tool_use"` vs Lilly's `tool_calls[]`)
+- `aiEngineRouter` passes provider through and uses correct tool result format per provider
+
+**Karen note:** `input_schema` not `inputSchema` — the mapper is inside aiEngineSend, Mac doesn't need to change tool-definitions.json.
+
+---
+
+## Mac's Job — Inject Into Client-AI-Component.js
+
+Both files have @@@ markers. Use them as injection boundaries.
+
+### Step 1 — Replace MCP-ENGINE block
+
+In `Client-AI-Component.js`, find this section:
+```
+// ============================================================
+// MCP-ENGINE — Token side (talks to server)
+```
+...down to the end of `mcpEngineSend`.
+
+Replace the entire block with the contents of `mcp-engine.js`
+(everything between `// @@@ BEGIN mcp-engine @@@` and `// @@@ END mcp-engine @@@`)
+
+### Step 2 — Replace AI-ENGINE block
+
+In `Client-AI-Component.js`, find this section:
+```
+// ============================================================
+// AI-ENGINE — Prompt side (talks to OpenAI/Gus)
+```
+...down to the end of `aiEngineRouter`.
+
+Replace the entire block with the contents of `ai-engine.js`
+(everything between `// @@@ BEGIN ai-engine @@@` and `// @@@ END ai-engine @@@`)
+
+### Step 3 — Add @@@ markers to Client-AI-Component.js
+
+After injection, the component should have clear markers so future extraction works:
+
+```
+// @@@ BEGIN mcp-engine @@@
+... (mcp-engine functions) ...
+// @@@ END mcp-engine @@@
+
+// @@@ BEGIN ai-engine @@@
+... (ai-engine functions) ...
+// @@@ END ai-engine @@@
+```
+
+The JSON TOKENS and CRUD sections already have their own markers — leave those alone.
+
+---
+
+## What Did NOT Change
+
+- JSON token loader functions — untouched
+- CRUD functions — untouched
+- Save/Restore placeholder — untouched
+- SQLite placeholder — untouched
+- `tool-definitions.json` — untouched (Karen's input_schema mapping is handled inside ai-engine)
+
+---
+
+## One Thing to Watch
+
+`aiEngineRouter` now takes `serverTarget` as the last arg ('local' or 'production').
+This replaces the old `serverUrl` string. The router calls `mcpEngineStaging` internally
+so it only needs the target name, not a full URL.
+
+Old signature: `aiEngineRouter(userMessage, toolDefinitions, apiKey, serverUrl)`
+New signature: `aiEngineRouter(userMessage, toolDefinitions, apiKey, provider, serverTarget)`
+
+---
+
+## The Rules
+- APIServer2.0.js is the source of truth. Always.
+- No code without Steve's GOFORIT.
+- Markers go in. Don't skip Step 3.

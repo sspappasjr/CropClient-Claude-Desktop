@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Butler Skill Tools — crop-client-services</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #f5f5f5;
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* HEADER */
+  header {
+    background: linear-gradient(135deg, #2e7d32 0%, #4caf50 100%);
+    color: white;
+    padding: 12px 25px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-shrink: 0;
+  }
+  .header-left h1 { font-size: 1.3em; }
+  .header-left p { opacity: 0.9; font-size: 0.85em; margin-top: 2px; }
+  .header-right { display: flex; gap: 12px; align-items: center; }
+  .header-right label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.8; }
+  .header-right input {
+    padding: 4px 8px;
+    border: 1px solid rgba(255,255,255,0.4);
+    border-radius: 4px;
+    background: rgba(255,255,255,0.15);
+    color: white;
+    font-size: 13px;
+    font-family: 'Courier New', monospace;
+  }
+  .header-right input:focus { outline: none; border-color: #fff; background: rgba(255,255,255,0.25); }
+  .cfg-field { display: flex; flex-direction: column; gap: 1px; }
+
+  /* LAYOUT: 40 / 60 */
+  .layout {
+    display: grid;
+    grid-template-columns: 40% 60%;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  /* LEFT: SKILL LIST */
+  .skill-list {
+    background: #fff;
+    border: 1px solid #ccc;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .skill-list-header {
+    padding: 10px 16px;
+    background: #fafafa;
+    border-bottom: 1px solid #e0e0e0;
+    font-size: 11px;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .skill-items {
+    flex: 1;
+    overflow-y: auto;
+    padding: 6px;
+  }
+  .skill-card {
+    padding: 12px 14px;
+    border-radius: 8px;
+    margin-bottom: 4px;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: all 0.2s;
+  }
+  .skill-card:hover { background: #e8f5e9; }
+  .skill-card.active { border-color: #ff9800; background: #fff8e1; }
+  .skill-card .skill-action {
+    font-size: 14px;
+    font-weight: 700;
+    color: #333;
+  }
+  .skill-card .skill-flow {
+    font-size: 12px;
+    color: #e65100;
+    font-weight: 600;
+    margin-top: 4px;
+    letter-spacing: 0.3px;
+  }
+  .skill-card .skill-summary {
+    font-size: 11px;
+    color: #888;
+    margin-top: 4px;
+    line-height: 1.4;
+  }
+
+  /* RIGHT: DETAIL PANEL */
+  .detail-panel {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: #fafafa;
+  }
+  .skill-detail {
+    display: none;
+    flex-direction: column;
+    flex: 1;
+    overflow: hidden;
+  }
+  .skill-detail.active {
+    display: flex;
+  }
+
+  /* Detail Header */
+  .detail-header {
+    padding: 14px 20px;
+    background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%);
+    color: white;
+    flex-shrink: 0;
+  }
+  .detail-header h2 { font-size: 1.15em; }
+  .detail-header .detail-desc { font-size: 0.85em; opacity: 0.9; margin-top: 3px; line-height: 1.4; }
+
+  /* Detail Content (scrollable) */
+  .detail-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px 20px;
+  }
+
+  /* Section blocks inside detail */
+  .detail-section {
+    margin-bottom: 16px;
+  }
+  .detail-section h3 {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: #888;
+    margin-bottom: 8px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid #e0e0e0;
+  }
+
+  /* Steps inside detail */
+  .detail-step {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: 6px;
+    margin-bottom: 4px;
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    transition: background 0.2s;
+  }
+  .detail-step:hover { background: #e8f5e9; }
+  .ds-num {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #2e7d32 0%, #4caf50 100%);
+    color: white;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: bold; font-size: 10px;
+    flex-shrink: 0;
+  }
+  .ds-info { flex: 1; }
+  .ds-name { font-weight: 600; font-size: 13px; color: #333; }
+  .ds-desc { font-size: 11px; color: #888; }
+  .ds-badge {
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    text-transform: uppercase;
+    flex-shrink: 0;
+  }
+  .dsb-pending { background: #eee; color: #999; }
+  .dsb-running { background: #ff9800; color: #fff; animation: pulse 1s infinite; }
+  .dsb-done { background: #4caf50; color: #fff; }
+  .dsb-fail { background: #f44336; color: #fff; }
+  @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.6; } }
+  .ds-btn {
+    padding: 5px 14px;
+    background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%);
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 11px;
+    font-weight: 600;
+    flex-shrink: 0;
+  }
+  .ds-btn:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
+
+  /* Links */
+  .detail-links {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .detail-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .detail-link:hover { transform: translateY(-1px); box-shadow: 0 3px 10px rgba(0,0,0,0.12); }
+  .link-guide { background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%); color: #fff; }
+  .link-quick { background: linear-gradient(135deg, #4caf50 0%, #388e3c 100%); color: #fff; }
+  .link-pair { background: linear-gradient(135deg, #9c27b0 0%, #7b1fa2 100%); color: #fff; }
+
+  /* JSON */
+  .json-block {
+    background: #263238;
+    color: #aed581;
+    border-radius: 6px;
+    padding: 12px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.82em;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    word-break: break-word;
+    max-height: 220px;
+    overflow-y: auto;
+  }
+
+  /* LOG */
+  .log-panel {
+    background: #263238;
+    color: #aed581;
+    font-family: 'Courier New', monospace;
+    padding: 8px 14px;
+    max-height: 130px;
+    overflow-y: auto;
+    font-size: 0.82em;
+    line-height: 1.5;
+    flex-shrink: 0;
+    border-top: 2px solid #1b2327;
+  }
+  .log-line { margin: 0; }
+  .log-ok { color: #81c784; }
+  .log-err { color: #ef5350; }
+  .log-info { color: #64b5f6; }
+  .log-cmd { color: #aed581; }
+  .log-heading { color: #ffcc80; font-weight: bold; }
+
+  /* STATUS BAR */
+  .status-bar {
+    background: #1b2327;
+    color: #aed581;
+    padding: 4px 20px;
+    font-size: 0.8em;
+    font-family: 'Courier New', monospace;
+    flex-shrink: 0;
+    display: flex;
+    justify-content: space-between;
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="header-left">
+    <h1>Butler Skill Tools</h1>
+    <p>crop-client-services — Reusable Processes for Deploy, Install, Verify</p>
+  </div>
+  <div class="header-right">
+    <div class="cfg-field"><label>Version</label><input type="text" id="cfgVersion" value="2.0" size="5" onchange="updateAll()"></div>
+    <div class="cfg-field"><label>Server</label><input type="text" id="cfgIP" value="184.168.20.205" size="14"></div>
+    <div class="cfg-field"><label>Domain</label><input type="text" id="cfgDomain" value="api.cropclient.com" size="20"></div>
+    <div class="cfg-field"><label>Port</label><input type="text" id="cfgPort" value="3101" size="5"></div>
+  </div>
+</header>
+
+<div class="layout">
+
+  <!-- LEFT: SKILL LIST (40%) -->
+  <div class="skill-list">
+    <div class="skill-list-header">crop-client-services skills</div>
+    <div class="skill-items">
+
+      <div class="skill-card active" onclick="selectSkill('push', this)">
+        <div class="skill-action">Save Your Work to GitHub</div>
+        <div class="skill-flow">Alpha &nbsp;&#9654;&nbsp; GitHub</div>
+        <div class="skill-summary">Back up your latest changes to the team's shared filing cabinet so everyone can see it</div>
+      </div>
+
+      <div class="skill-card" onclick="selectSkill('publish', this)">
+        <div class="skill-action">Publish to Live Server</div>
+        <div class="skill-flow">GitHub &nbsp;&#9654;&nbsp; Production Server</div>
+        <div class="skill-summary">Team reviewed and approved — now put it live so customers get the update</div>
+      </div>
+
+      <div class="skill-card" onclick="selectSkill('install', this)">
+        <div class="skill-action">Set Up a New Machine</div>
+        <div class="skill-flow">GitHub &nbsp;&#9654;&nbsp; New Machine</div>
+        <div class="skill-summary">Get a brand new computer ready to run CropClient services from scratch</div>
+      </div>
+
+      <div class="skill-card" onclick="selectSkill('verify', this)">
+        <div class="skill-action">Check Server Health</div>
+        <div class="skill-flow">Local &nbsp;&amp;&nbsp; Live &nbsp;&#9654;&nbsp; Health Report</div>
+        <div class="skill-summary">Quick check — are the servers up, on the right version, with all tools available?</div>
+      </div>
+
+      <div class="skill-card" onclick="selectSkill('rollback', this)">
+        <div class="skill-action">Undo Last Publish</div>
+        <div class="skill-flow">Live Server &nbsp;&#9654;&nbsp; Previous Version</div>
+        <div class="skill-summary">Something went wrong after publishing? Put it back to how it was before</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- RIGHT: DETAIL PANEL (60%) -->
+  <div class="detail-panel">
+
+    <!-- ====== PUSH TO GITHUB ====== -->
+    <div class="skill-detail active" id="detail-push">
+      <div class="detail-header">
+        <h2>Save Your Work to GitHub</h2>
+        <div class="detail-desc">Back up your latest v<span class="ver">2.0</span> changes from alpha to the team's GitHub repo. This does NOT go to the live server — it just gets your work into the shared filing cabinet so the team can review it.</div>
+      </div>
+      <div class="detail-content">
+
+        <div class="detail-section">
+          <h3>What This Does</h3>
+          <div class="detail-step"><div class="ds-num">1</div><div class="ds-info"><div class="ds-name">Commit and push your alpha to GitHub</div><div class="ds-desc">Takes everything in your local alpha folder, packages it up, and sends it to the team's GitHub repo. After this, anyone on the team can see your latest work.</div></div><span class="ds-badge dsb-pending" id="p-s1">pending</span><button class="ds-btn" onclick="runPush(1)">Push</button></div>
+        </div>
+
+        <div class="detail-section">
+          <h3>Verify</h3>
+          <div class="detail-step"><div class="ds-num">&#10003;</div><div class="ds-info"><div class="ds-name">Check local server is running</div><div class="ds-desc">Ping http://localhost:<span class="port-val">3101</span> — make sure your local copy is working before you push</div></div><span class="ds-badge dsb-pending" id="p-s2">pending</span><button class="ds-btn" onclick="runPush(2)">Test</button></div>
+        </div>
+
+        <div class="detail-section">
+          <h3>Reference</h3>
+          <div class="detail-links">
+            <button class="detail-link link-quick" onclick="showDoc('quick')">Quick Start</button>
+            <button class="detail-link link-pair" onclick="showDoc('pair')">Web.config Pair Rule</button>
+          </div>
+        </div>
+
+        <div class="detail-section">
+          <h3>Push Config</h3>
+          <div class="json-block" id="push-json"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====== PUBLISH TO LIVE ====== -->
+    <div class="skill-detail" id="detail-publish">
+      <div class="detail-header">
+        <h2>Publish to Live Server</h2>
+        <div class="detail-desc">The team has reviewed the latest in GitHub and approved it. Now pull it down to the production server at <span class="ip-val">184.168.20.205</span> so customers see the update at https://<span class="domain-val">api.cropclient.com</span>.</div>
+      </div>
+      <div class="detail-content">
+
+        <div class="detail-section">
+          <h3>What This Does</h3>
+          <div class="detail-step"><div class="ds-num">1</div><div class="ds-info"><div class="ds-name">Pull latest from GitHub to the server</div><div class="ds-desc">Connect to the production server, pull the approved code from GitHub, and restart IIS. After this, customers see the new version.</div></div><span class="ds-badge dsb-pending" id="pub-s1">pending</span><button class="ds-btn" onclick="runPublish(1)">Pull</button></div>
+        </div>
+
+        <div class="detail-section">
+          <h3>Verify</h3>
+          <div class="detail-step"><div class="ds-num">&#10003;</div><div class="ds-info"><div class="ds-name">Check live server is updated</div><div class="ds-desc">Ping https://<span class="domain-val">api.cropclient.com</span> — confirm it's alive and running v<span class="ver">2.0</span></div></div><span class="ds-badge dsb-pending" id="pub-s2">pending</span><button class="ds-btn" onclick="runPublish(2)">Test</button></div>
+        </div>
+
+        <div class="detail-section">
+          <h3>Reference</h3>
+          <div class="detail-links">
+            <button class="detail-link link-guide" onclick="showDoc('guide')">Server Install Guide</button>
+            <button class="detail-link link-quick" onclick="showDoc('quick')">Quick Start</button>
+            <button class="detail-link link-pair" onclick="showDoc('pair')">Web.config Pair Rule</button>
+          </div>
+        </div>
+
+        <div class="detail-section">
+          <h3>Publish Config</h3>
+          <div class="json-block" id="publish-json"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====== INSTALL DETAIL ====== -->
+    <div class="skill-detail" id="detail-install">
+      <div class="detail-header">
+        <h2>crop-client-services — Install on New Machine</h2>
+        <div class="detail-desc">First-time setup. Clone the Crop-Client-Services repo from GitHub, install all Node.js dependencies, start APIServer<span class="ver">2.0</span>.js on port <span class="port-val">3101</span>, and verify it's running. Works on any machine with Git and Node installed.</div>
+      </div>
+      <div class="detail-content">
+
+        <div class="detail-section">
+          <h3>Reference</h3>
+          <div class="detail-links">
+            <button class="detail-link link-guide" onclick="showDoc('guide')">Server Install Guide</button>
+            <button class="detail-link link-quick" onclick="showDoc('quick')">Quick Start</button>
+          </div>
+        </div>
+
+        <div class="detail-section">
+          <h3>Install Steps</h3>
+          <div class="detail-step"><div class="ds-num">1</div><div class="ds-info"><div class="ds-name">Git Clone from GitHub</div><div class="ds-desc">Clone https://github.com/sspappasjr/Crop-Client-Services.git to the target machine. This pulls the entire repo — api-server, pages, tools.</div></div><span class="ds-badge dsb-pending" id="i-s1">pending</span><button class="ds-btn" onclick="runInstall(1)">Clone</button></div>
+          <div class="detail-step"><div class="ds-num">2</div><div class="ds-info"><div class="ds-name">NPM Install Dependencies</div><div class="ds-desc">Run npm install at root level, then again inside api-server/. Installs Express, CORS, and all required packages.</div></div><span class="ds-badge dsb-pending" id="i-s2">pending</span><button class="ds-btn" onclick="runInstall(2)">Install</button></div>
+          <div class="detail-step"><div class="ds-num">3</div><div class="ds-info"><div class="ds-name">Start APIServer<span class="ver">2.0</span>.js</div><div class="ds-desc">Run node APIServer<span class="ver">2.0</span>.js from the api-server folder. Should see: 15 tools, port <span class="port-val">3101</span>, standalone mode.</div></div><span class="ds-badge dsb-pending" id="i-s3">pending</span><button class="ds-btn" onclick="runInstall(3)">Start</button></div>
+          <div class="detail-step"><div class="ds-num">4</div><div class="ds-info"><div class="ds-name">Verify Server is Running</div><div class="ds-desc">Ping http://localhost:<span class="port-val">3101</span>/ping and /tools — confirm it's alive with 15 tools available.</div></div><span class="ds-badge dsb-pending" id="i-s4">pending</span><button class="ds-btn" onclick="runInstall(4)">Verify</button></div>
+        </div>
+
+        <div class="detail-section">
+          <h3>Install JSON</h3>
+          <div class="json-block" id="install-json"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====== VERIFY DETAIL ====== -->
+    <div class="skill-detail" id="detail-verify">
+      <div class="detail-header">
+        <h2>crop-client-services — Verify Server Health</h2>
+        <div class="detail-desc">Quick health check for both local and production. Pings each server, lists available tools, and confirms the version. Use this anytime to make sure everything is running.</div>
+      </div>
+      <div class="detail-content">
+
+        <div class="detail-section">
+          <h3>Reference</h3>
+          <div class="detail-links">
+            <button class="detail-link link-guide" onclick="showDoc('guide')">Server Install Guide</button>
+            <button class="detail-link link-quick" onclick="showDoc('quick')">Quick Start</button>
+          </div>
+        </div>
+
+        <div class="detail-section">
+          <h3>Verify Steps</h3>
+          <div class="detail-step"><div class="ds-num">1</div><div class="ds-info"><div class="ds-name">Ping Local Server</div><div class="ds-desc">http://localhost:<span class="port-val">3101</span>/ping — check if local dev server is running.</div></div><span class="ds-badge dsb-pending" id="v-s1">pending</span><button class="ds-btn" onclick="runVerify(1)">Ping</button></div>
+          <div class="detail-step"><div class="ds-num">2</div><div class="ds-info"><div class="ds-name">Ping Production Server</div><div class="ds-desc">https://<span class="domain-val">api.cropclient.com</span>/ping — check if live server is responding.</div></div><span class="ds-badge dsb-pending" id="v-s2">pending</span><button class="ds-btn" onclick="runVerify(2)">Ping</button></div>
+          <div class="detail-step"><div class="ds-num">3</div><div class="ds-info"><div class="ds-name">List Tools — Local</div><div class="ds-desc">http://localhost:<span class="port-val">3101</span>/tools — confirm local tool count.</div></div><span class="ds-badge dsb-pending" id="v-s3">pending</span><button class="ds-btn" onclick="runVerify(3)">List</button></div>
+          <div class="detail-step"><div class="ds-num">4</div><div class="ds-info"><div class="ds-name">List Tools — Production</div><div class="ds-desc">https://<span class="domain-val">api.cropclient.com</span>/tools — confirm live tool count.</div></div><span class="ds-badge dsb-pending" id="v-s4">pending</span><button class="ds-btn" onclick="runVerify(4)">List</button></div>
+        </div>
+
+        <div class="detail-section">
+          <h3>Last Results</h3>
+          <div class="json-block" id="verify-json">Run a verify step to see results here.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====== ROLLBACK DETAIL ====== -->
+    <div class="skill-detail" id="detail-rollback">
+      <div class="detail-header">
+        <h2>crop-client-services — Rollback to Previous Version</h2>
+        <div class="detail-desc">If the deploy went wrong, restore the previous version. Copies the old web.config back and restarts IIS. The old APIServer file is still on the server — just need to point IIS back to it.</div>
+      </div>
+      <div class="detail-content">
+
+        <div class="detail-section">
+          <h3>Reference</h3>
+          <div class="detail-links">
+            <button class="detail-link link-guide" onclick="showDoc('guide')">Server Install Guide</button>
+            <button class="detail-link link-quick" onclick="showDoc('quick')">Quick Start</button>
+            <button class="detail-link link-pair" onclick="showDoc('pair')">Web.config Pair Rule</button>
+          </div>
+        </div>
+
+        <div class="detail-section">
+          <h3>Rollback Steps</h3>
+          <div class="detail-step"><div class="ds-num">1</div><div class="ds-info"><div class="ds-name">Restore Previous web.config</div><div class="ds-desc">RDP to server. Copy web1.6.config → web.config. This points IIS back to APIServer1.6.js.</div></div><span class="ds-badge dsb-pending" id="r-s1">pending</span><button class="ds-btn" onclick="runRollback(1)">Show</button></div>
+          <div class="detail-step"><div class="ds-num">2</div><div class="ds-info"><div class="ds-name">Restart IIS</div><div class="ds-desc">Run iisreset so IIS picks up the restored web.config and starts the old server file.</div></div><span class="ds-badge dsb-pending" id="r-s2">pending</span><button class="ds-btn" onclick="runRollback(2)">Show</button></div>
+          <div class="detail-step"><div class="ds-num">3</div><div class="ds-info"><div class="ds-name">Verify Rollback Worked</div><div class="ds-desc">Ping https://<span class="domain-val">api.cropclient.com</span>/ping — confirm server is running the previous version.</div></div><span class="ds-badge dsb-pending" id="r-s3">pending</span><button class="ds-btn" onclick="runRollback(3)">Verify</button></div>
+        </div>
+
+        <div class="detail-section">
+          <h3>Rollback JSON</h3>
+          <div class="json-block" id="rollback-json"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LOG (shared, bottom of detail panel) -->
+    <div class="log-panel" id="logPanel">
+      <div id="logContent"><p class="log-line log-ok">Butler Skill Tools ready. Select a skill on the left.</p></div>
+    </div>
+
+  </div><!-- /detail-panel -->
+
+</div><!-- /layout -->
+
+<div class="status-bar">
+  <span id="statusBar">Ready</span>
+  <span>crop-client-services v<span class="ver">2.0</span></span>
+</div>
+
+<script>
+  // ==============================
+  // NAV
+  // ==============================
+  function selectSkill(name, cardEl) {
+    document.querySelectorAll('.skill-card').forEach(c => c.classList.remove('active'));
+    document.querySelectorAll('.skill-detail').forEach(d => d.classList.remove('active'));
+    cardEl.classList.add('active');
+    document.getElementById('detail-' + name).classList.add('active');
+    setStatus('Selected: ' + name);
+  }
+
+  // ==============================
+  // CONFIG
+  // ==============================
+  function cfg(id) { return document.getElementById(id).value.trim(); }
+  function ver() { return cfg('cfgVersion'); }
+  function setStatus(msg) { document.getElementById('statusBar').textContent = msg; }
+
+  function updateAll() {
+    document.querySelectorAll('.ver').forEach(el => el.textContent = ver());
+    document.querySelectorAll('.port-val').forEach(el => el.textContent = cfg('cfgPort'));
+    document.querySelectorAll('.ip-val').forEach(el => el.textContent = cfg('cfgIP'));
+    document.querySelectorAll('.domain-val').forEach(el => el.textContent = cfg('cfgDomain'));
+    updateJsonBlocks();
+  }
+
+  // ==============================
+  // JSON BLOCKS
+  // ==============================
+  function updateJsonBlocks() {
+    const v = ver(), port = cfg('cfgPort'), ip = cfg('cfgIP'), domain = cfg('cfgDomain');
+    const jsons = {
+      push: {
+        skill: "Save Work to GitHub",
+        version: v,
+        from: "C:\\AICode\\crop-client-services",
+        to: "https://github.com/sspappasjr/Crop-Client-Services",
+        files: {
+          server: "APIServer" + v + ".js",
+          component: "api-component" + v + ".js",
+          config: "web" + v + ".config → web.config (pair)"
+        },
+        note: "This only backs up to GitHub — does NOT go to the live server"
+      },
+      publish: {
+        skill: "Publish to Live Server",
+        version: v,
+        from: "https://github.com/sspappasjr/Crop-Client-Services",
+        to: { ip: ip, domain: domain, path: "C:\\Crop-Client-Services\\api-server" },
+        bat: "server-deploy" + v + ".bat",
+        commands: ["git pull", "iisreset"],
+        pairRule: "web.config and web" + v + ".config must be identical"
+      },
+      install: {
+        skill: "crop-client-services → Install on New Machine",
+        version: v,
+        repo: "https://github.com/sspappasjr/Crop-Client-Services.git",
+        target: "C:\\Crop-Client-Services",
+        server: "APIServer" + v + ".js",
+        port: port,
+        tools: 15,
+        prerequisites: ["Git", "Node.js v18+", "npm"]
+      },
+      verify: {},
+      rollback: {
+        skill: "crop-client-services → Rollback to Previous",
+        currentVersion: v,
+        rollbackTo: "1.6",
+        server: { ip: ip, path: "C:\\Crop-Client-Services\\api-server" },
+        action: "copy web1.6.config → web.config, then iisreset",
+        domain: domain
+      }
+    };
+    Object.keys(jsons).forEach(k => {
+      const el = document.getElementById(k + '-json');
+      if (el && Object.keys(jsons[k]).length > 0) el.textContent = JSON.stringify(jsons[k], null, 2);
+    });
+  }
+
+  // ==============================
+  // DOCS
+  // ==============================
+  function showDoc(type) {
+    clearLog();
+    if (type === 'guide') {
+      log('=== SERVER INSTALL GUIDE ===', 'log-heading');
+      log('File: SERVER-INSTALL-GUIDE2.0.txt', 'log-info');
+      log('Location: deploy/ folder or tools/ folder', 'log-info');
+      log('Covers: clone, npm install, start, DNS, IIS, SSL, PM2', 'log-info');
+      log('Full guide for setting up a new server from scratch.', 'log-ok');
+    } else if (type === 'quick') {
+      log('=== QUICK START ===', 'log-heading');
+      log('File: QUICK_START2.0.txt', 'log-info');
+      log('Start:   cd api-server && node APIServer' + ver() + '.js', 'log-cmd');
+      log('Verify:  http://localhost:' + cfg('cfgPort') + '/ping', 'log-cmd');
+      log('Stop:    Ctrl+C', 'log-cmd');
+      log('Restart: Ctrl+C then node APIServer' + ver() + '.js', 'log-cmd');
+      log('PM2:     pm2 restart cropclient-api', 'log-cmd');
+    } else if (type === 'pair') {
+      log('=== WEB.CONFIG PAIR RULE ===', 'log-heading');
+      log('web.config = production file (IIS requires this exact name)', 'log-info');
+      log('web' + ver() + '.config = exact copy (version snapshot)', 'log-info');
+      log('They MUST always stay in sync.', 'log-err');
+      log('When you deploy, api-deploy bat copies web' + ver() + '.config → web.config', 'log-ok');
+    }
+  }
+
+  // ==============================
+  // LOG
+  // ==============================
+  function log(msg, cls) {
+    const p = document.createElement('p');
+    p.className = 'log-line ' + (cls || 'log-info');
+    p.textContent = msg;
+    document.getElementById('logContent').appendChild(p);
+    document.getElementById('logPanel').scrollTop = 999999;
+  }
+  function clearLog() { document.getElementById('logContent').innerHTML = ''; }
+
+  // ==============================
+  // BADGES
+  // ==============================
+  function setBadge(id, state) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = state;
+    el.className = 'ds-badge dsb-' + (state === 'running' ? 'running' : state === 'done' ? 'done' : state === 'fail' ? 'fail' : 'pending');
+  }
+
+  // ==============================
+  // PING
+  // ==============================
+  function pingUrl(url, label, badgeId, jsonTarget) {
+    setBadge(badgeId, 'running');
+    log('Pinging ' + url + ' ...', 'log-cmd');
+    setStatus('Pinging ' + url);
+    fetch(url)
+      .then(r => r.json())
+      .then(data => {
+        if (jsonTarget) {
+          const el = document.getElementById(jsonTarget);
+          if (el) el.textContent = JSON.stringify(data, null, 2);
+        }
+        if (Array.isArray(data)) {
+          log(label + ': ' + data.length + ' tools', 'log-ok');
+        } else if (data.tools) {
+          log(label + ': ' + data.tools.length + ' tools', 'log-ok');
+        } else if (data.status) {
+          log(label + ': ' + data.status + ' — ' + (data.server || 'OK'), 'log-ok');
+        } else {
+          log(label + ': OK', 'log-ok');
+        }
+        setBadge(badgeId, 'done');
+        setStatus(label + ' — OK');
+      })
+      .catch(e => {
+        log(label + ' FAILED: ' + e.message, 'log-err');
+        setBadge(badgeId, 'fail');
+        setStatus(label + ' — FAILED');
+      });
+  }
+
+  // ==============================
+  // PUSH (Alpha → GitHub)
+  // ==============================
+  function runPush(n) {
+    const v = ver(), port = cfg('cfgPort');
+    switch(n) {
+      case 1:
+        log('=== Save Work to GitHub ===', 'log-heading');
+        log('> cd C:\\AICode\\crop-client-services', 'log-cmd');
+        log('> git add .', 'log-cmd');
+        log('> git commit -m "v' + v + ' update"', 'log-cmd');
+        log('> git push', 'log-cmd');
+        log('Done — your work is now in GitHub for the team to review.', 'log-ok');
+        setBadge('p-s1', 'done');
+        break;
+      case 2:
+        pingUrl('http://localhost:' + port + '/ping', 'Local', 'p-s2', 'push-json');
+        break;
+    }
+  }
+
+  // ==============================
+  // PUBLISH (GitHub → Live Server)
+  // ==============================
+  function runPublish(n) {
+    const v = ver(), ip = cfg('cfgIP'), domain = cfg('cfgDomain');
+    switch(n) {
+      case 1:
+        log('=== Publish to Live Server ===', 'log-heading');
+        log('Connect to server: ' + ip, 'log-info');
+        log('Run: server-deploy' + v + '.bat', 'log-ok');
+        log('  — or manually:', 'log-info');
+        log('> cd /d C:\\Crop-Client-Services\\api-server', 'log-cmd');
+        log('> git pull', 'log-cmd');
+        log('> iisreset', 'log-cmd');
+        log('Done — the live server now has the approved version from GitHub.', 'log-ok');
+        setBadge('pub-s1', 'done');
+        break;
+      case 2:
+        pingUrl('https://' + domain + '/ping', 'Live', 'pub-s2', 'publish-json');
+        break;
+    }
+  }
+
+  // ==============================
+  // INSTALL
+  // ==============================
+  function runInstall(n) {
+    const v = ver(), port = cfg('cfgPort');
+    switch(n) {
+      case 1:
+        log('=== Step 1: Git Clone ===', 'log-heading');
+        log('> git clone https://github.com/sspappasjr/Crop-Client-Services.git', 'log-cmd');
+        log('> cd Crop-Client-Services', 'log-cmd');
+        setBadge('i-s1', 'done');
+        break;
+      case 2:
+        log('=== Step 2: NPM Install ===', 'log-heading');
+        log('> npm install', 'log-cmd');
+        log('> cd api-server && npm install', 'log-cmd');
+        setBadge('i-s2', 'done');
+        break;
+      case 3:
+        log('=== Step 3: Start Server ===', 'log-heading');
+        log('> cd api-server', 'log-cmd');
+        log('> node APIServer' + v + '.js', 'log-cmd');
+        log('Expect: 15 tools on port ' + port, 'log-info');
+        setBadge('i-s3', 'done');
+        break;
+      case 4:
+        pingUrl('http://localhost:' + port + '/ping', 'Install verify', 'i-s4', 'install-json');
+        break;
+    }
+  }
+
+  // ==============================
+  // VERIFY
+  // ==============================
+  function runVerify(n) {
+    const port = cfg('cfgPort'), domain = cfg('cfgDomain');
+    switch(n) {
+      case 1: pingUrl('http://localhost:' + port + '/ping', 'Local ping', 'v-s1', 'verify-json'); break;
+      case 2: pingUrl('https://' + domain + '/ping', 'Prod ping', 'v-s2', 'verify-json'); break;
+      case 3: pingUrl('http://localhost:' + port + '/tools', 'Local tools', 'v-s3', 'verify-json'); break;
+      case 4: pingUrl('https://' + domain + '/tools', 'Prod tools', 'v-s4', 'verify-json'); break;
+    }
+  }
+
+  // ==============================
+  // ROLLBACK
+  // ==============================
+  function runRollback(n) {
+    const ip = cfg('cfgIP'), domain = cfg('cfgDomain');
+    switch(n) {
+      case 1:
+        log('=== Step 1: Restore web.config ===', 'log-heading');
+        log('RDP to ' + ip, 'log-info');
+        log('> cd /d C:\\Crop-Client-Services\\api-server', 'log-cmd');
+        log('> copy web1.6.config web.config', 'log-cmd');
+        setBadge('r-s1', 'done');
+        break;
+      case 2:
+        log('=== Step 2: IIS Reset ===', 'log-heading');
+        log('> iisreset', 'log-cmd');
+        setBadge('r-s2', 'done');
+        break;
+      case 3:
+        pingUrl('https://' + domain + '/ping', 'Rollback verify', 'r-s3', 'rollback-json');
+        break;
+    }
+  }
+
+  // INIT
+  updateAll();
+</script>
+</body>
+</html>

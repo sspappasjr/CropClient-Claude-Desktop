@@ -1,0 +1,192 @@
+CROPCLIENT — SERVER INSTALL GUIDE
+==================================
+Updated: February 25, 2026
+Status: v2.0 — get_irrigation_details auto-chains to displayRecords
+
+DOMAINS:
+  cropclient.com               = Website (static pages, landing page, apps)
+  api.cropclient.com           = API Server (MCP server, port 3101, reverse proxy)
+
+GITHUB REPO:
+  https://github.com/sspappasjr/Crop-Client-Services
+  Branch: main (alpha)
+
+==============================================
+PRE-REQUISITES (on the server)
+==============================================
+1. Git installed
+2. Node.js installed (v18+ recommended)
+3. npm comes with Node.js
+4. GitHub access (either gh CLI or git credentials)
+
+To verify:
+  git --version
+  node --version
+  npm --version
+
+==============================================
+STEP 1: CLONE THE REPO
+==============================================
+Open CMD or PowerShell on the server.
+
+  git clone https://github.com/sspappasjr/Crop-Client-Services.git
+  cd Crop-Client-Services
+
+This is the FRESH INSTALL agent:
+  Token: CLONE → from GitHub filing cabinet to server
+  Token: STATUS → verify files arrived
+
+Verify:
+  dir
+  You should see: api-server, Pages, tools, package.json, QUICK_START.txt
+
+==============================================
+STEP 2: INSTALL NODE DEPENDENCIES
+==============================================
+Root level:
+  npm install
+
+API server:
+  cd api-server
+  npm install
+  cd ..
+
+==============================================
+STEP 3: START THE API SERVER
+==============================================
+  cd api-server
+  node APIServer2.0.js
+
+You should see:
+  API MCP Server started
+  API MCP Server running on http://localhost:3101
+  Tools available: 15
+
+==============================================
+STEP 4: VERIFY IT'S RUNNING
+==============================================
+Open browser or use curl from another terminal:
+
+  A) Ping:        http://localhost:3101/ping
+     Expect:      JSON response with status
+
+  B) List Tools:  http://localhost:3101/tools
+     Expect:      JSON array of 15 available tools
+
+  C) Test from audit app:
+     Open Pages/CropClient-MCP-API-Tools-Audit-Q-v2.0.html in browser
+     Set environment to "Local" (http://localhost:3101)
+     Click tools grid to test individual endpoints
+
+==============================================
+STEP 5: POINT DOMAIN TO SERVER
+==============================================
+In your domain registrar (GoDaddy):
+
+  For cropclient.com (if not already pointed):
+  1. A Record: @   → SERVER_IP
+  2. A Record: www → SERVER_IP
+
+  For api.cropclient.com (API subdomain):
+  1. A Record: api → SERVER_IP
+  (or CNAME: api → cropclient.com)
+
+==============================================
+STEP 6: REVERSE PROXY (IIS)
+==============================================
+Route incoming traffic on api.cropclient.com to localhost:3101.
+
+IIS (Windows Server):
+  1. Install URL Rewrite module
+  2. Install Application Request Routing (ARR) module
+  3. Enable ARR proxy in IIS Manager:
+     - Server level → Application Request Routing → Server Proxy Settings
+     - Check "Enable proxy"
+  4. Create new site → api.cropclient.com
+  5. Add URL Rewrite rule:
+     - Inbound rule
+     - Pattern: (.*)
+     - Rewrite URL: http://localhost:3101/{R:1}
+
+For cropclient.com (static site):
+  1. Create new site pointing to Crop-Client-Services/Pages folder
+  2. Or point to a separate static site folder
+
+==============================================
+STEP 7: SSL CERTIFICATE
+==============================================
+  1. Install Win-ACME or use IIS certificate features
+  2. Request cert for cropclient.com
+  3. Request cert for api.cropclient.com
+  4. Bind HTTPS to both sites
+
+==============================================
+STEP 8: KEEP API SERVER RUNNING
+==============================================
+API server needs to stay running after you close the terminal.
+
+Option A — PM2 (recommended):
+  npm install -g pm2
+  cd api-server
+  pm2 start APIServer2.0.js --name cropclient-api
+  pm2 save
+  pm2 startup
+
+Option B — Windows Service:
+  Use node-windows or NSSM to register as a service
+
+Option C — Task Scheduler:
+  Create scheduled task to run on startup:
+  Program: node
+  Arguments: C:\path\to\Crop-Client-Services\api-server\APIServer2.0.js
+
+==============================================
+STEP 9: FINAL TEST (LIVE DOMAIN)
+==============================================
+  A) https://api.cropclient.com/ping
+  B) https://api.cropclient.com/tools
+  C) Open audit app and set environment to "Online"
+     URL: https://api.cropclient.com
+
+Both return JSON = you're live.
+
+==============================================
+STEP 10: FUTURE UPDATES (GET LATEST)
+==============================================
+RDP to the server (184.168.20.205), then run:
+
+  cd /d C:\Crop-Client-Services\api-server
+  git pull
+  iisreset
+
+Or just double-click:  tools\server-deploy2.0.bat
+  (it runs those 3 commands with error checking)
+
+==============================================
+TROUBLESHOOTING
+==============================================
+Problem: "port 3101 already in use"
+  Fix: netstat -ano | findstr 3101
+       taskkill /pid <PID> /f
+
+Problem: git clone asks for auth
+  Fix: Install gh CLI, run: gh auth login --web
+  Or: Use personal access token when prompted
+
+Problem: node not found
+  Fix: Install Node.js from https://nodejs.org
+  Verify: node --version
+
+Problem: IIS proxy not working
+  Fix: Ensure ARR is enabled at server level (not just site level)
+  Check: Application Request Routing → Server Proxy Settings → Enable proxy = checked
+
+==============================================
+QUICK REFERENCE
+==============================================
+Repo:     https://github.com/sspappasjr/Crop-Client-Services
+Branch:   main
+API Port: 3101
+API File: api-server/APIServer2.0.js
+Audit:    Pages/CropClient-MCP-API-Tools-Audit-Q-v2.0.html
+Config:   stevep@sspnet.com / Steve Pappas

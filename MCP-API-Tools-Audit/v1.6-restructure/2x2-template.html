@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>2x2 Template with CRUD Bar</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: Arial, sans-serif; height: 100vh; padding: 8px; background: #f0f0f0; }
+
+  .container {
+    display: grid;
+    grid-template-columns: 60% 40%;
+    grid-template-rows: 50% 50%;
+    height: 100%;
+    gap: 6px;
+  }
+
+  .quad {
+    border: 2px solid #333;
+    border-radius: 6px;
+    background: #fff;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .quad-header {
+    background: #2c3e50;
+    color: #fff;
+    padding: 6px 12px;
+    font-weight: bold;
+    font-size: 14px;
+    border-radius: 4px 4px 0 0;
+  }
+
+  .quad-body {
+    flex: 1;
+    padding: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #999;
+    font-size: 13px;
+  }
+
+  /* CRUD Bar */
+  .crud-bar {
+    display: flex;
+    gap: 4px;
+    padding: 8px;
+    background: #ecf0f1;
+    border-bottom: 1px solid #ccc;
+  }
+  .crud-btn {
+    padding: 6px 14px;
+    border: 1px solid #888;
+    border-radius: 4px;
+    background: #fff;
+    font-size: 12px;
+    font-weight: bold;
+    text-align: center;
+    cursor: default;
+  }
+
+  /* Grid placeholder */
+  .grid-placeholder {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  .grid-placeholder th {
+    background: #34495e;
+    color: #fff;
+    padding: 4px 8px;
+    font-size: 11px;
+    text-align: left;
+  }
+  .grid-placeholder td {
+    border: 1px solid #ddd;
+    padding: 4px 8px;
+    font-size: 11px;
+    color: #bbb;
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- TOP LEFT: Tokens / Actions -->
+  <div class="quad">
+    <div class="quad-header">Tokens / Actions</div>
+    <div class="crud-bar">
+      <div class="crud-btn">RESTORE</div>
+      <div class="crud-btn">CREATE</div>
+      <div class="crud-btn">READ</div>
+      <div class="crud-btn">UPDATE</div>
+      <div class="crud-btn">DELETE</div>
+      <div class="crud-btn">SAVE</div>
+    </div>
+    <div class="quad-body">— token cards here —</div>
+  </div>
+
+  <!-- TOP RIGHT: Chat -->
+  <div class="quad">
+    <div class="quad-header">Chat</div>
+    <div class="quad-body" style="flex-direction: column; justify-content: flex-end; gap: 6px;">
+      <div style="flex:1; width:100%; border:1px dashed #ccc; border-radius:4px; display:flex; align-items:center; justify-content:center;">— chat log —</div>
+      <div style="display:flex; gap:4px; width:100%;">
+        <div style="flex:1; border:1px solid #ccc; border-radius:4px; padding:6px; font-size:12px; color:#bbb;">prompt...</div>
+        <div class="crud-btn">SEND</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BOTTOM LEFT: Grid -->
+  <div class="quad">
+    <div class="quad-header">Grid / Results</div>
+    <div class="quad-body" style="align-items: flex-start; overflow: auto;">
+      <table class="grid-placeholder">
+        <tr><th>Ranch</th><th>Planting</th><th>Date</th><th>Value</th><th>Status</th></tr>
+        <tr><td>---</td><td>---</td><td>---</td><td>---</td><td>---</td></tr>
+        <tr><td>---</td><td>---</td><td>---</td><td>---</td><td>---</td></tr>
+        <tr><td>---</td><td>---</td><td>---</td><td>---</td><td>---</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- BOTTOM RIGHT: Details -->
+  <div class="quad">
+    <div class="quad-header">Details</div>
+    <div class="quad-body">— selected record details —</div>
+  </div>
+
+</div>
+
+</body>
+</html>

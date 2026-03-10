@@ -1,0 +1,2915 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CropClient - Prompt Manager Chat v11</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        /* CropClient Header */
+        .header {
+            background: white;
+            padding: 15px 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            color: #2a5298;
+            font-size: 28px;
+            font-weight: 600;
+        }
+
+        .header .subtitle {
+            color: #666;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+
+        .header-right {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .status-badge {
+            background: #4CAF50;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        /* Main Container */
+        .container {
+            display: grid;
+            grid-template-columns: 60% 40%;
+            gap: 20px;
+            max-width: 1800px;
+            margin: 0 auto;
+            height: calc(100vh - 140px);
+            overflow: hidden;
+        }
+
+        /* Left Panel - Chat + Grid */
+        .left-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            overflow: hidden;
+            height: 100%;
+        }
+
+        /* Prompt Helpers Panel (Left Top - 50%) */
+        .prompt-helpers-panel {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            height: 50%;
+        }
+
+        .prompt-helpers-header {
+            background: #4CAF50;
+            color: white;
+            padding: 15px 20px;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .prompt-helpers-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .chat-header {
+            background: #2a5298;
+            color: white;
+            padding: 15px 20px;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        /* Chat Panel (Right Side - Full Height) */
+        .chat-panel {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            height: 100%;
+        }
+
+        /* Right Panel Container */
+        .right-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        /* Chat Section (Top 50% of right) */
+        .chat-section {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            height: 50%;
+        }
+
+        /* Form Section (Bottom 50% of right) */
+        .form-section {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            height: 50%;
+        }
+
+        .form-section-header {
+            background: #ff9800;
+            color: white;
+            padding: 15px 20px;
+            font-size: 18px;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+        }
+        
+        .form-section-header > span:last-child {
+            margin-right: 40px;
+        }
+
+        .form-section-content {
+            flex: 1;
+            overflow: hidden;
+            padding: 8px;
+        }
+
+        .form-footer {
+            background: white;
+            border-top: 2px solid #e0e0e0;
+            padding: 8px;
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 6px;
+        }
+
+        .form-footer button {
+            padding: 10px 4px;
+            border: none;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            color: white;
+            transition: transform 0.1s;
+        }
+
+        .form-footer button:hover {
+            transform: scale(1.05);
+        }
+
+        .form-subheader {
+            padding: 8px 20px;
+            background: #f5f5f5;
+            border-bottom: 2px solid #e0e0e0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .form-subheader-icon {
+            font-size: 18px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .form-subheader-icon:hover {
+            transform: scale(1.2);
+        }
+
+        .form-subheader-text {
+            font-size: 13px;
+            font-weight: 600;
+            color: #2a5298;
+        }
+
+        /* Form Styles */
+        .form-field {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-weight: 600;
+            color: #2a5298;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .form-input-large {
+            width: 100%;
+            padding: 15px;
+            font-size: 24px;
+            font-weight: bold;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            text-align: center;
+            transition: border-color 0.3s;
+        }
+
+        .form-input-large:focus {
+            outline: none;
+            border-color: #4CAF50;
+        }
+
+        .form-display {
+            background: #f8f8f8;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 16px;
+            color: #333;
+        }
+
+        .form-display strong {
+            color: #2a5298;
+            font-size: 20px;
+        }
+
+        /* CRUD Button Grid */
+        .crud-buttons {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .crud-btn {
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: white;
+        }
+
+        .crud-btn-create {
+            background: #4CAF50;
+        }
+
+        .crud-btn-create:hover {
+            background: #45a049;
+        }
+
+        .crud-btn-read {
+            background: #2196F3;
+        }
+
+        .crud-btn-read:hover {
+            background: #0b7dda;
+        }
+
+        .crud-btn-update {
+            background: #ff9800;
+        }
+
+        .crud-btn-update:hover {
+            background: #e68900;
+        }
+
+        .crud-btn-delete {
+            background: #f44336;
+        }
+
+        .crud-btn-delete:hover {
+            background: #da190b;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .message {
+            max-width: 80%;
+            padding: 12px 18px;
+            border-radius: 18px;
+            line-height: 1.4;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.user {
+            background: #2a5298;
+            color: white;
+            align-self: flex-end;
+            border-bottom-right-radius: 4px;
+        }
+
+        .message.assistant {
+            background: #f0f0f0;
+            color: #333;
+            align-self: flex-start;
+            border-bottom-left-radius: 4px;
+        }
+
+        .message.assistant strong {
+            color: #2a5298;
+        }
+
+        .chat-input-area {
+            padding: 20px;
+            background: #f8f8f8;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .chat-input-container {
+            display: flex;
+            gap: 10px;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 12px 18px;
+            border: 2px solid #ddd;
+            border-radius: 25px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .chat-input:focus {
+            border-color: #2a5298;
+        }
+
+        .send-btn {
+            background: #2a5298;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .send-btn:hover {
+            background: #1e3c72;
+        }
+
+        /* Grid Panel (Left Bottom - 65%) */
+        .grid-panel {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            height: 50%;
+        }
+
+        .grid-panel-header {
+            background: #4CAF50;
+            color: white;
+            padding: 15px 20px;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .prompt-section {
+            margin-bottom: 20px;
+        }
+
+        .prompt-section label {
+            display: block;
+            color: #333;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .prompt-select, .prompt-textarea {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .prompt-select:focus, .prompt-textarea:focus {
+            border-color: #4CAF50;
+        }
+
+        .prompt-textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        .quick-prompts {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .quick-prompt-btn {
+            background: #f0f0f0;
+            border: 1px solid #ddd;
+            padding: 10px;
+            border-radius: 8px;
+            text-align: left;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.3s;
+        }
+
+        .quick-prompt-btn:hover {
+            background: #e0e0e0;
+            border-color: #4CAF50;
+        }
+
+        .execute-btn {
+            width: 100%;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 15px;
+            transition: background 0.3s;
+        }
+
+        .execute-btn:hover {
+            background: #45a049;
+        }
+
+        .data-preview {
+            background: #f8f8f8;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+
+        .data-preview h3 {
+            color: #2a5298;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .data-item {
+            padding: 8px;
+            background: white;
+            margin-bottom: 8px;
+            border-radius: 5px;
+            font-size: 12px;
+            border-left: 3px solid #4CAF50;
+        }
+
+        .data-item strong {
+            color: #2a5298;
+        }
+
+        /* Data Grid */
+        .data-grid {
+            background: white;
+            border-radius: 0;
+            overflow: hidden;
+            margin-top: 0;
+            border: none;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .grid-header {
+            background: #2a5298;
+            color: white;
+            padding: 12px;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .grid-header-title {
+            font-size: 14px;
+        }
+
+        .create-next-btn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 5px;
+            font-size: 12px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.3s;
+        }
+
+        .create-next-btn:hover {
+            background: #45a049;
+        }
+
+        .grid-table-container {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .grid-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .grid-table th {
+            background: #f8f8f8;
+            padding: 10px;
+            text-align: left;
+            font-size: 12px;
+            font-weight: 600;
+            color: #666;
+            border-bottom: 2px solid #ddd;
+        }
+
+        .grid-table td {
+            padding: 10px;
+            font-size: 13px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .grid-table tr:hover {
+            background: #f8f8f8;
+        }
+
+        .grid-table tr.due-today {
+            background: #fff3cd;
+        }
+
+        .grid-table tr.due-today:hover {
+            background: #ffe69c;
+        }
+
+        .grid-table tr.new-record {
+            animation: highlightNew 2s ease;
+        }
+
+        @keyframes highlightNew {
+            0% {
+                background: #c8e6c9;
+            }
+            100% {
+                background: white;
+            }
+        }
+
+        .status-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+
+        .status-dot.green {
+            background: #4CAF50;
+        }
+
+        .status-dot.yellow {
+            background: #FFC107;
+        }
+
+        .status-dot.red {
+            background: #f44336;
+        }
+
+        .row-actions {
+            display: flex;
+            gap: 5px;
+        }
+
+        .action-icon-btn {
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            padding: 4px;
+            transition: transform 0.2s;
+            -webkit-tap-highlight-color: transparent;
+            outline: none;
+            user-select: none;
+        }
+
+        .action-icon-btn:hover {
+            transform: scale(1.2);
+        }
+
+        .action-icon-btn:active {
+            transform: scale(0.95);
+            background: transparent !important;
+        }
+
+        .action-icon-btn:focus {
+            outline: none;
+            background: transparent !important;
+        }
+        
+        /* Full-Page Mode Styles */
+        .expand-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 5px 10px;
+            border-radius: 5px;
+            transition: all 0.3s;
+            z-index: 100;
+        }
+        
+        .expand-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.1);
+        }
+        
+        .full-page {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            z-index: 9999 !important;
+            margin: 0 !important;
+            border-radius: 0 !important;
+        }
+        
+        .hidden {
+            display: none !important;
+        }
+
+        /* Agent Button Styles */
+        .agent-btn {
+            padding: 12px 8px;
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: 600;
+            text-align: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            line-height: 1.3;
+        }
+
+        .agent-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            background: linear-gradient(135deg, #45a049 0%, #4CAF50 100%);
+        }
+
+        .agent-btn:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        /* Agent Grid Item */
+        .agent-item {
+            padding: 4px 6px;
+            margin-bottom: 2px;
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .agent-item:hover {
+            border-color: #4CAF50;
+            background: #f0f7ff;
+        }
+
+        .agent-item.selected {
+            border-color: #4CAF50;
+            background: #e8f5e9;
+        }
+
+        .agent-item-title {
+            font-weight: 600;
+            color: #2a5298;
+            font-size: 11px;
+            line-height: 1.1;
+        }
+
+        .agent-item-custom {
+            background: #fff3e0;
+            border-color: #ff9800;
+        }
+
+        /* Modal Popup Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 10000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 10% auto;
+            padding: 30px;
+            border-radius: 10px;
+            width: 60%;
+            max-width: 600px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+
+        .modal-header {
+            font-size: 20px;
+            font-weight: 600;
+            color: #2a5298;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #ff9800;
+        }
+
+        .modal-body {
+            font-size: 14px;
+            line-height: 1.6;
+            color: #333;
+        }
+
+        .modal-body p {
+            margin: 10px 0;
+        }
+
+        .modal-close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            line-height: 20px;
+        }
+
+        .modal-close:hover,
+        .modal-close:focus {
+            color: #000;
+        }
+    </style>
+</head>
+<body>
+    <!-- CropClient Header -->
+    <div class="header">
+        <div>
+            <h1>🌾 CropClient</h1>
+            <div class="subtitle">Prompt Manager - Chat Mode</div>
+        </div>
+        <div class="header-right">
+            <span class="status-badge">● DEMO MODE</span>
+            <span style="color: #666; font-size: 14px;">Steve's Test Environment</span>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Left Panel - Prompt Helpers (35%) + Grid (65%) -->
+        <div class="left-panel">
+            <!-- Prompt Helpers Panel (Top 35%) -->
+            <div class="prompt-helpers-panel" id="promptPanel">
+                <div class="prompt-helpers-header" style="position: relative;">
+                    🔧 Prompt Builder & Examples
+                    <button class="expand-btn" onclick="toggleFullPage('promptPanel')" title="Expand">⛶</button>
+                </div>
+                <div class="prompt-helpers-content">
+                    <!-- Two Column Layout: AI Agents (Left) + DIY Prompts (Right) -->
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 8px;">
+                        
+                        <!-- LEFT: AI AGENTS -->
+                        <div>
+                            <div style="font-size: 11px; color: #666; font-weight: 600; margin-bottom: 3px;">🤖 AI AGENTS</div>
+                            <!-- Filter -->
+                            <div style="margin-bottom: 4px;">
+                                <select id="agentFilter" onchange="filterAgents()" style="width: 100%; padding: 4px; border: 1px solid #4CAF50; border-radius: 3px; font-size: 11px;">
+                                    <option value="all">All Agents</option>
+                                    <option value="field">Field Operations</option>
+                                    <option value="planning">Daily Planning</option>
+                                    <option value="compliance">Compliance</option>
+                                    <option value="custom">My Custom Prompts</option>
+                                </select>
+                            </div>
+                            <!-- Prompts Grid -->
+                            <div id="agentsGrid" style="max-height: 140px; overflow-y: auto; border: 1px solid #e0e0e0; border-radius: 3px; padding: 4px;">
+                                <!-- Populated by JavaScript -->
+                            </div>
+                        </div>
+
+                        <!-- RIGHT: DIY PROMPTS -->
+                        <div>
+                            <div style="font-size: 11px; color: #666; font-weight: 600; margin-bottom: 3px;">🔧 DIY PROMPTS</div>
+                            
+                            <!-- Action and Target SIDE BY SIDE -->
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px;">
+                                <!-- Action Grid (Left) -->
+                                <div>
+                                    <label style="font-size: 10px; color: #666; font-weight: 600; margin-bottom: 2px; display: block;">Action:</label>
+                                    <div id="actionGrid" style="max-height: 140px; overflow-y: auto; border: 1px solid #e0e0e0; border-radius: 3px; padding: 4px;">
+                                        <!-- Populated by JavaScript -->
+                                    </div>
+                                </div>
+
+                                <!-- Target Grid (Right) -->
+                                <div>
+                                    <label style="font-size: 10px; color: #666; font-weight: 600; margin-bottom: 2px; display: block;">Target:</label>
+                                    <div id="targetGrid" style="max-height: 140px; overflow-y: auto; border: 1px solid #e0e0e0; border-radius: 3px; padding: 4px;">
+                                        <!-- Populated by JavaScript -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SHARED PROMPT SECTION (Always Visible) -->
+                    <div style="padding-top: 6px; border-top: 1px solid #e0e0e0;">
+                        <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
+                            <textarea id="sharedPrompt" style="flex: 1; padding: 4px; border: 2px solid #2a5298; border-radius: 3px; font-size: 11px; height: 24px; resize: vertical; overflow-y: auto;" placeholder="Select agent or build prompt..."></textarea>
+                            <label style="font-size: 10px; color: #666; font-weight: 600; white-space: nowrap;">:Prompt</label>
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 4px;">
+                            <button class="execute-btn" onclick="resetPrompt()" style="font-size: 11px; padding: 4px; background: #ff9800;">🔄 Reset</button>
+                            <button class="execute-btn" onclick="saveAsAgent()" style="font-size: 11px; padding: 4px; background: #2196F3;">💾 Save</button>
+                            <button class="execute-btn" onclick="fillPrompt()" style="font-size: 11px; padding: 4px; background: #9C27B0;">📝 Fill</button>
+                            <button class="execute-btn" onclick="executeSharedPrompt()" style="font-size: 11px; padding: 4px;">▶️ Send</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Grid Panel (Bottom 65%) -->
+            <div class="grid-panel" id="gridPanel">
+                <div class="grid-panel-header" style="display: flex; justify-content: space-between; align-items: center; position: relative;">
+                    <span>📋 Irrigation</span>
+                    <span style="font-size: 14px; margin-right: 40px;"><span id="recordCount">0</span> records</span>
+                    <button class="expand-btn" onclick="toggleFullPage('gridPanel')" title="Expand">⛶</button>
+                </div>
+                <div class="data-grid">
+                    <div class="grid-header">
+                        <span class="grid-header-title"></span>
+                        <div style="display: flex; gap: 5px; align-items: center;">
+                        </div>
+                    </div>
+                    <div class="grid-table-container">
+                        <table class="grid-table">
+                            <thead>
+                                <tr>
+                                    <th>Ranch</th>
+                                    <th>Planting</th>
+                                    <th>Date</th>
+                                    <th>Method</th>
+                                    <th>Rec. Hrs</th>
+                                    <th>Mgr Hrs</th>
+                                    <th>Applied</th>
+                                    <th>Interval</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="gridTableBody">
+                                <!-- Populated by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Panel - Chat (50%) + Form (50%) -->
+        <div class="right-panel">
+            <!-- Chat Section (Top 50%) -->
+            <div class="chat-section" id="chatPanel">
+                <div class="chat-header" style="position: relative;">
+                    💬 Irrigation Assistant
+                    <button class="expand-btn" onclick="toggleFullPage('chatPanel')" title="Expand">⛶</button>
+                </div>
+                <div class="chat-messages" id="chatMessages">
+                    <div class="message assistant">
+                        Hello! I'm your irrigation assistant. Ask me about water recommendations, schedules, or field status.
+                    </div>
+                </div>
+                <div class="chat-input-area">
+                    <div class="chat-input-container">
+                        <input type="text" class="chat-input" id="chatInput" placeholder="Ask about irrigation recommendations..." onkeypress="if(event.key==='Enter') sendMessage()">
+                        <button class="send-btn" onclick="sendMessage()">Send</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Form Section (Bottom 50% - Reserved) -->
+            <div class="form-section" id="formPanel">
+                <div class="form-section-header" id="formSectionHeader">
+                    <span style="position: absolute; left: 20px; font-size: 16px; font-weight: 600;">Irrigation</span>
+                    <span id="formTitle" style="flex: 1; text-align: center; font-size: 16px; font-weight: 600;">Select a record</span>
+                    <button class="expand-btn" onclick="toggleFullPage('formPanel')" title="Expand">⛶</button>
+                </div>
+                <div class="form-subheader">
+                    <span class="form-subheader-icon" onclick="showInstructions()" title="Show Instructions">📋</span>
+                    <span class="form-subheader-text" id="formSubheaderText">Form Instructions</span>
+                </div>
+                <div class="form-section-content" id="formContent">
+                    <div style="padding: 20px; text-align: center; color: #999;">
+                        Click a record in the grid to edit details
+                    </div>
+                </div>
+                <!-- CRUD FOOTER - ALWAYS VISIBLE -->
+                <div class="form-footer">
+                    <button onclick="handleReset()" style="background: #9E9E9E;">🔄 Reset</button>
+                    <button onclick="handleCreate()" style="background: #4CAF50;">✨ Create</button>
+                    <button onclick="testReadMeter()" style="background: #2196F3;">👁️ Meter</button>
+                    <button onclick="handleUpdate()" style="background: #ff9800;">💾 Update</button>
+                    <button onclick="handleDelete()" style="background: #f44336;">🗑️ Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // PERMANENT SAFE STORAGE - Real irrigation.json data - Never Modified
+        const ORIGINAL_IRRIGATION_DATA = [
+            {
+                "Ranch": "MobileFrame Ranch 1",
+                "Planting": "Planting 1A",
+                "Eventdate": "9/15/25",
+                "IrrigationMethod": "Germination Sprinkler",
+                "WaterApplied": "0",
+                "ManagerAmount": "0",
+                "RecommendedInches": "0",
+                "RecommendedHours": "0",
+                "RecommendedInterval": "0",
+                "LastUpdatedDate": "9/16/25 22:25",
+                "UpdatedBy": "Robert Rossilli"
+            },
+            {
+                "Ranch": "MobileFrame Ranch 1",
+                "Planting": "Planting 1A",
+                "Eventdate": "9/20/25",
+                "IrrigationMethod": "Germination Sprinkler",
+                "WaterApplied": "2",
+                "ManagerAmount": "2",
+                "RecommendedInches": "0.5",
+                "RecommendedHours": "1.7",
+                "RecommendedInterval": "2.6",
+                "LastUpdatedDate": "9/16/25 22:36",
+                "UpdatedBy": "Robert Rossilli"
+            },
+            {
+                "Ranch": "MobileFrame Ranch 1",
+                "Planting": "Planting 1A",
+                "Eventdate": "9/23/25",
+                "IrrigationMethod": "Germination Sprinkler",
+                "WaterApplied": "0",
+                "ManagerAmount": "0",
+                "RecommendedInches": "0.6",
+                "RecommendedHours": "2.1",
+                "RecommendedInterval": "1.2",
+                "LastUpdatedDate": "9/16/25 22:37",
+                "UpdatedBy": "Robert Rossilli"
+            },
+            {
+                "Ranch": "MobileFrame Ranch 1",
+                "Planting": "Planting 1B",
+                "Eventdate": "9/15/25",
+                "IrrigationMethod": "Sprinkler",
+                "WaterApplied": "0.56",
+                "ManagerAmount": "0.28",
+                "RecommendedInches": "0",
+                "RecommendedHours": "0",
+                "RecommendedInterval": "0",
+                "LastUpdatedDate": "9/16/25 22:30",
+                "UpdatedBy": "Robert Rossilli"
+            },
+            {
+                "Ranch": "MobileFrame Ranch 1",
+                "Planting": "Planting 1B",
+                "Eventdate": "9/18/25",
+                "IrrigationMethod": "Sprinkler",
+                "WaterApplied": "0",
+                "ManagerAmount": "0",
+                "RecommendedInches": "0.3",
+                "RecommendedHours": "0.9",
+                "RecommendedInterval": "3",
+                "LastUpdatedDate": "9/16/25 22:29",
+                "UpdatedBy": "Robert Rossilli"
+            },
+            {
+                "Ranch": "MobileFrame Ranch 1",
+                "Planting": "Planting 1B",
+                "Eventdate": "9/21/25",
+                "IrrigationMethod": "Sprinkler",
+                "WaterApplied": "0",
+                "ManagerAmount": "0",
+                "RecommendedInches": "0.2",
+                "RecommendedHours": "0.9",
+                "RecommendedInterval": "3",
+                "LastUpdatedDate": "9/16/25 22:32",
+                "UpdatedBy": "Robert Rossilli"
+            },
+            {
+                "Ranch": "MobileFrame Ranch 2",
+                "Planting": "Planting 2A",
+                "Eventdate": "9/15/25",
+                "IrrigationMethod": "Sprinkler",
+                "WaterApplied": "0.54",
+                "ManagerAmount": "0",
+                "RecommendedInches": "0",
+                "RecommendedHours": "0",
+                "RecommendedInterval": "0",
+                "LastUpdatedDate": "9/16/25 23:50",
+                "UpdatedBy": "Robert Rossilli"
+            },
+            {
+                "Ranch": "MobileFrame Ranch 2",
+                "Planting": "Planting 2A",
+                "Eventdate": "9/18/25",
+                "IrrigationMethod": "Sprinkler",
+                "WaterApplied": "0",
+                "ManagerAmount": "0",
+                "RecommendedInches": "0.6",
+                "RecommendedHours": "2",
+                "RecommendedInterval": "1.1",
+                "LastUpdatedDate": "9/16/25 23:50",
+                "UpdatedBy": "Robert Rossilli"
+            },
+            {
+                "Ranch": "MobileFrame Ranch 2",
+                "Planting": "Planting 2A",
+                "Eventdate": "9/23/25",
+                "IrrigationMethod": "Sprinkler",
+                "WaterApplied": "0",
+                "ManagerAmount": "0",
+                "RecommendedInches": "0.6",
+                "RecommendedHours": "1.9",
+                "RecommendedInterval": "1.9",
+                "LastUpdatedDate": "9/16/25 23:44",
+                "UpdatedBy": "CropManage "
+            },
+            {
+                "Ranch": "MobileFrame Ranch 2",
+                "Planting": "Planting 2B",
+                "Eventdate": "9/15/25",
+                "IrrigationMethod": "Germination Sprinkler",
+                "WaterApplied": "0",
+                "ManagerAmount": "0",
+                "RecommendedInches": "0",
+                "RecommendedHours": "0",
+                "RecommendedInterval": "0",
+                "LastUpdatedDate": "9/16/25 23:46",
+                "UpdatedBy": "CropManage "
+            },
+            {
+                "Ranch": "MobileFrame Ranch 2",
+                "Planting": "Planting 2B",
+                "Eventdate": "9/18/25",
+                "IrrigationMethod": "Germination Sprinkler",
+                "WaterApplied": "0",
+                "ManagerAmount": "0",
+                "RecommendedInches": "0.7",
+                "RecommendedHours": "2.3",
+                "RecommendedInterval": "1.1",
+                "LastUpdatedDate": "9/16/25 23:51",
+                "UpdatedBy": "Robert Rossilli"
+            },
+            {
+                "Ranch": "MobileFrame Ranch 2",
+                "Planting": "Planting 2B",
+                "Eventdate": "9/23/25",
+                "IrrigationMethod": "Germination Sprinkler",
+                "WaterApplied": "0",
+                "ManagerAmount": "0",
+                "RecommendedInches": "0.7",
+                "RecommendedHours": "2.2",
+                "RecommendedInterval": "1.9",
+                "LastUpdatedDate": "9/16/25 23:51",
+                "UpdatedBy": "Robert Rossilli"
+            }
+        ];
+
+        // Working/Display Array - This is what gets shown and modified
+        let displayRecords = [];
+
+        // Current grid filter
+        let currentFilter = 'all';
+
+        // Statistics tracking
+        let stats = {
+            recordsCreated: 0,
+            hoursUpdated: 0,
+            totalWaterScheduled: 0
+        };
+
+        // Parse date in M/D/YY format to proper date
+        function parseEventDate(dateStr) {
+            const parts = dateStr.split('/');
+            const month = parseInt(parts[0]);
+            const day = parseInt(parts[1]);
+            const year = 2000 + parseInt(parts[2]);
+            return new Date(year, month - 1, day);
+        }
+
+        // Format date to M/D/YY
+        function formatDate(date) {
+            const year = String(date.getFullYear()).slice(-2);
+            const month = date.getMonth() + 1;
+            const day = date.getDate();
+            return `${month}/${day}/${year}`;
+        }
+        
+        // Toggle Full Page Mode
+        let currentFullPagePanel = null;
+        function toggleFullPage(panelId) {
+            const panel = document.getElementById(panelId);
+            const container = document.querySelector('.container');
+            const header = document.querySelector('.header');
+            const leftPanel = document.querySelector('.left-panel');
+            const rightPanel = document.querySelector('.right-panel');
+            
+            if (currentFullPagePanel === panelId) {
+                // Exit full page mode
+                panel.classList.remove('full-page');
+                container.classList.remove('hidden');
+                header.classList.remove('hidden');
+                if (leftPanel) leftPanel.classList.remove('hidden');
+                if (rightPanel) rightPanel.classList.remove('hidden');
+                currentFullPagePanel = null;
+            } else {
+                // Enter full page mode
+                if (currentFullPagePanel) {
+                    // Exit previous full page first
+                    document.getElementById(currentFullPagePanel).classList.remove('full-page');
+                }
+                panel.classList.add('full-page');
+                header.classList.add('hidden');
+                currentFullPagePanel = panelId;
+            }
+        }
+        
+        // ESC key handler to exit full page mode
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && currentFullPagePanel) {
+                toggleFullPage(currentFullPagePanel);
+            }
+        });
+        
+        // Highlight selected row
+        function highlightRow(row) {
+            // Remove highlight from all rows
+            document.querySelectorAll('#gridTableBody tr').forEach(r => {
+                r.style.backgroundColor = '';
+                r.style.color = '';
+            });
+            // Highlight clicked row with SOLID BLUE
+            row.style.backgroundColor = '#1976D2';
+            row.style.color = 'white';
+        }
+
+        // Select Record by ID (for programmatic selection)
+        function selectRecord(recordId) {
+            // Find the record
+            selectedRecord = displayRecords.find(r => r.id === recordId);
+            
+            if (!selectedRecord) {
+                console.log('selectRecord: Record not found:', recordId);
+                return;
+            }
+            
+            console.log('selectRecord: Setting selectedRecord to:', selectedRecord);
+            
+            // Remove highlight from all rows
+            document.querySelectorAll('#gridTableBody tr').forEach(r => {
+                r.style.backgroundColor = '';
+                r.style.color = '';
+            });
+            
+            // Find and highlight the selected row
+            const row = document.querySelector(`#gridTableBody tr[data-field="${recordId}"]`);
+            if (row) {
+                row.style.backgroundColor = '#1976D2';
+                row.style.color = 'white';
+            }
+            
+            // Populate the form
+            populateForm(recordId);
+        }
+
+        // Initialize display records from original data
+        function initializeDisplayRecords() {
+            displayRecords = [];
+            
+            // Create display records from original irrigation data
+            ORIGINAL_IRRIGATION_DATA.forEach((record, index) => {
+                const recHours = parseFloat(record.RecommendedHours) || 0;
+                const mgrHours = parseFloat(record.ManagerAmount) || 0;
+                const appliedHours = parseFloat(record.WaterApplied) || 0;
+                const interval = parseFloat(record.RecommendedInterval) || 0;
+                const eventDate = parseEventDate(record.Eventdate);
+                
+                // Shorten ranch name
+                let shortRanch = record.Ranch.replace('MobileFrame ', '');
+                
+                // Shorten updater name
+                let shortBy = record.UpdatedBy.replace('Robert Rossilli', 'Robert').replace('CropManage ', 'CropM').trim();
+                
+                displayRecords.push({
+                    id: `record_${index}`,
+                    ranch: shortRanch,
+                    planting: record.Planting,
+                    hours: recHours,
+                    mgrHours: mgrHours,
+                    appliedHours: appliedHours,
+                    interval: interval,
+                    scheduledDate: formatDate(eventDate),
+                    irrigationMethod: record.IrrigationMethod,
+                    recommendedInches: parseFloat(record.RecommendedInches) || 0,
+                    lastUpdatedDate: record.LastUpdatedDate,
+                    updatedBy: shortBy,
+                    isNew: false,
+                    isOriginal: true,
+                    isUpdated: false
+                });
+            });
+
+            // Reset stats
+            stats = {
+                recordsCreated: 0,
+                hoursUpdated: 0,
+                totalWaterScheduled: calculateTotalWater()
+            };
+        }
+
+        // Calculate total water hours scheduled
+        function calculateTotalWater() {
+            return displayRecords.reduce((sum, record) => sum + record.hours, 0);
+        }
+
+        // Initialize
+        window.onload = function() {
+            initializeDisplayRecords();
+            populateDataGrid();
+            autoSelectLastRecord();
+            loadCustomAgents();
+            renderAgentsGrid();
+            renderActionGrid();
+            renderTargetGrid();
+            
+            // Enter key to send message
+            document.getElementById('chatInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    sendMessage();
+                }
+            });
+        };
+
+        // Auto-select the last (most recent) record in the grid
+        function autoSelectLastRecord() {
+            if (displayRecords.length === 0) return;
+            
+            // Sort by date to find most recent
+            const sortedRecords = [...displayRecords].sort((a, b) => 
+                new Date(b.scheduledDate) - new Date(a.scheduledDate)
+            );
+            
+            const lastRecord = sortedRecords[0];
+            
+            // Highlight the row
+            setTimeout(() => {
+                const rows = document.querySelectorAll('#gridTableBody tr');
+                rows.forEach(row => {
+                    if (row.dataset.field === lastRecord.id) {
+                        row.style.backgroundColor = '#E3F2FD';
+                        row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                });
+            }, 100);
+            
+            addMessage(`📌 Auto-selected most recent record: <strong>${lastRecord.ranch} ${lastRecord.planting}</strong> on ${lastRecord.scheduledDate}`, 'assistant');
+        }
+
+        // Populate Data Grid - Shows displayRecords array
+        function populateDataGrid() {
+            const tbody = document.getElementById('gridTableBody');
+            const today = '9/23/25'; // Today is 9/23/25
+            let html = '';
+            
+            // Filter records based on current filter
+            let filteredRecords = displayRecords.filter(record => {
+                if (currentFilter === 'all') return true;
+                if (currentFilter === 'ranch1') return record.ranch.includes('Ranch 1');
+                if (currentFilter === 'ranch2') return record.ranch.includes('Ranch 2');
+                if (currentFilter === 'planting1a') return record.planting === 'Planting 1A';
+                if (currentFilter === 'planting1b') return record.planting === 'Planting 1B';
+                if (currentFilter === 'planting2a') return record.planting === 'Planting 2A';
+                if (currentFilter === 'planting2b') return record.planting === 'Planting 2B';
+                if (currentFilter === 'date_0923') return record.scheduledDate === '2025-09-23';
+                return true;
+            });
+
+            // Sort by Ranch, then Planting, then Date (chronological - oldest first)
+            filteredRecords.sort((a, b) => {
+                // First: Sort by Ranch (Ranch 1, then Ranch 2)
+                const ranchCompare = a.ranch.localeCompare(b.ranch);
+                if (ranchCompare !== 0) return ranchCompare;
+                
+                // Second: Sort by Planting (1A, 1B, 2A, 2B)
+                const plantingCompare = a.planting.localeCompare(b.planting);
+                if (plantingCompare !== 0) return plantingCompare;
+                
+                // Third: Sort by Date (chronological - oldest to newest)
+                const dateCompare = new Date(a.scheduledDate) - new Date(b.scheduledDate);
+                if (dateCompare !== 0) return dateCompare;
+                
+                // If all same, originals first
+                if (a.isOriginal && !b.isOriginal) return -1;
+                if (!a.isOriginal && b.isOriginal) return 1;
+                return 0;
+            });
+            
+            filteredRecords.forEach(record => {
+                // Determine row class
+                let rowClass = '';
+                
+                if (record.isNew) rowClass += ' new-record';
+                if (record.isUpdated) rowClass += ' new-record';
+                
+                // Show indicator for record type
+                let indicator = '';
+                if (record.isNew) indicator = '<span title="New Record">🆕</span>';
+                else if (record.isUpdated) indicator = '<button class="action-icon-btn" onclick="event.stopPropagation(); approveRecommendation(\'' + record.id + '\')" title="Approve Recommendation">📝</button>';
+                
+                // Shorten method name
+                let shortMethod = record.irrigationMethod
+                    .replace('Germination Sprinkler', 'Germ. Spr.')
+                    .replace('Sprinkler', 'Sprinkler');
+                
+                html += `
+                    <tr class="${rowClass}" data-field="${record.id}" onclick="selectRecord('${record.id}')" style="cursor: pointer;">
+                        <td>${record.ranch}</td>
+                        <td><strong>${record.planting}</strong></td>
+                        <td>${record.scheduledDate}</td>
+                        <td>${shortMethod}</td>
+                        <td><strong>${record.hours}</strong></td>
+                        <td>${record.mgrHours}</td>
+                        <td><strong>${record.appliedHours}</strong></td>
+                        <td>${record.interval}</td>
+                        <td class="row-actions">
+                            ${indicator}
+                            ${record.isOriginal ? `
+                                <button class="action-icon-btn" onclick="event.stopPropagation(); fieldTestCreateNext('${record.id}')" title="Next Irrigation (Field Task)">⊕</button>
+                                <button class="action-icon-btn" onclick="event.stopPropagation(); fieldTestReadMeter('${record.id}')" title="Read Water Meter">📊</button>
+                                <button class="action-icon-btn" onclick="event.stopPropagation(); viewDetails('${record.id}')" title="View Details">👁️</button>
+                            ` : ''}
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            tbody.innerHTML = html;
+            
+            // Update record count
+            document.getElementById('recordCount').textContent = filteredRecords.length;
+            
+            // Clear isNew/isUpdated flags after displaying
+            setTimeout(() => {
+                displayRecords.forEach(record => {
+                    record.isNew = false;
+                    record.isUpdated = false;
+                });
+            }, 2000);
+            
+            // If a record was already selected, re-highlight it
+            if (selectedRecord) {
+                const selectedRow = document.querySelector(`#gridTableBody tr[data-field="${selectedRecord.id}"]`);
+                if (selectedRow) {
+                    selectedRow.style.backgroundColor = '#1976D2';
+                    selectedRow.style.color = 'white';
+                }
+            }
+        }
+
+        // Send Chat Message
+        function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            
+            if (!message) return;
+            
+            // Add user message
+            addMessage(message, 'user');
+            
+            // Clear input
+            input.value = '';
+            
+            // Process and respond
+            setTimeout(() => {
+                const response = processChatQuery(message);
+                addMessage(response, 'assistant');
+            }, 500);
+        }
+
+        // Add Message to Chat
+        function addMessage(text, type) {
+            const messagesDiv = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}`;
+            messageDiv.innerHTML = text;
+            messagesDiv.appendChild(messageDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        // Process Chat Query - THE SMART ENGINE
+        function processChatQuery(query) {
+            const lowerQuery = query.toLowerCase();
+            
+            // ========================================
+            // DEMO SIMULATION: Prompt-to-Action
+            // ========================================
+            
+            // Parse for ranch/planting to auto-select record
+            let targetRanch = null;
+            let targetPlanting = null;
+            
+            if (lowerQuery.includes('ranch 1') || lowerQuery.includes('mobileframe ranch 1')) {
+                targetRanch = 'MobileFrame Ranch 1';
+            } else if (lowerQuery.includes('ranch 2') || lowerQuery.includes('mobileframe ranch 2')) {
+                targetRanch = 'MobileFrame Ranch 2';
+            }
+            
+            if (lowerQuery.includes('1a') || lowerQuery.includes('planting 1a')) {
+                targetPlanting = 'Planting 1A';
+            } else if (lowerQuery.includes('1b') || lowerQuery.includes('planting 1b')) {
+                targetPlanting = 'Planting 1B';
+            } else if (lowerQuery.includes('2a') || lowerQuery.includes('planting 2a')) {
+                targetPlanting = 'Planting 2A';
+            } else if (lowerQuery.includes('2b') || lowerQuery.includes('planting 2b')) {
+                targetPlanting = 'Planting 2B';
+            }
+            
+            // DEMO: CREATE NEXT - Auto-trigger form action
+            if ((lowerQuery.includes('create next') || lowerQuery.includes('next irrigation')) && targetRanch && targetPlanting) {
+                // Find and select the record
+                const record = displayRecords.find(r => 
+                    r.ranch === targetRanch && 
+                    r.planting === targetPlanting
+                );
+                
+                if (record) {
+                    selectRecord(record.id);
+                    
+                    // Wait a moment then trigger handleCreate
+                    setTimeout(() => {
+                        handleCreate();
+                    }, 300);
+                    
+                    return `🎬 <strong>Demo: Create Next Irrigation</strong><br>
+                            <em>Prompt: "Create next ${targetRanch} ${targetPlanting}"</em><br><br>
+                            ✅ Selected: ${targetRanch} ${targetPlanting}<br>
+                            ✅ Executing: Create Next Irrigation<br>
+                            ✅ New record will be created<br>
+                            ✅ Manager Hours field will be cleared<br>
+                            ✅ Ready for manager to enter hours`;
+                } else {
+                    return `❌ Could not find ${targetRanch} ${targetPlanting}`;
+                }
+            }
+            
+            // DEMO: READ METER - Auto-trigger meter reading
+            if ((lowerQuery.includes('read meter') || lowerQuery.includes('meter reading')) && targetRanch && targetPlanting) {
+                // Find and select the record
+                const record = displayRecords.find(r => 
+                    r.ranch === targetRanch && 
+                    r.planting === targetPlanting
+                );
+                
+                if (record) {
+                    selectRecord(record.id);
+                    
+                    // Wait a moment then trigger testReadMeter
+                    setTimeout(() => {
+                        testReadMeter();
+                    }, 300);
+                    
+                    return `🎬 <strong>Demo: Read Water Meter</strong><br>
+                            <em>Prompt: "Read meter ${targetRanch} ${targetPlanting}"</em><br><br>
+                            ✅ Selected: ${targetRanch} ${targetPlanting}<br>
+                            ✅ Executing: Read Water Meter<br>
+                            ✅ Form prepared for meter reading<br>
+                            ✅ Water Applied field cleared<br>
+                            ✅ Ready for field worker to enter value`;
+                } else {
+                    return `❌ Could not find ${targetRanch} ${targetPlanting}`;
+                }
+            }
+            
+            // ========================================
+            // END DEMO SIMULATION
+            // ========================================
+            
+            // Handle FILTERING prompts - This is what the demo is about!
+            if (lowerQuery.includes('show me') || lowerQuery.includes('filter') || lowerQuery.includes('only show')) {
+                
+                // Show all records
+                if (lowerQuery.includes('all records') || lowerQuery.includes('show all')) {
+                    currentFilter = 'all';
+                    populateDataGrid();
+                    
+                    // Auto-select first record after filtering
+                    if (displayRecords.length > 0) {
+                        setTimeout(() => {
+                            const firstRow = document.querySelector('#gridTableBody tr');
+                            if (firstRow) {
+                                firstRow.click();
+                            }
+                        }, 100);
+                    }
+                    
+                    return `✅ Showing <strong>all records</strong> (${displayRecords.length} total). Grid updated!`;
+                }
+                
+                // Filter by Ranch 1
+                if (lowerQuery.includes('ranch 1')) {
+                    currentFilter = 'ranch1';
+                    populateDataGrid();
+                    const count = displayRecords.filter(r => r.ranch.includes('Ranch 1')).length;
+                    
+                    // Auto-select first record after filtering
+                    setTimeout(() => {
+                        const firstRow = document.querySelector('#gridTableBody tr');
+                        if (firstRow) {
+                            firstRow.click();
+                        }
+                    }, 100);
+                    
+                    return `✅ Filtered to <strong>Ranch 1</strong> records only. Showing ${count} records. Grid updated!`;
+                }
+                
+                // Filter by Ranch 2
+                if (lowerQuery.includes('ranch 2')) {
+                    currentFilter = 'ranch2';
+                    populateDataGrid();
+                    const count = displayRecords.filter(r => r.ranch.includes('Ranch 2')).length;
+                    
+                    // Auto-select first record after filtering
+                    setTimeout(() => {
+                        const firstRow = document.querySelector('#gridTableBody tr');
+                        if (firstRow) {
+                            firstRow.click();
+                        }
+                    }, 100);
+                    
+                    return `✅ Filtered to <strong>Ranch 2</strong> records only. Showing ${count} records. Grid updated!`;
+                }
+                
+                // Filter by planting
+                if (lowerQuery.includes('planting 1a') || lowerQuery.includes('1a')) {
+                    currentFilter = 'planting1a';
+                    populateDataGrid();
+                    const count = displayRecords.filter(r => r.planting === 'Planting 1A').length;
+                    return `✅ Filtered to <strong>Planting 1A</strong> only. Showing ${count} records. Grid updated!`;
+                }
+                
+                if (lowerQuery.includes('planting 1b') || lowerQuery.includes('1b')) {
+                    currentFilter = 'planting1b';
+                    populateDataGrid();
+                    const count = displayRecords.filter(r => r.planting === 'Planting 1B').length;
+                    return `✅ Filtered to <strong>Planting 1B</strong> only. Showing ${count} records. Grid updated!`;
+                }
+                
+                if (lowerQuery.includes('planting 2a') || lowerQuery.includes('2a')) {
+                    currentFilter = 'planting2a';
+                    populateDataGrid();
+                    const count = displayRecords.filter(r => r.planting === 'Planting 2A').length;
+                    return `✅ Filtered to <strong>Planting 2A</strong> only. Showing ${count} records. Grid updated!`;
+                }
+                
+                if (lowerQuery.includes('planting 2b') || lowerQuery.includes('2b')) {
+                    currentFilter = 'planting2b';
+                    populateDataGrid();
+                    const count = displayRecords.filter(r => r.planting === 'Planting 2B').length;
+                    return `✅ Filtered to <strong>Planting 2B</strong> only. Showing ${count} records. Grid updated!`;
+                }
+                
+                // Filter by date
+                if (lowerQuery.includes('9/23') || lowerQuery.includes('september 23')) {
+                    currentFilter = 'date_0923';
+                    populateDataGrid();
+                    const count = displayRecords.filter(r => r.scheduledDate === '2025-09-23').length;
+                    return `✅ Filtered to <strong>9/23/25</strong> records only. Showing ${count} records. Grid updated!`;
+                }
+            }
+            
+            // Handle statistics queries
+            if (lowerQuery.includes('statistic') || lowerQuery.includes('stats') || lowerQuery.includes('how many')) {
+                const originalCount = displayRecords.filter(r => r.isOriginal).length;
+                return `📊 <strong>Current Statistics:</strong><br>
+                    • Total Records: <strong>${displayRecords.length}</strong><br>
+                    • Original Records: <strong>${originalCount}</strong><br>
+                    • New Records Created: <strong>${stats.recordsCreated}</strong><br>
+                    • Hours Updated: <strong>${stats.hoursUpdated}</strong> times<br>
+                    • Total Water Scheduled: <strong>${calculateTotalWater().toFixed(1)} hours</strong><br>
+                    • Ranch 1 Records: <strong>${displayRecords.filter(r => r.ranch.includes('Ranch 1')).length}</strong><br>
+                    • Ranch 2 Records: <strong>${displayRecords.filter(r => r.ranch.includes('Ranch 2')).length}</strong>`;
+            }
+            
+            // Handle "Create Next" - THE BIG BANANA (fallback for non-demo mode)
+            if (lowerQuery.includes('create next') || lowerQuery.includes('next irrigation')) {
+                if (targetRanch && targetPlanting) {
+                    const record = displayRecords.find(r => r.ranch.includes(targetRanch) && r.planting === targetPlanting && r.isOriginal);
+                    if (record) {
+                        return createNextIrrigation(record.id);
+                    }
+                }
+                return "Please specify which field you'd like to create the next irrigation for (e.g., Ranch 1 Planting 1B).";
+            }
+
+            // Handle "Update Hours"
+            if (lowerQuery.includes('update hours') || lowerQuery.includes('change hours') || lowerQuery.includes('adjust water')) {
+                if (targetRanch && targetPlanting) {
+                    const record = displayRecords.find(r => r.ranch.includes(targetRanch) && r.planting === targetPlanting && r.isOriginal);
+                    if (record) {
+                        const newHours = (record.hours + 0.5).toFixed(1);
+                        return `To update ${record.ranch} ${record.planting} hours: Click the ⊕ Next Irrigation icon to create a new irrigation event with updated recommendation.`;
+                    }
+                }
+                return "Please specify which field you'd like to update (e.g., 'update hours for Ranch 1 Planting 1A').";
+            }
+            
+            // Handle specific field water recommendation
+            if ((targetRanch && targetPlanting) && (lowerQuery.includes('water') || lowerQuery.includes('recommendation') || lowerQuery.includes('how much'))) {
+                const records = displayRecords.filter(r => r.ranch.includes(targetRanch) && r.planting === targetPlanting && r.isOriginal);
+                if (records.length > 0) {
+                    let response = `<strong>${targetRanch} ${targetPlanting}</strong> irrigation records:<br>`;
+                    records.forEach(r => {
+                        response += `• ${r.scheduledDate}: <strong>${r.hours} hours</strong> (${r.irrigationMethod})<br>`;
+                    });
+                    return response;
+                }
+            }
+            
+            // Which field needs water next?
+            if (lowerQuery.includes('which') && lowerQuery.includes('next')) {
+                const today = new Date('2025-09-23');
+                let nextField = null;
+                let minDays = Infinity;
+                
+                const originalRecords = displayRecords.filter(r => r.isOriginal);
+                for (const record of originalRecords) {
+                    const dueDate = new Date(record.scheduledDate);
+                    const daysUntil = Math.ceil((dueDate - today) / (1000 * 60 * 60 * 24));
+                    
+                    if (daysUntil >= 0 && daysUntil < minDays && record.hours > 0) {
+                        minDays = daysUntil;
+                        nextField = record;
+                    }
+                }
+                
+                if (nextField) {
+                    if (minDays === 0) {
+                        return `<strong>${nextField.ranch} ${nextField.planting}</strong> needs water <strong>today</strong>! Schedule ${nextField.hours} hours.`;
+                    } else {
+                        return `<strong>${nextField.ranch} ${nextField.planting}</strong> needs water next in <strong>${minDays} day${minDays > 1 ? 's' : ''}</strong> (${nextField.scheduledDate}).`;
+                    }
+                }
+            }
+            
+            // Biggest water user
+            if (lowerQuery.includes('biggest') || lowerQuery.includes('most water')) {
+                let maxField = null;
+                let maxHours = 0;
+                
+                const originalRecords = displayRecords.filter(r => r.isOriginal);
+                for (const record of originalRecords) {
+                    if (record.hours > maxHours) {
+                        maxHours = record.hours;
+                        maxField = record;
+                    }
+                }
+                
+                if (maxField) {
+                    return `<strong>${maxField.ranch} ${maxField.planting}</strong> on ${maxField.scheduledDate} is the biggest water user at <strong>${maxField.hours} hours</strong> using ${maxField.irrigationMethod}.`;
+                }
+            }
+            
+            // Show today's schedule
+            if (lowerQuery.includes('today') && lowerQuery.includes('schedule')) {
+                const today = '2025-09-23';
+                let todayFields = displayRecords.filter(r => r.scheduledDate === today);
+                
+                if (todayFields.length > 0) {
+                    let response = "<strong>Today's Irrigation Schedule (9/23/25):</strong><br>";
+                    todayFields.forEach(field => {
+                        response += `• ${field.ranch} ${field.planting}: ${field.hours} hours (${field.irrigationMethod})<br>`;
+                    });
+                    return response;
+                } else {
+                    return "No fields are scheduled for irrigation today.";
+                }
+            }
+            
+            // General greeting
+            if (lowerQuery.includes('hello') || lowerQuery.includes('hi')) {
+                return "Hello! How can I help you with your irrigation today? You can ask about specific fields, schedules, water usage, or try filtering the grid with prompts like 'Show me Ranch 1 records'.";
+            }
+            
+            // Default - helpful response
+            return "I can help you with irrigation recommendations! Try asking about:<br>• Filter the grid: 'Show me Ranch 1 records'<br>• Specific fields: 'Ranch 1 Planting 1A'<br>• Which field needs water next<br>• Your biggest water user<br>• Today's schedule<br>• Statistics (how many records, total water, etc.)";
+        }
+
+        // Create Next Irrigation - THE BIG BANANA FEATURE (from chat)
+        function createNextIrrigation(recordId) {
+            const clickedRecord = displayRecords.find(r => r.id === recordId && r.isOriginal);
+            
+            if (!clickedRecord) {
+                return "Could not find that field. Please try again.";
+            }
+            
+            // Find the LAST (most recent) record for this ranch/planting combination
+            const sameFieldRecords = displayRecords.filter(r => 
+                r.ranch === clickedRecord.ranch && 
+                r.planting === clickedRecord.planting
+            );
+            
+            // Sort by date descending to get the most recent
+            sameFieldRecords.sort((a, b) => parseShortDate(b.scheduledDate) - parseShortDate(a.scheduledDate));
+            const lastRecord = sameFieldRecords[0];
+            
+            // Calculate next irrigation date - Use parseShortDate for proper parsing
+            const currentDate = parseShortDate(lastRecord.scheduledDate);
+            const nextDate = new Date(currentDate);
+            const intervalDays = parseFloat(lastRecord.interval) || 1; // Use interval from last record
+            nextDate.setDate(nextDate.getDate() + Math.round(intervalDays));
+            const nextDateStr = formatDate(nextDate);
+            
+            // Calculate new hours with TINY random adjustment (0.1 to 0.3)
+            const tinyAdjust = (Math.random() * 0.2 + 0.1); // Random between 0.1 and 0.3
+            const newRecHours = Math.max(0.1, parseFloat((lastRecord.hours + tinyAdjust).toFixed(1)));
+            const newMgrHours = parseFloat((lastRecord.mgrHours + 0.1).toFixed(1));
+            
+            // Add NEW record to displayRecords
+            const newRecord = {
+                id: `created_${Date.now()}`,
+                ranch: lastRecord.ranch,
+                planting: lastRecord.planting,
+                hours: newRecHours,
+                mgrHours: newMgrHours,
+                appliedHours: 0, // Not applied yet
+                interval: lastRecord.interval,
+                scheduledDate: nextDateStr,
+                irrigationMethod: lastRecord.irrigationMethod,
+                recommendedInches: lastRecord.recommendedInches,
+                lastUpdatedDate: new Date().toLocaleString(),
+                updatedBy: "AI",
+                isNew: true,
+                isOriginal: false,
+                isUpdated: false
+            };
+            
+            displayRecords.push(newRecord);
+            
+            // Update statistics
+            stats.recordsCreated++;
+            stats.totalWaterScheduled = calculateTotalWater();
+            
+            // Refresh the grid
+            populateDataGrid();
+            
+            // Auto-select the new record (highlight it in grid)
+            setTimeout(() => {
+                const rows = document.querySelectorAll('#gridTableBody tr');
+                rows.forEach(row => {
+                    if (row.dataset.field === newRecord.id) {
+                        row.style.backgroundColor = '#90EE90';
+                        row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                });
+            }, 100);
+            
+            return `✨ <strong>Next Irrigation Created!</strong><br><br>
+                <strong>Field:</strong> ${lastRecord.ranch} ${lastRecord.planting}<br>
+                <strong>Last Date:</strong> ${lastRecord.scheduledDate}<br>
+                <strong>Interval:</strong> ${intervalDays} days<br>
+                <strong>Next Date:</strong> ${nextDateStr}<br>
+                <strong>Rec Hours:</strong> ${newRecHours} hours (was ${lastRecord.hours})<br>
+                <strong>Method:</strong> ${lastRecord.irrigationMethod}<br><br>
+                New record added to grid and highlighted!`;
+        }
+
+        // Create Next from Grid button
+        function createNextFromRecord(fieldId) {
+            const response = createNextIrrigation(fieldId);
+            addMessage(response, 'assistant');
+        }
+
+        // Update Hours for a field (Approve Recommendation)
+        function updateHours(fieldId) {
+            const record = displayRecords.find(r => r.id === fieldId && r.isOriginal);
+            
+            if (!record) {
+                addMessage("Could not find that field.", 'assistant');
+                return;
+            }
+            
+            // Set Manager Hours = Rec Hours (Approve)
+            const oldMgrHours = record.mgrHours;
+            record.mgrHours = record.hours;
+            record.isUpdated = true;
+            
+            // Refresh grid
+            populateDataGrid();
+            
+            addMessage(`📝 <strong>Recommendation Approved!</strong><br>
+                ${record.ranch} ${record.planting} Manager Hours set to <strong>${record.mgrHours} hours</strong> (matching recommendation).<br>
+                Previous Manager Hours: ${oldMgrHours}`, 'assistant');
+        }
+
+        // View Details
+        function viewDetails(recordId) {
+            const record = displayRecords.find(r => r.id === recordId);
+            
+            if (!record) {
+                addMessage("Could not find field details.", 'assistant');
+                return;
+            }
+            
+            const message = `📋 <strong>${record.ranch} ${record.planting} Details:</strong><br>
+                • Event Date: ${record.scheduledDate}<br>
+                • Irrigation Method: ${record.irrigationMethod}<br>
+                • Water Hours: ${record.hours} hours<br>
+                • Interval: ${record.interval || 0} days<br>
+                • Water Applied: ${record.waterApplied || 0} inches<br>
+                • Recommended Inches: ${record.recommendedInches || 0}<br>
+                • Last Updated: ${record.lastUpdatedDate}<br>
+                • Updated By: ${record.updatedBy}`;
+            
+            addMessage(message, 'assistant');
+        }
+
+        // Show Create Next Dialog
+        function showCreateNextDialog() {
+            addMessage("Which field would you like to create the next irrigation for? Click the ✨ icon next to any field in the grid, or tell me the ranch and planting.", 'assistant');
+        }
+
+        // ========================================
+        // FIELD-TEST INTEGRATED FUNCTIONS
+        // ========================================
+
+        // Helper: Parse date in M/D/YY format
+        function parseEventDate(dateStr) {
+            const parts = dateStr.split('/');
+            const month = parseInt(parts[0]);
+            const day = parseInt(parts[1]);
+            const year = parts[2].length === 2 ? 2000 + parseInt(parts[2]) : parseInt(parts[2]);
+            return new Date(year, month - 1, day);
+        }
+
+        // Helper: Format Date to M/D/YY
+        function formatDateShort(date) {
+            const year = String(date.getFullYear()).slice(-2);
+            const month = date.getMonth() + 1;
+            const day = date.getDate();
+            return `${month}/${day}/${year}`;
+        }
+
+        // NEXT IRRIGATION - Field-Test Function (Form-Based Workflow)
+        function fieldTestCreateNext(recordId) {
+            const clickedRecord = displayRecords.find(r => r.id === recordId);
+            
+            if (!clickedRecord) {
+                addMessage("❌ Could not find that record.", 'assistant');
+                return;
+            }
+            
+            // Find all records for this ranch/planting
+            const sameFieldRecords = displayRecords.filter(r => 
+                r.ranch === clickedRecord.ranch && 
+                r.planting === clickedRecord.planting
+            );
+            
+            // Sort by date to get most recent
+            sameFieldRecords.sort((a, b) => {
+                const dateA = parseEventDate(a.scheduledDate);
+                const dateB = parseEventDate(b.scheduledDate);
+                return dateA - dateB;
+            });
+            
+            const lastRecord = sameFieldRecords[sameFieldRecords.length - 1];
+            
+            // Calculate next date
+            const currentDate = parseEventDate(lastRecord.scheduledDate);
+            const nextDate = new Date(currentDate);
+            const intervalDays = parseFloat(lastRecord.interval) || 1;
+            const roundedInterval = Math.round(intervalDays);
+            
+            nextDate.setDate(nextDate.getDate() + roundedInterval);
+            const nextDateStr = formatDateShort(nextDate);
+            
+            // Calculate new hours (simulate CropManage recommendation)
+            const tinyAdjust = (Math.random() * 0.2 + 0.1);
+            const newRecHours = Math.max(0.1, parseFloat((lastRecord.hours + tinyAdjust).toFixed(1)));
+            
+            // Create new record
+            const newRecord = {
+                id: `created_${Date.now()}`,
+                ranch: lastRecord.ranch,
+                planting: lastRecord.planting,
+                hours: newRecHours,
+                mgrHours: 0, // EMPTY - awaiting manager input
+                appliedHours: 0,
+                interval: lastRecord.interval,
+                scheduledDate: nextDateStr,
+                irrigationMethod: lastRecord.irrigationMethod,
+                recommendedInches: lastRecord.recommendedInches,
+                lastUpdatedDate: new Date().toLocaleString(),
+                updatedBy: "Field Manager",
+                isNew: true,
+                isOriginal: false,
+                isUpdated: false
+            };
+            
+            displayRecords.push(newRecord);
+            
+            // Sort and refresh grid
+            displayRecords.sort((a, b) => {
+                if (a.ranch < b.ranch) return -1;
+                if (a.ranch > b.ranch) return 1;
+                if (a.planting < b.planting) return -1;
+                if (a.planting > b.planting) return 1;
+                const dateA = parseEventDate(a.scheduledDate);
+                const dateB = parseEventDate(b.scheduledDate);
+                return dateA - dateB;
+            });
+            
+            populateDataGrid();
+            
+            // Show form with new record selected
+            populateForm(newRecord.id);
+            
+            // Highlight new row
+            setTimeout(() => {
+                const rows = document.querySelectorAll('#gridTableBody tr');
+                rows.forEach(row => {
+                    if (row.dataset.field === newRecord.id) {
+                        row.style.backgroundColor = '#90EE90';
+                        row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                });
+            }, 100);
+            
+            addMessage(`⊕ <strong>Next Irrigation Created!</strong><br><br>
+                <strong>Field:</strong> ${lastRecord.ranch} ${lastRecord.planting}<br>
+                <strong>Last Date:</strong> ${lastRecord.scheduledDate}<br>
+                <strong>Next Date:</strong> ${nextDateStr} (+${roundedInterval} days)<br>
+                <strong>CropManage Rec:</strong> ${newRecHours} hours<br><br>
+                📝 <strong>Form ready - Enter Manager Hours</strong>`, 'assistant');
+        }
+
+        // READ METER - Field-Test Function (Meter Reading Workflow)
+        function fieldTestReadMeter(recordId) {
+            const clickedRecord = displayRecords.find(r => r.id === recordId);
+            
+            if (!clickedRecord) {
+                addMessage("❌ Could not find that record.", 'assistant');
+                return;
+            }
+            
+            // Find all records for this ranch/planting
+            const matchingRecords = displayRecords.filter(r => 
+                r.ranch === clickedRecord.ranch && 
+                r.planting === clickedRecord.planting
+            );
+            
+            if (matchingRecords.length === 0) {
+                addMessage(`❌ No records found for ${clickedRecord.ranch} ${clickedRecord.planting}`, 'assistant');
+                return;
+            }
+            
+            // Sort by date to get most recent
+            matchingRecords.sort((a, b) => {
+                const dateA = parseEventDate(a.scheduledDate);
+                const dateB = parseEventDate(b.scheduledDate);
+                return dateA - dateB;
+            });
+            
+            const lastRecord = matchingRecords[matchingRecords.length - 1];
+            
+            // Show form with this record selected
+            populateForm(lastRecord.id);
+            
+            // Highlight row
+            setTimeout(() => {
+                const rows = document.querySelectorAll('#gridTableBody tr');
+                rows.forEach(row => {
+                    row.style.backgroundColor = '';
+                    if (row.dataset.field === lastRecord.id) {
+                        row.style.backgroundColor = '#FFE4B5';
+                        row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                });
+            }, 100);
+            
+            addMessage(`📊 <strong>Meter Reading Task</strong><br><br>
+                <strong>Field:</strong> ${lastRecord.ranch} ${lastRecord.planting}<br>
+                <strong>Date:</strong> ${lastRecord.scheduledDate}<br>
+                <strong>Current Applied:</strong> ${lastRecord.appliedHours} hours<br><br>
+                📝 <strong>Form ready - Enter Water Meter Reading</strong>`, 'assistant');
+        }
+
+        // APPROVE RECOMMENDATION - Sets Mgr Hours = Rec Hours
+        function approveRecommendation(recordId) {
+            const record = displayRecords.find(r => r.id === recordId);
+            
+            if (!record) {
+                addMessage("❌ Could not find that record.", 'assistant');
+                return;
+            }
+            
+            const recHours = record.hours;
+            const oldMgrHours = record.mgrHours;
+            
+            // Set Manager Hours = Recommendation Hours
+            record.mgrHours = recHours;
+            record.isUpdated = true;
+            
+            // Refresh grid
+            populateDataGrid();
+            
+            addMessage(`📝 <strong>Recommendation Approved!</strong><br><br>
+                <strong>${record.ranch} ${record.planting}</strong><br>
+                Recommendation: ${recHours} Hours<br>
+                Manager Hours: ${oldMgrHours} → <strong>${record.mgrHours} Hours</strong><br><br>
+                ✅ <strong>Manager approved the recommendation!</strong>`, 'assistant');
+        }
+
+        // ========================================
+        // DIY PROMPT BUILDER (Two Grids)
+        // ========================================
+        
+        const ACTION_OPTIONS = [
+            { id: 'show', text: 'Show me' },
+            { id: 'filter', text: 'Filter to' },
+            { id: 'create', text: 'Create next irrigation for' },
+            { id: 'update', text: 'Update hours for' },
+            { id: 'analyze', text: 'Analyze' }
+        ];
+
+        const TARGET_OPTIONS = [
+            { id: 'all', text: 'all records' },
+            { id: 'ranch1', text: 'Ranch 1 records' },
+            { id: 'ranch2', text: 'Ranch 2 records' },
+            { id: '1a', text: 'Planting 1A' },
+            { id: '1b', text: 'Planting 1B' },
+            { id: '2a', text: 'Planting 2A' },
+            { id: '2b', text: 'Planting 2B' },
+            { id: 'ranch1_1a', text: 'Ranch 1 Planting 1A' },
+            { id: 'ranch1_1b', text: 'Ranch 1 Planting 1B' },
+            { id: 'ranch2_2a', text: 'Ranch 2 Planting 2A' },
+            { id: 'ranch2_2b', text: 'Ranch 2 Planting 2B' },
+            { id: 'today', text: "today's records" }
+        ];
+
+        let selectedAction = null;
+        let selectedTarget = null;
+
+        // Render Action Grid
+        function renderActionGrid() {
+            const grid = document.getElementById('actionGrid');
+            let html = '';
+            
+            ACTION_OPTIONS.forEach(option => {
+                const selectedClass = selectedAction && selectedAction.id === option.id ? ' selected' : '';
+                html += `
+                    <div class="agent-item${selectedClass}" onclick="selectAction('${option.id}')">
+                        <div class="agent-item-title">${option.text}</div>
+                    </div>
+                `;
+            });
+            
+            grid.innerHTML = html;
+        }
+
+        // Render Target Grid
+        function renderTargetGrid() {
+            const grid = document.getElementById('targetGrid');
+            let html = '';
+            
+            TARGET_OPTIONS.forEach(option => {
+                const selectedClass = selectedTarget && selectedTarget.id === option.id ? ' selected' : '';
+                html += `
+                    <div class="agent-item${selectedClass}" onclick="selectTarget('${option.id}')">
+                        <div class="agent-item-title">${option.text}</div>
+                    </div>
+                `;
+            });
+            
+            grid.innerHTML = html;
+        }
+
+        // Select Action
+        function selectAction(actionId) {
+            selectedAction = ACTION_OPTIONS.find(a => a.id === actionId);
+            renderActionGrid();
+            buildDIYPrompt();
+        }
+
+        // Select Target
+        function selectTarget(targetId) {
+            selectedTarget = TARGET_OPTIONS.find(t => t.id === targetId);
+            renderTargetGrid();
+            buildDIYPrompt();
+        }
+
+        // Build DIY Prompt from selections
+        function buildDIYPrompt() {
+            if (selectedAction && selectedTarget) {
+                const prompt = `${selectedAction.text} ${selectedTarget.text}`;
+                document.getElementById('sharedPrompt').value = prompt;
+            }
+        }
+
+        // Use the built prompt
+        function useBuiltPrompt() {
+            const prompt = document.getElementById('builtPrompt').textContent;
+            document.getElementById('chatInput').value = prompt;
+            sendMessage();
+        }
+
+        // Show Prompt Example (puts prompt in chat and sends it)
+        function showPromptExample(prompt) {
+            document.getElementById('chatInput').value = prompt;
+            sendMessage();
+        }
+
+        // Use Prompt Example (puts it in custom prompt textarea)
+        function usePromptExample(prompt) {
+            document.getElementById('customPrompt').value = prompt;
+        }
+
+        // Filter Grid
+        function filterGrid(filter) {
+            currentFilter = filter;
+            populateDataGrid();
+        }
+
+        // Reset Data - Restore from ORIGINAL safe storage
+        function resetData() {
+            // Clear all chat messages except welcome
+            const messagesDiv = document.getElementById('chatMessages');
+            messagesDiv.innerHTML = `
+                <div class="message assistant">
+                    Hello! I'm your irrigation assistant. Ask me about water recommendations, schedules, or field status.
+                </div>
+            `;
+            
+            // Reinitialize display records from ORIGINAL safe data
+            initializeDisplayRecords();
+            
+            // Reset filter to all
+            currentFilter = 'all';
+            
+            // Refresh grid
+            populateDataGrid();
+            
+            // Auto-select last record after reset
+            autoSelectLastRecord();
+            
+            // Show reset confirmation in chat
+            addMessage(`🔄 <strong>System Reset Complete!</strong><br>
+                • All data restored to original state<br>
+                • ${displayRecords.length} original records loaded<br>
+                • All created records removed<br>
+                • All hour updates reverted<br>
+                • All filters cleared<br>
+                • Statistics reset<br><br>
+                Ready for a fresh demo!`, 'assistant');
+        }
+
+        // Use Quick Prompt (now from dropdown)
+        function useQuickPrompt() {
+            const select = document.getElementById('quickPromptSelect');
+            const prompt = select.value;
+            
+            if (prompt) {
+                document.getElementById('chatInput').value = prompt;
+                sendMessage();
+                select.value = ''; // Reset dropdown
+            }
+        }
+
+        // Execute Prompt from Prompt Manager
+        function executePrompt() {
+            const customPrompt = document.getElementById('customPrompt').value.trim();
+            
+            if (customPrompt) {
+                // Use custom prompt
+                document.getElementById('chatInput').value = customPrompt;
+                sendMessage();
+                document.getElementById('customPrompt').value = '';
+            } else {
+                addMessage("Please enter a custom prompt or use the Prompt Builder above.", 'assistant');
+            }
+        }
+
+        // ========================================
+        // FORM FUNCTIONS
+        // ========================================
+
+        let selectedRecord = null;
+
+        // Populate Form with Selected Record
+        function populateForm(recordId) {
+            selectedRecord = displayRecords.find(r => r.id === recordId);
+            
+            if (!selectedRecord) {
+                return;
+            }
+
+            // Update ONLY the center title with Ranch and Planting (keep "Irrigation" on left)
+            document.getElementById('formTitle').textContent = `${selectedRecord.ranch} ${selectedRecord.planting}`;
+
+            const formContent = document.getElementById('formContent');
+            
+            formContent.innerHTML = `
+                <div style="padding: 4px 8px; height: 100%; display: flex; flex-direction: column; overflow: hidden;">
+                    <!-- Result Area -->
+                    <div id="resultArea"></div>
+
+                    <!-- Row 1: Date & Interval - BIGGER CENTERED FIELDS -->
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 4px;">
+                        <div style="text-align: center;">
+                            <label style="font-weight: 600; color: #2a5298; font-size: 11px; display: block; margin-bottom: 2px;">Date</label>
+                            <input type="text" id="formDate" value="${selectedRecord.scheduledDate}" readonly 
+                                   style="width: 100%; padding: 6px; font-size: 14px; font-weight: 600; border: 2px solid #ddd; border-radius: 6px; text-align: center; background: #f5f5f5; color: #666;">
+                        </div>
+                        <div style="text-align: center;">
+                            <label style="font-weight: 600; color: #2a5298; font-size: 11px; display: block; margin-bottom: 2px;">Interval</label>
+                            <input type="text" id="formInterval" value="${selectedRecord.interval} days" readonly 
+                                   style="width: 100%; padding: 6px; font-size: 14px; font-weight: 600; border: 2px solid #ddd; border-radius: 6px; text-align: center; background: #f5f5f5; color: #666;">
+                        </div>
+                    </div>
+
+                    <!-- Centered Recommendation Box - SMALLER/SHORTER -->
+                    <div style="background: linear-gradient(135deg, #4CAF50 0%, #2E7D32 100%); color: white; padding: 6px; border-radius: 6px; text-align: center; margin: 0 auto 4px auto; width: 45%;">
+                        <div style="font-size: 8px; opacity: 0.9; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px;">REC HOURS</div>
+                        <div id="formRecommendation" style="font-size: 28px; font-weight: bold; line-height: 1;">${selectedRecord.hours}</div>
+                    </div>
+
+                    <!-- Row 2: Manager Hours & Water Applied - BIGGER CENTERED FIELDS -->
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 4px;">
+                        <div style="text-align: center;">
+                            <label style="font-weight: 600; color: #2a5298; font-size: 11px; display: block; margin-bottom: 2px;">Manager Hours</label>
+                            <input type="number" id="formManagerHours" value="${selectedRecord.mgrHours}" step="0.1" onchange="markFormDirty()"
+                                   style="width: 100%; padding: 8px; font-size: 20px; font-weight: 600; border: 2px solid #4CAF50; border-radius: 6px; text-align: center; background: white;">
+                        </div>
+                        <div style="text-align: center;">
+                            <label style="font-weight: 600; color: #2a5298; font-size: 11px; display: block; margin-bottom: 2px;">Water Applied</label>
+                            <input type="number" id="formWaterApplied" value="${selectedRecord.appliedHours}" step="0.1" onchange="markFormDirty()"
+                                   style="width: 100%; padding: 8px; font-size: 20px; font-weight: 600; border: 2px solid #2196F3; border-radius: 6px; text-align: center; background: white;">
+                        </div>
+                    </div>
+
+                    <!-- Message/Instructions Field (full width) - ALWAYS VISIBLE -->
+                    <div style="margin-bottom: 4px;">
+                        <label style="font-weight: 600; color: #2a5298; font-size: 10px; display: block; margin-bottom: 2px;">Task Message / Instructions</label>
+                        <input type="text" id="formMessage" placeholder="Instructions for field worker..." 
+                               style="width: 100%; padding: 5px; font-size: 11px; border: 2px solid #ffd700; border-radius: 6px; background: #fffacd;">
+                    </div>
+
+                    <div id="formStatus" style="margin-top: 4px; padding: 4px; border-radius: 4px; font-size: 10px; display: none;"></div>
+                </div>
+            `;
+        }
+
+        // Mark form as dirty (changed)
+        function markFormDirty() {
+            const status = document.getElementById('formStatus');
+            if (status) {
+                status.style.display = 'block';
+                status.style.background = '#fff3cd';
+                status.style.color = '#856404';
+                status.textContent = '⚠️ Unsaved changes';
+            }
+        }
+
+        // CRUD - Create (Create Next Irrigation)
+        function crudCreate() {
+            if (!selectedRecord) return;
+            
+            const response = createNextIrrigation(selectedRecord.id);
+            addMessage(response, 'assistant');
+            
+            // Show success in form
+            const status = document.getElementById('formStatus');
+            status.style.display = 'block';
+            status.style.background = '#d4edda';
+            status.style.color = '#155724';
+            status.textContent = '✅ Next irrigation created!';
+            
+            setTimeout(() => {
+                status.style.display = 'none';
+            }, 3000);
+        }
+
+        // CRUD - Read (View Details)
+        function crudRead() {
+            if (!selectedRecord) return;
+            viewDetails(selectedRecord.id);
+        }
+
+        // CRUD - Update (Save Changes)
+        function crudUpdate() {
+            if (!selectedRecord) return;
+            
+            const newMgrHours = parseFloat(document.getElementById('formManagerHours').value);
+            const newWaterApplied = parseFloat(document.getElementById('formWaterApplied').value);
+            
+            // Update the record
+            selectedRecord.mgrHours = newMgrHours;
+            selectedRecord.appliedHours = newWaterApplied;
+            selectedRecord.isUpdated = true;
+            selectedRecord.lastUpdatedDate = new Date().toLocaleString();
+            selectedRecord.updatedBy = "Steve";
+            
+            // Update statistics
+            stats.hoursUpdated++;
+            
+            // Refresh grid
+            populateDataGrid();
+            
+            // Show success
+            const status = document.getElementById('formStatus');
+            status.style.display = 'block';
+            status.style.background = '#d4edda';
+            status.style.color = '#155724';
+            status.textContent = '✅ Changes saved successfully!';
+            
+            // Call crudRead to show detailed message
+            crudRead();
+            
+            setTimeout(() => {
+                status.style.display = 'none';
+            }, 3000);
+        }
+
+        // CRUD - Delete (Remove Record - Only for Created Records)
+        function crudDelete() {
+            if (!selectedRecord) return;
+            
+            if (selectedRecord.isOriginal) {
+                const status = document.getElementById('formStatus');
+                status.style.display = 'block';
+                status.style.background = '#f8d7da';
+                status.style.color = '#721c24';
+                status.textContent = '❌ Cannot delete original records. Use Reset to restore.';
+                return;
+            }
+            
+            if (confirm(`Delete this record?\n${selectedRecord.ranch} ${selectedRecord.planting} on ${selectedRecord.scheduledDate}`)) {
+                // Remove from displayRecords
+                const index = displayRecords.findIndex(r => r.id === selectedRecord.id);
+                if (index > -1) {
+                    displayRecords.splice(index, 1);
+                }
+                
+                // Update statistics
+                stats.recordsCreated--;
+                stats.totalWaterScheduled = calculateTotalWater();
+                
+                // Refresh grid
+                populateDataGrid();
+                
+                // Clear form
+                document.getElementById('formContent').innerHTML = `
+                    <div style="padding: 20px; text-align: center; color: #999;">
+                        Click a record in the grid to edit details
+                    </div>
+                `;
+                
+                selectedRecord = null;
+                
+                addMessage(`🗑️ Record deleted successfully!`, 'assistant');
+            }
+        }
+
+        // ========================================
+        // HANDLE WRAPPER FUNCTIONS (Match Test File)
+        // ========================================
+        
+        function handleReset() {
+            // Reload data from original source
+            displayRecords = [];
+            selectedRecord = null;
+            
+            // Reload data
+            loadAllData();
+            
+            // Reset form subheader to Irrigation
+            const subheader = document.getElementById('formSubheaderText');
+            if (subheader) {
+                subheader.textContent = 'Irrigation';
+            }
+            
+            addMessage('✅ Data reset - all records reloaded from original source', 'assistant');
+        }
+
+        function handleCreate() {
+            // Set form subheader to indicate Create Next operation
+            document.getElementById('formSubheaderText').textContent = 'Create Next Irrigation';
+            
+            if (!selectedRecord) {
+                addMessage('❌ No record selected. Click a row first.', 'assistant');
+                return;
+            }
+            
+            addMessage('=== CREATING NEXT IRRIGATION ===', 'assistant');
+            addMessage(`Selected Record ID: ${selectedRecord.id}`, 'assistant');
+            addMessage(`Ranch: ${selectedRecord.ranch} | Planting: ${selectedRecord.planting}`, 'assistant');
+            addMessage(`Date IN: "${selectedRecord.scheduledDate}" | Interval: ${selectedRecord.interval} days`, 'assistant');
+            
+            // Find all records for this ranch/planting
+            const sameFieldRecords = displayRecords.filter(r => 
+                r.ranch === selectedRecord.ranch && 
+                r.planting === selectedRecord.planting
+            );
+            
+            addMessage(`Found ${sameFieldRecords.length} records for this field`, 'assistant');
+            
+            // Sort by date to get most recent
+            sameFieldRecords.sort((a, b) => {
+                const dateA = parseEventDate(a.scheduledDate);
+                const dateB = parseEventDate(b.scheduledDate);
+                return dateA - dateB;
+            });
+            
+            const lastRecord = sameFieldRecords[sameFieldRecords.length - 1];
+            addMessage(`Most recent (last): ${lastRecord.scheduledDate}`, 'assistant');
+            
+            // Calculate next date
+            const currentDate = parseEventDate(lastRecord.scheduledDate);
+            const nextDate = new Date(currentDate);
+            const intervalDays = parseFloat(lastRecord.interval) || 1;
+            const roundedInterval = Math.round(intervalDays);
+            
+            addMessage(`Interval: ${intervalDays} days (rounded: ${roundedInterval})`, 'assistant');
+            
+            nextDate.setDate(nextDate.getDate() + roundedInterval);
+            const nextDateStr = formatDate(nextDate);
+            
+            addMessage(`Date OUT: "${nextDateStr}"`, 'assistant');
+            
+            // Calculate new hours
+            const tinyAdjust = (Math.random() * 0.2 + 0.1);
+            const newRecHours = Math.max(0.1, parseFloat((lastRecord.hours + tinyAdjust).toFixed(1)));
+            const newMgrHours = parseFloat((lastRecord.mgrHours + 0.1).toFixed(1));
+            
+            addMessage(`New rec hours: ${newRecHours} (was ${lastRecord.hours})`, 'assistant');
+            addMessage(`New mgr hours: ${newMgrHours} (was ${lastRecord.mgrHours})`, 'assistant');
+            
+            // Create new record
+            const newRecord = {
+                id: `created_${Date.now()}`,
+                ranch: lastRecord.ranch,
+                planting: lastRecord.planting,
+                hours: newRecHours,
+                mgrHours: newMgrHours,
+                appliedHours: 0,
+                interval: lastRecord.interval,
+                scheduledDate: nextDateStr,
+                irrigationMethod: lastRecord.irrigationMethod,
+                recommendedInches: lastRecord.recommendedInches,
+                lastUpdatedDate: new Date().toLocaleString(),
+                updatedBy: "Test System",
+                isNew: true,
+                isOriginal: false,
+                isUpdated: false
+            };
+            
+            displayRecords.push(newRecord);
+            addMessage('=== NEW RECORD CREATED ===', 'assistant');
+            
+            populateDataGrid();
+            
+            // Save the new record ID before sorting
+            const newRecordId = newRecord.id;
+            
+            // INLINE SORT - sort by ranch, planting, then date (ascending)
+            displayRecords.sort((a, b) => {
+                // First by ranch
+                if (a.ranch < b.ranch) return -1;
+                if (a.ranch > b.ranch) return 1;
+                
+                // Then by planting
+                if (a.planting < b.planting) return -1;
+                if (a.planting > b.planting) return 1;
+                
+                // Finally by date (ascending - oldest first)
+                const dateA = parseEventDate(a.scheduledDate);
+                const dateB = parseEventDate(b.scheduledDate);
+                return dateA - dateB;
+            });
+            
+            addMessage(`Records sorted by: Ranch → Planting → Date (oldest first)`, 'assistant');
+            addMessage(`Total records: ${displayRecords.length}`, 'assistant');
+            
+            // Re-render table with sorted data
+            populateDataGrid();
+            
+            // Restore selection to the new record
+            selectRecord(newRecordId);
+            addMessage(`Selection preserved: ${newRecord.ranch} ${newRecord.planting}`, 'assistant');
+            
+            // Clear Manager Hours field and set message in Task Message field
+            document.getElementById('formManagerHours').value = '';
+            document.getElementById('formMessage').value = 'Irrigation added and Recommendation generated. Enter Manager Hours';
+            
+            // Focus on Manager Hours field
+            document.getElementById('formManagerHours').focus();
+        }
+
+        function testReadMeter() {
+            // Set form subheader to indicate Meter operation
+            document.getElementById('formSubheaderText').textContent = 'Read Water Meter';
+            
+            if (!selectedRecord) {
+                addMessage('❌ No record selected. Click a row first.', 'assistant');
+                return;
+            }
+            
+            // Use selected record's ranch and planting
+            const targetRanch = selectedRecord.ranch;
+            const targetPlanting = selectedRecord.planting;
+            
+            addMessage('=== READ METER ===', 'assistant');
+            addMessage(`Looking for: ${targetRanch} / ${targetPlanting}`, 'assistant');
+            
+            // Find all records for this ranch/planting
+            const matchingRecords = displayRecords.filter(r => 
+                r.ranch === targetRanch && 
+                r.planting === targetPlanting
+            );
+            
+            if (matchingRecords.length === 0) {
+                addMessage(`❌ No records found for ${targetRanch} ${targetPlanting}`, 'assistant');
+                return;
+            }
+            
+            addMessage(`Found ${matchingRecords.length} records`, 'assistant');
+            
+            // Sort by date to get most recent (last)
+            matchingRecords.sort((a, b) => {
+                const dateA = parseEventDate(a.scheduledDate);
+                const dateB = parseEventDate(b.scheduledDate);
+                return dateA - dateB;
+            });
+            
+            const lastRecord = matchingRecords[matchingRecords.length - 1];
+            
+            addMessage('LAST RECORD FOUND:', 'assistant');
+            addMessage(`Ranch: ${lastRecord.ranch} | Planting: ${lastRecord.planting}`, 'assistant');
+            addMessage(`Date: ${lastRecord.scheduledDate}`, 'assistant');
+            addMessage(`Current Water Applied: ${lastRecord.appliedHours}`, 'assistant');
+            
+            // Select this record in the grid
+            selectRecord(lastRecord.id);
+            
+            // Populate form for meter reading
+            document.getElementById('formDate').value = lastRecord.scheduledDate;
+            document.getElementById('formInterval').value = lastRecord.interval + ' days';
+            document.getElementById('formRecommendation').textContent = lastRecord.hours.toFixed(1);
+            document.getElementById('formManagerHours').value = lastRecord.mgrHours;
+            document.getElementById('formWaterApplied').value = ''; // EMPTY for field worker entry
+            document.getElementById('formMessage').value = 'Read water meter and enter gallons. Meter located at northwest corner.';
+            
+            // Focus on Water Applied field
+            document.getElementById('formWaterApplied').focus();
+            
+            addMessage('✅ Form ready for meter reading entry', 'assistant');
+            addMessage('→ Enter water applied value and click Update to save', 'assistant');
+        }
+
+        function handleUpdate() {
+            if (!selectedRecord) {
+                addMessage('❌ No record selected', 'assistant');
+                return;
+            }
+            
+            const recordId = selectedRecord.id; // Save ID before changes
+            const mgrHours = parseFloat(document.getElementById('formManagerHours').value);
+            const waterApplied = parseFloat(document.getElementById('formWaterApplied').value);
+            const message = document.getElementById('formMessage').value;
+            
+            selectedRecord.mgrHours = mgrHours;
+            selectedRecord.appliedHours = waterApplied;
+            selectedRecord.message = message;
+            selectedRecord.isUpdated = true;
+            
+            populateDataGrid();
+            selectRecord(recordId); // Re-select after render
+            
+            // Write success message to the Task Message field
+            document.getElementById('formMessage').value = `Record updated! Mgr Hours: ${mgrHours} | Water Applied: ${waterApplied}`;
+            
+            // Reset form subheader to Irrigation
+            const subheader = document.getElementById('formSubheaderText');
+            if (subheader) {
+                subheader.textContent = 'Irrigation';
+            }
+            
+            addMessage(`✅ Updated: Manager Hours: ${mgrHours}, Water Applied: ${waterApplied}`, 'assistant');
+        }
+
+        function handleDelete() {
+            if (!selectedRecord) {
+                addMessage('❌ No record selected', 'assistant');
+                return;
+            }
+            
+            if (!selectedRecord.isOriginal) {
+                if (confirm(`Delete created record for ${selectedRecord.ranch} ${selectedRecord.planting}?`)) {
+                    const index = displayRecords.findIndex(r => r.id === selectedRecord.id);
+                    if (index > -1) {
+                        displayRecords.splice(index, 1);
+                        selectedRecord = null;
+                        populateDataGrid();
+                        addMessage('✅ Record deleted', 'assistant');
+                    }
+                }
+            } else {
+                addMessage('❌ Cannot delete original records. Only created records can be deleted.', 'assistant');
+            }
+        }
+
+        // ========================================
+        // SHARED PROMPT FUNCTIONS
+        // ========================================
+        function executeSharedPrompt() {
+            const prompt = document.getElementById('sharedPrompt').value.trim();
+            if (!prompt) return;
+            addMessage(prompt, 'user');
+            setTimeout(() => {
+                const response = processChatQuery(prompt);
+                addMessage(response, 'assistant');
+            }, 500);
+        }
+
+        function saveAsAgent() {
+            const prompt = document.getElementById('sharedPrompt').value.trim();
+            if (!prompt) {
+                addMessage("⚠️ Please create a prompt first!", 'assistant');
+                return;
+            }
+            addMessage("💾 Save as Agent - Coming in production version!", 'assistant');
+        }
+
+        function resetPrompt() {
+            // Clear prompt field
+            document.getElementById('sharedPrompt').value = '';
+            
+            // Reload original data from file storage
+            resetData();
+        }
+
+        // ========================================
+        // AI AGENT SYSTEM (Grid + localStorage)
+        // ========================================
+        
+        // System Agents (built-in)
+        const SYSTEM_AGENTS = [
+            { id: 'next', icon: '⊕', name: 'Next Irrigation', category: 'field', prompt: 'Create next irrigation for {ranch} {planting}', desc: 'Creates next irrigation with CropManage rec' },
+            { id: 'meter', icon: '📊', name: 'Read Meter', category: 'field', prompt: 'Record meter reading for {ranch} {planting}', desc: 'Record water meter reading' },
+            { id: 'complete', icon: '✅', name: 'Complete Task', category: 'field', prompt: 'Complete irrigation task for {ranch} {planting}', desc: 'Mark irrigation complete with actual applied' },
+            { id: 'duetoday', icon: '📅', name: 'Due Today', category: 'planning', prompt: 'Show me fields due for irrigation today', desc: 'Filter to fields scheduled for today' },
+            { id: 'thisweek', icon: '🗓️', name: 'This Week', category: 'planning', prompt: 'Show me irrigation schedule for this week', desc: 'Show 7-day irrigation schedule' },
+            { id: 'nextfield', icon: '⏰', name: 'Next Field', category: 'planning', prompt: 'Which field needs water next?', desc: 'Show next field due for irrigation' },
+            { id: 'budget', icon: '💧', name: 'Budget Analysis', category: 'compliance', prompt: 'Analyze water budget compliance', desc: 'Compare actual vs CropManage budget' },
+            { id: 'report', icon: '📋', name: 'State Report', category: 'compliance', prompt: 'Generate state compliance report', desc: 'Export SGMA audit report' },
+            { id: 'variances', icon: '⚠️', name: 'Show Variances', category: 'compliance', prompt: 'Show all fields with manager variances', desc: 'List manager overrides' },
+            { id: 'myranch', icon: '🔍', name: 'My Ranch', category: 'planning', prompt: 'Show me Ranch 2 records', desc: 'Filter to my ranch' },
+            { id: 'stats', icon: '📈', name: 'Statistics', category: 'planning', prompt: 'Show me statistics', desc: 'Display current statistics' }
+        ];
+
+        let customAgents = [];
+        let selectedAgent = null;
+
+        // Load custom agents from localStorage
+        function loadCustomAgents() {
+            const saved = localStorage.getItem('cropclient_custom_agents');
+            if (saved) {
+                customAgents = JSON.parse(saved);
+            }
+        }
+
+        // Save custom agents to localStorage
+        function saveCustomAgents() {
+            localStorage.setItem('cropclient_custom_agents', JSON.stringify(customAgents));
+        }
+
+        // Render agents grid
+        function renderAgentsGrid() {
+            const filter = document.getElementById('agentFilter').value;
+            const grid = document.getElementById('agentsGrid');
+            
+            let agents = [...SYSTEM_AGENTS];
+            if (filter !== 'custom') {
+                agents = agents.concat(customAgents);
+            } else {
+                agents = customAgents;
+            }
+
+            // Filter by category
+            if (filter !== 'all' && filter !== 'custom') {
+                agents = agents.filter(a => a.category === filter);
+            }
+
+            let html = '';
+            agents.forEach(agent => {
+                const isCustom = !SYSTEM_AGENTS.find(s => s.id === agent.id);
+                const customClass = isCustom ? ' agent-item-custom' : '';
+                const selectedClass = selectedAgent && selectedAgent.id === agent.id ? ' selected' : '';
+                
+                html += `
+                    <div class="agent-item${customClass}${selectedClass}" onclick="selectAgent('${agent.id}', ${isCustom})">
+                        <div class="agent-item-title">${agent.icon} ${agent.name}${isCustom ? ' ⭐' : ''} <span style="color: #999; font-weight: normal; font-size: 11px;">- ${agent.desc}</span></div>
+                    </div>
+                `;
+            });
+
+            grid.innerHTML = html || '<div style="padding: 20px; text-align: center; color: #999;">No agents found</div>';
+        }
+
+        // Select an agent
+        function selectAgent(agentId, isCustom) {
+            const agents = isCustom ? customAgents : SYSTEM_AGENTS;
+            selectedAgent = agents.find(a => a.id === agentId);
+            
+            if (selectedAgent) {
+                document.getElementById('sharedPrompt').value = selectedAgent.prompt;
+                renderAgentsGrid(); // Refresh to show selection
+            }
+        }
+
+        // Filter agents
+        function filterAgents() {
+            renderAgentsGrid();
+        }
+
+        // Save current prompt as agent
+        function saveAsAgent() {
+            const prompt = document.getElementById('sharedPrompt').value.trim();
+            if (!prompt) {
+                addMessage("⚠️ Please create a prompt first!", 'assistant');
+                return;
+            }
+
+            const name = prompt.substring(0, 30) + (prompt.length > 30 ? '...' : '');
+            const newAgent = {
+                id: 'custom_' + Date.now(),
+                icon: '⭐',
+                name: name,
+                category: 'custom',
+                prompt: prompt,
+                desc: 'Custom prompt'
+            };
+
+            customAgents.push(newAgent);
+            saveCustomAgents();
+            renderAgentsGrid();
+            
+            addMessage(`💾 <strong>Saved as Agent!</strong><br>Your custom prompt is now available in AI Agents tab.`, 'assistant');
+        }
+
+        // Fill prompt variables
+        function fillPrompt() {
+            const promptField = document.getElementById('sharedPrompt');
+            let prompt = promptField.value;
+            
+            if (!prompt) {
+                addMessage('⚠️ Please enter a prompt first with variables like {ranch}, {planting}, {date}, etc.', 'assistant');
+                return;
+            }
+            
+            if (!selectedRecord) {
+                addMessage('⚠️ Please select a record first to fill in the variables.', 'assistant');
+                return;
+            }
+            
+            // Replace variables with values from selected record
+            const filled = prompt
+                .replace(/{ranch}/gi, selectedRecord.ranch)
+                .replace(/{planting}/gi, selectedRecord.planting)
+                .replace(/{date}/gi, selectedRecord.scheduledDate)
+                .replace(/{hours}/gi, selectedRecord.hours)
+                .replace(/{rec}/gi, selectedRecord.hours)
+                .replace(/{mgrhours}/gi, selectedRecord.mgrHours)
+                .replace(/{applied}/gi, selectedRecord.appliedHours)
+                .replace(/{interval}/gi, selectedRecord.interval)
+                .replace(/{method}/gi, selectedRecord.irrigationMethod);
+            
+            // Update prompt field with filled version
+            promptField.value = filled;
+            
+            addMessage(`✅ Variables filled from ${selectedRecord.ranch} ${selectedRecord.planting}`, 'assistant');
+        }
+
+        // Show/Hide Instructions Modal
+        function showInstructions() {
+            document.getElementById('instructionsModal').style.display = 'block';
+        }
+
+        function closeInstructions() {
+            document.getElementById('instructionsModal').style.display = 'none';
+        }
+
+        // Close modal when clicking outside of it
+        window.onclick = function(event) {
+            const modal = document.getElementById('instructionsModal');
+            if (event.target == modal) {
+                modal.style.display = 'none';
+            }
+        }
+
+        // Helper to change form title
+        function setFormTitle(title) {
+            document.getElementById('formTitle').textContent = '📋 ' + title;
+        }
+    </script>
+
+    <!-- Instructions Modal -->
+    <div id="instructionsModal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeInstructions()">&times;</span>
+            <div class="modal-header">Form Instructions</div>
+            <div class="modal-body">
+                <p><strong>Reset:</strong> Reloads all irrigation data from scratch</p>
+                <p><strong>Create:</strong> Calculate and create next irrigation event</p>
+                <p><strong>Meter:</strong> Read water meter</p>
+                <p><strong>Update:</strong> Save changes to selected record</p>
+                <p><strong>Delete:</strong> Remove created records (originals protected)</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

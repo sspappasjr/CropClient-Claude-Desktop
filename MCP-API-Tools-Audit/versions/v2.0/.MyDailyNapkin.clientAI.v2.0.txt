@@ -1,0 +1,81 @@
+=====================================================================
+                   MyDailyNapkin.ClientAI  v2.0  3.4.2026
+  Prompt-side modules. The equal to George's v1.1 but for AI prompts.
+  George v1.1 = the HANDS (server, staging, fetch)
+  This v2.0   = the BRAIN (prompt send, prompt fetch, tool router)
+=====================================================================
+                        CLIENTAI PROMPT MODULES
+                        Where each module lives and what it does
+=====================================================================
+
+George's 3 modules (v1.1) — the HANDS:
+  Module 1 - Server Presets     → which server to talk to
+  Module 2 - Token Staging      → prepare tool name + params
+  Module 3 - Fetch/Send Engine  → POST to server, get result back
+
+---------------------------------------------------------------------
+PROMPT MODULE 1 - PROMPT SEND
+  What it does:  Takes what the user typed in plain English,
+                 packages it with the tool list (all 22 tools),
+                 sends it to OpenAI (or Gus later).
+  Layman:        "Here's what the grower said, here's what you
+                 can do — figure out which tools to call."
+  Needs:         OpenAI API key, tool definitions, user message
+  Returns:       AI response (either text or a tool call request)
+---------------------------------------------------------------------
+PROMPT MODULE 2 - PROMPT FETCH (RESPONSE PARSE)
+  What it does:  Reads what the AI sent back. Two possibilities:
+                 A) AI says "call get_ranches with these params"
+                    → hand it to the Tool Router (Module 3)
+                 B) AI says "Here are your irrigation records"
+                    → show it to the user in chat
+  Layman:        "What did the AI say? Is it an answer or a
+                 request to do something?"
+  Needs:         AI response object
+  Returns:       Parsed action (tool call or text to display)
+---------------------------------------------------------------------
+PROMPT MODULE 3 - TOOL ROUTER
+  What it does:  When the AI says "call this tool" — this module
+                 takes that request and calls George's Module 3
+                 (Fetch/Send Engine) with the right token + params.
+                 Then sends the result BACK to the AI so it can
+                 decide what to do next.
+  Layman:        "The AI said call get_ranches — OK, calling it
+                 with George's engine, got the result, sending
+                 it back to the AI."
+  Needs:         Tool name + params from AI, George's fetch engine
+  Returns:       Tool result sent back to AI for next step
+---------------------------------------------------------------------
+
+THE LOOP:
+  User types "Show me irrigation for Ranch 1"
+    → Module 1 (Prompt Send) → sends to AI with 22 tool definitions
+    → AI says "call get_token first"
+    → Module 2 (Prompt Fetch) → sees it's a tool call
+    → Module 3 (Tool Router) → calls George's fetch engine
+    → Result goes back to AI
+    → AI says "now call get_ranches"
+    → Module 3 again → fetch engine → result back to AI
+    → AI says "now call get_irrigation_details for Ranch 1"
+    → Module 3 again → fetch engine → result back to AI
+    → AI says "Here are your irrigation records for Ranch 1"
+    → Module 2 → sees it's text → shows in chat
+  DONE.
+
+---------------------------------------------------------------------
+RELATIONSHIP TO GEORGE'S MODULES:
+  George's Module 3 (Fetch/Send) is CALLED BY Prompt Module 3.
+  Nothing replaces George's code. The prompt modules sit ON TOP.
+  Same server. Same tokens. Same fetch. Just AI deciding instead
+  of buttons.
+---------------------------------------------------------------------
+
+WHAT'S NEEDED BEFORE WE CODE:
+  1. OpenAI key installed and working
+  2. Tool definitions for all 22 tools (JSON schema format)
+  3. A chat box in the harness (S2 is already "Chat Log")
+  4. George's fetch engine confirmed working for all tokens
+
+=====================================================================
+  Happy Trails ... the napkin never lies.
+=====================================================================

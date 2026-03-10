@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Factory Layout Designer v1.0</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: Arial, sans-serif; background: #f0f0f0; overflow: hidden; }
+
+  /* --- Template Styles (survive export) --- */
+  .container {
+    display: grid;
+    grid-template-columns: 60% 40%;
+    grid-template-rows: 50% 50%;
+    gap: 6px;
+  }
+  .quad { border:2px solid #333; border-radius:6px; background:#fff; display:flex; flex-direction:column; }
+  .quad-header { background:#2c3e50; color:#fff; padding:6px 12px; font-weight:bold; font-size:14px; border-radius:4px 4px 0 0; }
+  .quad-body { flex:1; padding:10px; color:#999; font-size:13px; }
+
+  /* --- Designer Styles (stripped on export) --- */
+
+  /* Header bar: title left, NAME input + SAVE right */
+  .designer-header {
+    height: 40px;
+    background: #2c3e50;
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    gap: 8px;
+  }
+  .designer-header .title { color:#fff; font-size:14px; font-weight:bold; margin-right:auto; }
+  .designer-header .name-label { color:#bdc3c7; font-size:12px; font-weight:bold; }
+  .designer-header .name-input {
+    width: 180px; padding:3px 8px; border:1px solid #7f8c8d; border-radius:3px;
+    font-size:13px; font-weight:bold; background:#fff; color:#2c3e50;
+  }
+  .hdr-btn {
+    padding:5px 14px; background:#ecf0f1; border:1px solid #7f8c8d; border-radius:3px;
+    font-size:12px; font-weight:bold; color:#2c3e50; cursor:pointer;
+  }
+  .hdr-btn:hover { background:#fff; }
+
+  /* Design tools bar: OPEN left, tools centered, CLEAR right */
+  .designer-bar {
+    height: 42px;
+    background: #ecf0f1;
+    border-bottom: 2px solid #bdc3c7;
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
+    gap: 4px;
+  }
+  .bar-left { display:flex; gap:4px; }
+  .bar-center { display:flex; gap:4px; flex:1; justify-content:center; }
+  .bar-right { display:flex; gap:4px; }
+  .bar-sep { width:1px; height:28px; background:#bdc3c7; margin:0 6px; }
+
+  .icon-btn {
+    width: 38px; height: 38px;
+    background: #fff; border:1px solid #999; border-radius:3px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; font-size:22px; color:#2c3e50; position:relative;
+  }
+  .icon-btn:hover { background:#d5e8f0; }
+  .icon-btn[title]:hover::after {
+    content: attr(title);
+    position:absolute; top:42px; left:50%; transform:translateX(-50%);
+    background:#2c3e50; color:#fff; font-size:12px; font-weight:bold;
+    padding:4px 10px; border-radius:3px; white-space:nowrap; z-index:50;
+    pointer-events:none;
+  }
+
+  .txt-btn {
+    padding:5px 14px; background:#fff; border:1px solid #999; border-radius:3px;
+    font-size:12px; font-weight:bold; color:#2c3e50; cursor:pointer;
+  }
+  .txt-btn:hover { background:#d5e8f0; }
+  .txt-btn.danger { color:#e74c3c; border-color:#e74c3c; }
+  .txt-btn.danger:hover { background:#fde8e8; }
+
+  /* Tools palette */
+  .designer-tools .toolbar {
+    height: 58px;
+    background: #f7f9fa;
+    border-bottom: 1px solid #ddd;
+    display: flex;
+    align-items: center;
+    padding: 4px 16px;
+    gap: 6px;
+    overflow-x: auto;
+  }
+  .toolbar-label { color:#2c3e50; font-weight:bold; font-size:13px; white-space:nowrap; margin-right:6px; }
+  .tool-btn {
+    min-width: 74px; height: 40px;
+    background: #fff; border:2px solid #333; border-radius:4px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:13px; font-weight:bold; color:#333;
+    cursor:grab; user-select:none; flex-shrink:0; padding:4px 8px;
+  }
+  .tool-btn:hover { background:#eaf2f8; }
+
+  .canvas { width:100%; height:calc(100vh - 140px); }
+
+  .guide-outline { stroke:#bdc3c7; stroke-width:2; stroke-dasharray:8 4; fill:none; }
+  .guide-divider { stroke:#bdc3c7; stroke-width:1; stroke-dasharray:4 4; }
+  .guide-label { fill:#bdc3c7; font-size:12px; font-family:Arial; }
+
+  #renameInput {
+    display:none; position:fixed;
+    border:2px solid #2c3e50; font-size:14px; font-weight:bold;
+    font-family:Arial; padding:3px 6px; outline:none; z-index:100;
+  }
+
+  #toolPopup {
+    display:none; position:fixed;
+    background:#fff; border:2px solid #2c3e50; border-radius:4px;
+    padding:14px; z-index:200; box-shadow:0 2px 8px rgba(0,0,0,0.2);
+    min-width: 270px;
+  }
+  #toolPopup .pop-header {
+    font-size:14px; font-weight:bold; color:#fff; background:#2c3e50;
+    padding:6px 10px; margin:-14px -14px 12px -14px; border-radius:2px 2px 0 0;
+  }
+  #toolPopup label { font-size:13px; font-weight:bold; color:#2c3e50; display:block; margin-bottom:3px; }
+  #toolPopup .pop-type { font-size:12px; color:#999; margin-bottom:8px; }
+  #toolPopup input {
+    width:100%; padding:6px 8px; border:1px solid #999; border-radius:3px;
+    font-size:14px; margin-bottom:10px; display:block;
+  }
+  #toolPopup .pop-btns { display:flex; gap:6px; }
+  .pop-btn {
+    padding:6px 16px; border:1px solid #999; border-radius:3px;
+    font-size:13px; font-weight:bold; cursor:pointer; background:#fff;
+  }
+  .pop-btn.ok { background:#2c3e50; color:#fff; }
+  .pop-btn.del { color:#e74c3c; border-color:#e74c3c; }
+</style>
+</head>
+<body>
+
+<!-- @@@@ DESIGNER_TOOLS id:component @@@@ -->
+<div class="designer-tools" id="designerTools">
+
+  <!-- HEADER: Title left, NAME + SAVE right -->
+  <div class="designer-header">
+    <div class="title">Factory Layout Designer v1.0</div>
+    <span class="name-label">NAME:</span>
+    <input class="name-input" id="templateName" type="text" value="my-template" placeholder="template name" />
+    <button class="hdr-btn" onclick="saveLayout()">SAVE</button>
+    <button class="hdr-btn" onclick="exportHTML()">EXPORT</button>
+  </div>
+
+  <!-- DESIGN BAR: OPEN left, design tools centered, CLEAR right -->
+  <div class="designer-bar">
+    <div class="bar-left">
+      <button class="txt-btn" onclick="openLayout()" title="Open a saved template">OPEN</button>
+    </div>
+    <div class="bar-center">
+      <button class="icon-btn" onclick="undo()" title="Undo (Ctrl+Z)">&#x21B6;</button>
+      <div class="bar-sep"></div>
+      <button class="icon-btn" onclick="copySelected()" title="Copy">&#x2398;</button>
+      <div class="bar-sep"></div>
+      <button class="icon-btn" onclick="lineUp('h')" title="Line up horizontal">&#x2505;</button>
+      <button class="icon-btn" onclick="lineUp('v')" title="Line up vertical">&#x2503;</button>
+      <div class="bar-sep"></div>
+      <button class="icon-btn" onclick="alignSelected('left')" title="Align left">&#x21E4;</button>
+      <button class="icon-btn" onclick="alignSelected('right')" title="Align right">&#x21E5;</button>
+      <button class="icon-btn" onclick="alignSelected('top')" title="Align top">&#x2912;</button>
+      <button class="icon-btn" onclick="alignSelected('bottom')" title="Align bottom">&#x2913;</button>
+      <button class="icon-btn" onclick="alignSelected('hcenter')" title="Align center H">&#x2194;</button>
+      <button class="icon-btn" onclick="alignSelected('vcenter')" title="Align center V">&#x2195;</button>
+      <div class="bar-sep"></div>
+      <button class="icon-btn" onclick="groupSelected()" title="Group">&#x229E;</button>
+      <button class="icon-btn" onclick="ungroupSelected()" title="Ungroup">&#x229F;</button>
+    </div>
+    <div class="bar-right">
+      <button class="txt-btn danger" onclick="clearCanvas()">CLEAR</button>
+    </div>
+  </div>
+
+  <!-- TOOLS PALETTE -->
+  <div class="toolbar" id="toolbar">
+    <div class="toolbar-label">TOOLS:</div>
+  </div>
+
+  <input id="renameInput" type="text" />
+
+  <div id="toolPopup">
+    <div class="pop-header" id="popHeader">Tool Settings</div>
+    <div class="pop-type" id="popType"></div>
+    <label>NAME:</label>
+    <input id="popName" type="text" placeholder="e.g. Ranch" />
+    <label>TOKEN:</label>
+    <input id="popToken" type="text" placeholder="e.g. get-ranches" />
+    <div class="pop-btns">
+      <button class="pop-btn ok" onclick="saveTool()">OK</button>
+      <button class="pop-btn" onclick="closeTool()">CANCEL</button>
+      <button class="pop-btn del" onclick="deleteTool()">DELETE</button>
+    </div>
+  </div>
+
+</div>
+<!-- @@@@ /DESIGNER_TOOLS @@@@ -->
+
+<!-- @@@@ TEMPLATE_CANVAS id:2x2 @@@@ -->
+<svg class="canvas" id="canvas"></svg>
+<!-- @@@@ /TEMPLATE_CANVAS @@@@ -->
+
+<!-- @@@@ DESIGNER_SCRIPT id:component @@@@ -->
+<script>
+  const tools = [
+    { id: 'box',      label: 'Box',      w: 160, h: 120 },
+    { id: 'grid',     label: 'Grid',     w: 200, h: 140 },
+    { id: 'dropdown', label: 'Dropdown', w: 140, h: 34  },
+    { id: 'text',     label: 'Text',     w: 180, h: 80  },
+    { id: 'input',    label: 'Input',    w: 160, h: 34  },
+    { id: 'button',   label: 'Button',   w: 100, h: 38  },
+    { id: 'list',     label: 'List',     w: 160, h: 120 },
+    { id: 'tabs',     label: 'Tabs',     w: 200, h: 34  },
+    { id: 'bar',      label: 'Bar',      w: 240, h: 38  },
+    { id: 'label',    label: 'Label',    w: 100, h: 28  },
+  ];
+
+  const PAD = 40, GAP = 6;
+  const canvas = document.getElementById('canvas');
+  const toolbar = document.getElementById('toolbar');
+  const renameInput = document.getElementById('renameInput');
+  const toolPopup = document.getElementById('toolPopup');
+  const popHeader = document.getElementById('popHeader');
+  const popType = document.getElementById('popType');
+  const popName = document.getElementById('popName');
+  const popToken = document.getElementById('popToken');
+  const templateName = document.getElementById('templateName');
+
+  let counter = 0, drag = null, activeBox = null;
+  let selected = [];
+  let groups = [];
+  let undoStack = [];
+  const MAX_UNDO = 30; // array of arrays of g elements
+
+  // --- 2x2 Guide ---
+  function drawGuide() {
+    canvas.querySelectorAll('.guide-el').forEach(e => e.remove());
+    const cr = canvas.getBoundingClientRect();
+    const w = cr.width - PAD*2, h = cr.height - PAD*2;
+    const x = PAD, y = PAD, c1 = w*0.6, r1 = h*0.5;
+
+    gEl('rect', { x,y, width:w, height:h, class:'guide-outline guide-el' });
+    gEl('line', { x1:x+c1+GAP/2, y1:y, x2:x+c1+GAP/2, y2:y+h, class:'guide-divider guide-el' });
+    gEl('line', { x1:x, y1:y+r1+GAP/2, x2:x+w, y2:y+r1+GAP/2, class:'guide-divider guide-el' });
+
+    [['TOP LEFT (60%)', x+c1/2, y+r1/2],
+     ['TOP RIGHT (40%)', x+c1+GAP+(w*0.4-GAP)/2, y+r1/2],
+     ['BOTTOM LEFT (60%)', x+c1/2, y+r1+GAP+(h*0.5-GAP)/2],
+     ['BOTTOM RIGHT (40%)', x+c1+GAP+(w*0.4-GAP)/2, y+r1+GAP+(h*0.5-GAP)/2]
+    ].forEach(([t,tx,ty]) => gEl('text', { x:tx, y:ty, 'text-anchor':'middle', 'dominant-baseline':'middle', class:'guide-label guide-el' }, t));
+  }
+
+  function gEl(tag, attrs, text) {
+    const el = svgCreate(tag, attrs, text);
+    const firstG = canvas.querySelector('g');
+    if (firstG) canvas.insertBefore(el, firstG); else canvas.appendChild(el);
+    return el;
+  }
+
+  // --- Toolbar ---
+  tools.forEach(t => {
+    const div = document.createElement('div');
+    div.className = 'tool-btn';
+    div.textContent = t.label;
+    div.dataset.id = t.id;
+    div.addEventListener('mousedown', spawnTool);
+    toolbar.appendChild(div);
+  });
+
+  function spawnTool(e) {
+    e.preventDefault();
+    const t = tools.find(x => x.id === e.target.dataset.id);
+    if (!t) return;
+    counter++;
+    saveSnapshot();
+    const cr = canvas.getBoundingClientRect();
+    const g = makeBox(t.label, t.id, e.clientX-cr.left-t.w/2, e.clientY-cr.top-t.h/2, t.w, t.h, '');
+    drag = { el:g, ox:t.w/2, oy:t.h/2, mode:'move' };
+  }
+
+  // --- Make a Tool Box: plain white, name centered ---
+  function makeBox(name, type, x, y, w, h, token) {
+    const g = svgCreate('g', { transform:`translate(${x},${y})` });
+    canvas.appendChild(g);
+
+    svgCreate('rect', { width:w, height:h, rx:4, ry:4, fill:'#fff', stroke:'#333', 'stroke-width':2 }, null, g);
+
+    const display = name || type;
+    svgCreate('text', {
+      x:w/2, y:h/2, 'text-anchor':'middle', 'dominant-baseline':'middle',
+      fill:'#333', 'font-size':'14', 'font-weight':'bold', 'font-family':'Arial'
+    }, display, g);
+
+    svgCreate('text', {
+      x:w/2, y:h/2+16, 'text-anchor':'middle', 'dominant-baseline':'middle',
+      fill:'#2980b9', 'font-size':'11', 'font-family':'Arial'
+    }, token || '', g);
+
+    svgCreate('polygon', {
+      points:`${w},${h-12} ${w},${h} ${w-12},${h}`,
+      fill:'#999', cursor:'nwse-resize'
+    }, null, g);
+
+    g.dataset.w = w; g.dataset.h = h;
+    g.dataset.name = name; g.dataset.type = type;
+    g.dataset.token = token || '';
+    g.dataset.groupId = '';
+
+    g.querySelector('rect').addEventListener('mousedown', (e) => { if (e.button===0) { handleSelect(e,g); startMove(e,g); } });
+    g.querySelectorAll('text')[0].addEventListener('mousedown', (e) => { if (e.button===0) { handleSelect(e,g); startMove(e,g); } });
+    g.querySelector('rect').addEventListener('dblclick', (e) => startRename(e,g));
+    g.querySelectorAll('text')[0].addEventListener('dblclick', (e) => startRename(e,g));
+    g.addEventListener('contextmenu', (e) => openTool(e,g));
+    g.querySelector('polygon').addEventListener('mousedown', (e) => startResize(e,g));
+
+    return g;
+  }
+
+  function updateBoxDisplay(g) {
+    const w = parseFloat(g.dataset.w), h = parseFloat(g.dataset.h);
+    const texts = g.querySelectorAll('text');
+    texts[0].textContent = g.dataset.name || g.dataset.type;
+    texts[0].setAttribute('x', w/2); texts[0].setAttribute('y', h/2);
+    texts[1].textContent = g.dataset.token || '';
+    texts[1].setAttribute('x', w/2); texts[1].setAttribute('y', h/2+16);
+  }
+
+  // --- Selection ---
+  function handleSelect(e, g) {
+    e.preventDefault(); e.stopPropagation();
+
+    // If this box is in a group, select the whole group
+    let toSelect = [g];
+    if (g.dataset.groupId) {
+      const grp = groups.find(gr => gr.id === g.dataset.groupId);
+      if (grp) toSelect = grp.members;
+    }
+
+    if (e.shiftKey) {
+      toSelect.forEach(s => {
+        if (selected.includes(s)) {
+          selected = selected.filter(x => x !== s);
+          markSelected(s, false);
+        } else {
+          selected.push(s);
+          markSelected(s, true);
+        }
+      });
+    } else {
+      clearSelection();
+      selected = [...toSelect];
+      toSelect.forEach(s => markSelected(s, true));
+    }
+  }
+
+  function markSelected(g, on) {
+    g.querySelector('rect').setAttribute('stroke', on ? '#e74c3c' : '#333');
+    g.querySelector('rect').setAttribute('stroke-width', on ? 3 : 2);
+  }
+
+  function clearSelection() {
+    selected.forEach(g => markSelected(g, false));
+    selected = [];
+  }
+
+  canvas.addEventListener('mousedown', (e) => { if (e.target === canvas) clearSelection(); });
+
+  // --- Copy ---
+  function copySelected() {
+    if (!selected.length) return;
+    saveSnapshot();
+    const copies = [];
+    selected.forEach(g => {
+      const t = g.transform.baseVal.getItem(0);
+      copies.push(makeBox(g.dataset.name, g.dataset.type, t.matrix.e+20, t.matrix.f+20,
+        parseFloat(g.dataset.w), parseFloat(g.dataset.h), g.dataset.token));
+    });
+    clearSelection();
+    copies.forEach(c => { selected.push(c); markSelected(c, true); });
+  }
+
+  // --- Line Up: place side by side ---
+  function lineUp(dir) {
+    if (selected.length < 2) return;
+    saveSnapshot();
+    const positions = selected.map(g => {
+      const t = g.transform.baseVal.getItem(0);
+      return { g, x:t.matrix.e, y:t.matrix.f, w:parseFloat(g.dataset.w), h:parseFloat(g.dataset.h) };
+    });
+    // Sort by current position
+    if (dir === 'h') {
+      positions.sort((a,b) => a.x - b.x);
+      let cx = positions[0].x;
+      positions.forEach(p => {
+        p.g.setAttribute('transform', `translate(${cx},${p.y})`);
+        cx += p.w + 4;
+      });
+    }
+    if (dir === 'v') {
+      positions.sort((a,b) => a.y - b.y);
+      let cy = positions[0].y;
+      positions.forEach(p => {
+        p.g.setAttribute('transform', `translate(${p.x},${cy})`);
+        cy += p.h + 4;
+      });
+    }
+  }
+
+  // --- Align ---
+  function alignSelected(mode) {
+    if (selected.length < 2) return;
+    saveSnapshot();
+    const pos = selected.map(g => {
+      const t = g.transform.baseVal.getItem(0);
+      return { g, x:t.matrix.e, y:t.matrix.f, w:parseFloat(g.dataset.w), h:parseFloat(g.dataset.h) };
+    });
+
+    if (mode === 'left')    { const v = Math.min(...pos.map(p=>p.x)); pos.forEach(p => p.g.setAttribute('transform',`translate(${v},${p.y})`)); }
+    if (mode === 'right')   { const v = Math.max(...pos.map(p=>p.x+p.w)); pos.forEach(p => p.g.setAttribute('transform',`translate(${v-p.w},${p.y})`)); }
+    if (mode === 'top')     { const v = Math.min(...pos.map(p=>p.y)); pos.forEach(p => p.g.setAttribute('transform',`translate(${p.x},${v})`)); }
+    if (mode === 'bottom')  { const v = Math.max(...pos.map(p=>p.y+p.h)); pos.forEach(p => p.g.setAttribute('transform',`translate(${p.x},${v-p.h})`)); }
+    if (mode === 'hcenter') { const v = pos.reduce((s,p)=>s+p.x+p.w/2,0)/pos.length; pos.forEach(p => p.g.setAttribute('transform',`translate(${v-p.w/2},${p.y})`)); }
+    if (mode === 'vcenter') { const v = pos.reduce((s,p)=>s+p.y+p.h/2,0)/pos.length; pos.forEach(p => p.g.setAttribute('transform',`translate(${p.x},${v-p.h/2})`)); }
+  }
+
+  // --- Group / Ungroup ---
+  let groupCounter = 0;
+  function groupSelected() {
+    if (selected.length < 2) return;
+    groupCounter++;
+    const gid = 'grp-' + groupCounter;
+    const grp = { id: gid, members: [...selected] };
+    groups.push(grp);
+    selected.forEach(g => {
+      g.dataset.groupId = gid;
+      // Show grouped with dashed blue border
+      g.querySelector('rect').setAttribute('stroke-dasharray', '4 2');
+      g.querySelector('rect').setAttribute('stroke', '#2980b9');
+    });
+  }
+
+  function ungroupSelected() {
+    if (!selected.length) return;
+    const gids = new Set();
+    selected.forEach(g => { if (g.dataset.groupId) gids.add(g.dataset.groupId); });
+    gids.forEach(gid => {
+      const grp = groups.find(g => g.id === gid);
+      if (grp) {
+        grp.members.forEach(g => {
+          g.dataset.groupId = '';
+          g.querySelector('rect').setAttribute('stroke-dasharray', '');
+          g.querySelector('rect').setAttribute('stroke', '#333');
+          g.querySelector('rect').setAttribute('stroke-width', 2);
+        });
+        groups = groups.filter(g => g.id !== gid);
+      }
+    });
+    clearSelection();
+  }
+
+  // --- Double-click Rename ---
+  function startRename(e, g) {
+    e.preventDefault(); e.stopPropagation();
+    const cr = canvas.getBoundingClientRect();
+    const t = g.transform.baseVal.getItem(0);
+    const w = parseFloat(g.dataset.w);
+    renameInput.style.display = 'block';
+    renameInput.style.left = (cr.left + t.matrix.e + 4) + 'px';
+    renameInput.style.top = (cr.top + t.matrix.f + parseFloat(g.dataset.h)/2 - 12) + 'px';
+    renameInput.style.width = (w - 8) + 'px';
+    renameInput.value = g.dataset.name;
+    renameInput.focus(); renameInput.select();
+
+    const finish = () => {
+      g.dataset.name = renameInput.value;
+      updateBoxDisplay(g);
+      renameInput.style.display = 'none';
+      renameInput.removeEventListener('blur', finish);
+      renameInput.removeEventListener('keydown', onKey);
+    };
+    const onKey = (ev) => { if (ev.key==='Enter') finish(); if (ev.key==='Escape') { renameInput.style.display='none'; } };
+    renameInput.addEventListener('blur', finish);
+    renameInput.addEventListener('keydown', onKey);
+  }
+
+  // --- Right-click Tool Settings ---
+  function openTool(e, g) {
+    e.preventDefault(); e.stopPropagation();
+    activeBox = g;
+    const typeLabel = g.dataset.type.charAt(0).toUpperCase() + g.dataset.type.slice(1);
+    popHeader.textContent = typeLabel + ' Settings';
+    popType.textContent = 'Type: ' + typeLabel;
+    popName.value = g.dataset.name || '';
+    popToken.value = g.dataset.token || '';
+    toolPopup.style.display = 'block';
+    toolPopup.style.left = e.clientX + 'px';
+    toolPopup.style.top = e.clientY + 'px';
+    popName.focus();
+  }
+
+  function saveTool() {
+    if (!activeBox) return;
+    activeBox.dataset.name = popName.value;
+    activeBox.dataset.token = popToken.value;
+    updateBoxDisplay(activeBox);
+    closeTool();
+  }
+
+  function closeTool() { toolPopup.style.display = 'none'; activeBox = null; }
+
+  function deleteTool() {
+    if (!activeBox) return;
+    selected = selected.filter(s => s !== activeBox);
+    activeBox.remove();
+    closeTool();
+  }
+
+  document.addEventListener('mousedown', (e) => {
+    if (toolPopup.style.display === 'block' && !toolPopup.contains(e.target)) closeTool();
+  });
+
+  // --- Move & Resize ---
+  function startMove(e, g) {
+    e.preventDefault(); e.stopPropagation();
+    const cr = canvas.getBoundingClientRect();
+
+    // Move all selected (includes group members)
+    const toMove = selected.length > 1 ? selected : (g.dataset.groupId ? (groups.find(gr=>gr.id===g.dataset.groupId)||{members:[g]}).members : [g]);
+    const offsets = toMove.map(s => {
+      const st = s.transform.baseVal.getItem(0);
+      return { el:s, ox: e.clientX - cr.left - st.matrix.e, oy: e.clientY - cr.top - st.matrix.f };
+    });
+    drag = toMove.length > 1 ? { els:offsets, mode:'moveGroup' } :
+      { el:g, mode:'move', ox:offsets[0].ox, oy:offsets[0].oy };
+  }
+
+  function startResize(e, g) {
+    e.preventDefault(); e.stopPropagation();
+    // If grouped, resize whole group proportionally
+    if (g.dataset.groupId) {
+      const grp = groups.find(gr => gr.id === g.dataset.groupId);
+      if (grp && grp.members.length > 1) {
+        const starts = grp.members.map(m => {
+          const mt = m.transform.baseVal.getItem(0);
+          return { el:m, x:mt.matrix.e, y:mt.matrix.f, w:parseFloat(m.dataset.w), h:parseFloat(m.dataset.h) };
+        });
+        // Find bounding box of group
+        const minX = Math.min(...starts.map(s=>s.x));
+        const minY = Math.min(...starts.map(s=>s.y));
+        const maxX = Math.max(...starts.map(s=>s.x+s.w));
+        const maxY = Math.max(...starts.map(s=>s.y+s.h));
+        drag = { mode:'resizeGroup', startX:e.clientX, startY:e.clientY,
+          groupW:maxX-minX, groupH:maxY-minY, originX:minX, originY:minY, starts };
+        return;
+      }
+    }
+    drag = { el:g, mode:'resize', startX:e.clientX, startY:e.clientY, startW:parseFloat(g.dataset.w), startH:parseFloat(g.dataset.h) };
+  }
+
+  document.addEventListener('mousemove', (e) => {
+    if (!drag) return;
+    const cr = canvas.getBoundingClientRect();
+    if (drag.mode === 'move')
+      drag.el.setAttribute('transform', `translate(${e.clientX-cr.left-drag.ox},${e.clientY-cr.top-drag.oy})`);
+    if (drag.mode === 'moveGroup')
+      drag.els.forEach(d => d.el.setAttribute('transform', `translate(${e.clientX-cr.left-d.ox},${e.clientY-cr.top-d.oy})`));
+    if (drag.mode === 'resize')
+      resizeBox(drag.el, Math.max(60, drag.startW+e.clientX-drag.startX), Math.max(30, drag.startH+e.clientY-drag.startY));
+    if (drag.mode === 'resizeGroup') {
+      const scaleX = Math.max(0.3, (drag.groupW + e.clientX - drag.startX) / drag.groupW);
+      const scaleY = Math.max(0.3, (drag.groupH + e.clientY - drag.startY) / drag.groupH);
+      drag.starts.forEach(s => {
+        const nx = drag.originX + (s.x - drag.originX) * scaleX;
+        const ny = drag.originY + (s.y - drag.originY) * scaleY;
+        const nw = Math.max(60, s.w * scaleX);
+        const nh = Math.max(30, s.h * scaleY);
+        s.el.setAttribute('transform', `translate(${nx},${ny})`);
+        resizeBox(s.el, nw, nh);
+      });
+    }
+  });
+
+  document.addEventListener('mouseup', () => {
+    if (drag && (drag.mode === 'move' || drag.mode === 'moveGroup' || drag.mode === 'resize' || drag.mode === 'resizeGroup')) saveSnapshot();
+    drag = null;
+  });
+
+  function resizeBox(g, w, h) {
+    g.querySelector('rect').setAttribute('width', w);
+    g.querySelector('rect').setAttribute('height', h);
+    g.querySelector('polygon').setAttribute('points', `${w},${h-12} ${w},${h} ${w-12},${h}`);
+    g.dataset.w = w; g.dataset.h = h;
+    updateBoxDisplay(g);
+  }
+
+  // --- Undo ---
+  function saveSnapshot() {
+    const snap = [];
+    canvas.querySelectorAll('g').forEach(g => {
+      const t = g.transform.baseVal.getItem(0);
+      snap.push({ name:g.dataset.name, type:g.dataset.type, x:t.matrix.e, y:t.matrix.f,
+        w:parseFloat(g.dataset.w), h:parseFloat(g.dataset.h), token:g.dataset.token||'',
+        groupId:g.dataset.groupId||'' });
+    });
+    undoStack.push(JSON.stringify(snap));
+    if (undoStack.length > MAX_UNDO) undoStack.shift();
+  }
+
+  function undo() {
+    if (!undoStack.length) return;
+    clearCanvas();
+    const snap = JSON.parse(undoStack.pop());
+    snap.forEach(b => {
+      const g = makeBox(b.name, b.type, b.x, b.y, b.w, b.h, b.token);
+      if (b.groupId) g.dataset.groupId = b.groupId;
+    });
+    // Rebuild groups
+    const gids = new Set();
+    canvas.querySelectorAll('g').forEach(g => { if (g.dataset.groupId) gids.add(g.dataset.groupId); });
+    gids.forEach(gid => {
+      const members = [];
+      canvas.querySelectorAll('g').forEach(g => { if (g.dataset.groupId === gid) members.push(g); });
+      if (members.length > 1) {
+        groups.push({ id:gid, members });
+        members.forEach(g => { g.querySelector('rect').setAttribute('stroke-dasharray','4 2'); g.querySelector('rect').setAttribute('stroke','#2980b9'); });
+      }
+    });
+  }
+
+  // --- Keyboard: Delete, Ctrl+Z, Arrow nudge ---
+  document.addEventListener('keydown', (e) => {
+    if (document.activeElement.tagName === 'INPUT') return;
+
+    if (e.key === 'Delete' && selected.length) {
+      saveSnapshot();
+      selected.forEach(g => g.remove());
+      selected = [];
+    }
+    if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
+      e.preventDefault();
+      undo();
+    }
+    // Arrow keys: nudge 1px, Shift+Arrow: nudge 10px
+    const arrows = { ArrowLeft:[-1,0], ArrowRight:[1,0], ArrowUp:[0,-1], ArrowDown:[0,1] };
+    if (arrows[e.key] && selected.length) {
+      e.preventDefault();
+      const step = e.shiftKey ? 10 : 1;
+      const [dx, dy] = arrows[e.key];
+      if (!e.repeat) saveSnapshot(); // snapshot only on first press
+      selected.forEach(g => {
+        const t = g.transform.baseVal.getItem(0);
+        g.setAttribute('transform', `translate(${t.matrix.e + dx*step},${t.matrix.f + dy*step})`);
+      });
+    }
+  });
+
+  // --- SAVE (File System Access API — standard Windows Save dialog) ---
+  async function saveLayout() {
+    const name = templateName.value || 'my-template';
+    const boxes = [];
+    canvas.querySelectorAll('g').forEach(g => {
+      const t = g.transform.baseVal.getItem(0);
+      boxes.push({ name:g.dataset.name, type:g.dataset.type, x:t.matrix.e, y:t.matrix.f,
+        w:parseFloat(g.dataset.w), h:parseFloat(g.dataset.h), token:g.dataset.token||'',
+        groupId:g.dataset.groupId||'' });
+    });
+    if (!boxes.length) { alert('Nothing to save.'); return; }
+    const json = JSON.stringify({ template:name, tools:boxes }, null, 2);
+    try {
+      const handle = await window.showSaveFilePicker({
+        suggestedName: name + '.factory.json',
+        types: [{ description:'Factory Template', accept:{'application/json':['.json']} }]
+      });
+      const writable = await handle.createWritable();
+      await writable.write(json);
+      await writable.close();
+      alert('Saved "' + name + '" (' + boxes.length + ' tools)');
+    } catch(e) {
+      if (e.name !== 'AbortError') alert('Save failed: ' + e.message);
+    }
+  }
+
+  // --- OPEN (File System Access API — standard Windows Open dialog) ---
+  async function openLayout() {
+    try {
+      const [handle] = await window.showOpenFilePicker({
+        types: [{ description:'Factory Template', accept:{'application/json':['.json']} }]
+      });
+      const file = await handle.getFile();
+      const text = await file.text();
+      const data = JSON.parse(text);
+      const boxes = data.tools || data;
+      const name = data.template || file.name.replace('.factory.json','').replace('.json','');
+      clearCanvas();
+      templateName.value = name;
+      (Array.isArray(boxes) ? boxes : []).forEach(b => {
+        const g = makeBox(b.name, b.type, b.x, b.y, b.w, b.h, b.token);
+        if (b.groupId) g.dataset.groupId = b.groupId;
+      });
+      // Rebuild group references
+      const gids = new Set();
+      canvas.querySelectorAll('g').forEach(g => { if (g.dataset.groupId) gids.add(g.dataset.groupId); });
+      gids.forEach(gid => {
+        const members = [];
+        canvas.querySelectorAll('g').forEach(g => { if (g.dataset.groupId === gid) members.push(g); });
+        if (members.length > 1) {
+          groups.push({ id:gid, members });
+          members.forEach(g => { g.querySelector('rect').setAttribute('stroke-dasharray','4 2'); g.querySelector('rect').setAttribute('stroke','#2980b9'); });
+        }
+      });
+    } catch(e) {
+      if (e.name !== 'AbortError') alert('Open failed: ' + e.message);
+    }
+  }
+
+  // --- EXPORT ---
+  function exportHTML() {
+    const boxes = [];
+    canvas.querySelectorAll('g').forEach(g => {
+      const t = g.transform.baseVal.getItem(0);
+      boxes.push({ name:g.dataset.name, type:g.dataset.type, x:t.matrix.e, y:t.matrix.f,
+        w:parseFloat(g.dataset.w), h:parseFloat(g.dataset.h), token:g.dataset.token||'' });
+    });
+    if (!boxes.length) { alert('Nothing to export.'); return; }
+
+    let html = '<!DOCTYPE html>\n<html lang="en">\n<head>\n<meta charset="UTF-8">\n';
+    html += '<title>' + (templateName.value || 'Factory Template') + '</title>\n<style>\n';
+    html += '  * { margin:0; padding:0; box-sizing:border-box; }\n';
+    html += '  body { font-family:Arial,sans-serif; height:100vh; padding:8px; background:#f0f0f0; }\n';
+    html += '  .container { display:grid; grid-template-columns:60% 40%; grid-template-rows:50% 50%; height:100%; gap:6px; }\n';
+    html += '  .quad { border:2px solid #333; border-radius:6px; background:#fff; display:flex; flex-direction:column; }\n';
+    html += '  .quad-header { background:#2c3e50; color:#fff; padding:6px 12px; font-weight:bold; font-size:14px; border-radius:4px 4px 0 0; }\n';
+    html += '  .quad-body { flex:1; padding:10px; position:relative; }\n';
+    html += '  .component { border:2px solid #333; border-radius:4px; background:#fff; overflow:hidden; }\n';
+    html += '  .component-body { padding:8px; }\n';
+    html += '</style>\n</head>\n<body>\n\n';
+
+    const cr = canvas.getBoundingClientRect();
+    const tw = cr.width - PAD*2, th = cr.height - PAD*2;
+    const splitX = PAD + tw*0.6, splitY = PAD + th*0.5;
+
+    const quads = { tl:[], tr:[], bl:[], br:[] };
+    boxes.forEach(b => {
+      const cx = b.x+b.w/2, cy = b.y+b.h/2;
+      if (cx < splitX && cy < splitY) quads.tl.push(b);
+      else if (cx >= splitX && cy < splitY) quads.tr.push(b);
+      else if (cx < splitX && cy >= splitY) quads.bl.push(b);
+      else quads.br.push(b);
+    });
+
+    const quadNames = { tl:'Tokens / Actions', tr:'Chat', bl:'Grid / Results', br:'Details' };
+    html += '<div class="container">\n\n';
+    ['tl','tr','bl','br'].forEach(q => {
+      html += '  <div class="quad">\n';
+      html += '    <div class="quad-header">' + quadNames[q] + '</div>\n';
+      html += '    <div class="quad-body">\n';
+      quads[q].forEach(b => {
+        const marker = (b.name || b.type).toUpperCase().replace(/\s+/g, '_');
+        html += '      <!-- @@@@ ' + marker + ' id:' + b.type + ' @@@@ -->\n';
+        html += '      <div class="component" style="width:'+Math.round(b.w)+'px;height:'+Math.round(b.h)+'px;">\n';
+        html += '        <div class="component-body">\n';
+        if (b.token) html += '          <!-- TOKEN: ' + b.token + ' -->\n';
+        html += '          <!-- FACTORY: inject ' + b.type + ' component here -->\n';
+        html += '        </div>\n';
+        html += '      </div>\n';
+        html += '      <!-- @@@@ /' + marker + ' @@@@ -->\n';
+      });
+      html += '    </div>\n';
+      html += '  </div>\n\n';
+    });
+
+    html += '</div>\n\n</body>\n</html>';
+
+    const blob = new Blob([html], { type:'text/html' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = (templateName.value || 'factory-template') + '.html';
+    a.click();
+  }
+
+  function clearCanvas() {
+    canvas.querySelectorAll('g').forEach(g => g.remove());
+    selected = []; groups = [];
+  }
+
+  // --- SVG Helper ---
+  function svgCreate(tag, attrs, text, parent) {
+    const el = document.createElementNS('http://www.w3.org/2000/svg', tag);
+    if (attrs) Object.entries(attrs).forEach(([k,v]) => el.setAttribute(k,v));
+    if (text) el.textContent = text;
+    if (parent) parent.appendChild(el);
+    return el;
+  }
+
+  drawGuide();
+</script>
+<!-- @@@@ /DESIGNER_SCRIPT @@@@ -->
+
+</body>
+</html>

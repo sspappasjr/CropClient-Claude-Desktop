@@ -1,0 +1,37 @@
+<!-- S3: Bottom-Left Section - Data Grid -->
+        <div class="section section-s3">
+            <div class="s3-data-grid">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <h3 style="color: #2a5298; margin: 0;">📊 Irrigation Data Grid</h3>
+                    <button 
+                        onclick="resetIrrigationData()"
+                        style="background: #ff9800; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 600;">
+                        🔄 Reset Data
+                    </button>
+                </div>
+                
+                <div id="recordCount" style="margin-bottom: 10px; color: #666; font-size: 14px;">
+                    Loading records...
+                </div>
+                
+                <div style="overflow-x: auto; max-height: 300px; overflow-y: auto;">
+                    <table id="irrigationGrid" style="width: 100%; border-collapse: collapse; font-size: 12px;">
+                        <thead>
+                            <tr style="background: #2a5298; color: white; position: sticky; top: 0;">
+                                <th style="padding: 8px; text-align: center; border: 1px solid #ddd;">ID</th>
+                                <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Ranch</th>
+                                <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Planting</th>
+                                <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Date</th>
+                                <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Rec Hrs</th>
+                                <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Mgr Hrs</th>
+                                <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Interval</th>
+                                <th style="padding: 8px; text-align: left; border: 1px solid #ddd;">Applied</th>
+                            </tr>
+                        </thead>
+                        <tbody id="gridBody">
+                            <!-- Data rows will be inserted here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>

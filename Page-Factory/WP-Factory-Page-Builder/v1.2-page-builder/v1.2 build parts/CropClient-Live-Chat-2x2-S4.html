@@ -1,0 +1,99 @@
+<!-- S4: Bottom-Right Section - Form Editor -->
+        <div class="section section-s4">
+            <div class="s4-form-editor" style="padding: 15px;">
+                <h3 style="color: #ff9800; text-align: center; margin-bottom: 20px;">📝 Selected Record Editor</h3>
+                
+                <!-- Record ID Display -->
+                <div style="background: #fff3e0; padding: 10px; border-radius: 6px; margin-bottom: 15px; text-align: center;">
+                    <strong>Record ID: </strong>
+                    <span id="formRecordId" style="color: #ff9800; font-size: 18px;">-</span>
+                </div>
+                
+                <!-- Form Fields in Grid Layout -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                    <!-- Ranch -->
+                    <div>
+                        <label style="display: block; font-size: 12px; color: #666; margin-bottom: 4px;">Ranch:</label>
+                        <input type="text" id="formRanch" readonly 
+                            style="width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 4px; background: #f5f5f5; font-size: 13px;">
+                    </div>
+                    
+                    <!-- Planting -->
+                    <div>
+                        <label style="display: block; font-size: 12px; color: #666; margin-bottom: 4px;">Planting:</label>
+                        <input type="text" id="formPlanting" readonly 
+                            style="width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 4px; background: #f5f5f5; font-size: 13px;">
+                    </div>
+                    
+                    <!-- Date -->
+                    <div>
+                        <label style="display: block; font-size: 12px; color: #666; margin-bottom: 4px;">Date:</label>
+                        <input type="text" id="formDate" readonly 
+                            style="width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 4px; background: #f5f5f5; font-size: 13px;">
+                    </div>
+                    
+                    <!-- Interval -->
+                    <div>
+                        <label style="display: block; font-size: 12px; color: #666; margin-bottom: 4px;">Interval (days):</label>
+                        <input type="text" id="formInterval" readonly 
+                            style="width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 4px; background: #f5f5f5; font-size: 13px;">
+                    </div>
+                    
+                    <!-- Recommended Hours -->
+                    <div>
+                        <label style="display: block; font-size: 12px; color: #666; margin-bottom: 4px;">Rec Hours:</label>
+                        <input type="text" id="formRecHours" 
+                            style="width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px;">
+                    </div>
+                    
+                    <!-- Manager Hours -->
+                    <div>
+                        <label style="display: block; font-size: 12px; color: #666; margin-bottom: 4px;">Mgr Hours:</label>
+                        <input type="text" id="formMgrHours" 
+                            style="width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px;">
+                    </div>
+                    
+                    <!-- Water Applied -->
+                    <div>
+                        <label style="display: block; font-size: 12px; color: #666; margin-bottom: 4px;">Water Applied:</label>
+                        <input type="text" id="formWaterApplied" 
+                            style="width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 4px; background: #e8f5e9; font-size: 13px;">
+                    </div>
+                    
+                    <!-- Method -->
+                    <div>
+                        <label style="display: block; font-size: 12px; color: #666; margin-bottom: 4px;">Method:</label>
+                        <input type="text" id="formMethod" readonly 
+                            style="width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 4px; background: #f5f5f5; font-size: 13px;">
+                    </div>
+                </div>
+                
+                <!-- Message Field (full width) -->
+                <div style="margin-top: 12px;">
+                    <label style="display: block; font-size: 12px; color: #666; margin-bottom: 4px;">Field Message:</label>
+                    <input type="text" id="formMessage" placeholder="Instructions for field worker..." 
+                        style="width: 100%; padding: 8px; border: 2px solid #ffd700; border-radius: 4px; background: #fffacd; font-size: 13px;">
+                </div>
+                
+                <!-- CRUD Buttons -->
+                <div style="display: flex; gap: 8px; margin-top: 15px; justify-content: center;">
+                    <button onclick="handleFormCreate()" 
+                        style="padding: 8px 16px; background: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: 600;">
+                        ✨ Create
+                    </button>
+                    <button onclick="handleFormRead()" 
+                        style="padding: 8px 16px; background: #2196F3; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: 600;">
+                        👁️ Read
+                    </button>
+                    <button onclick="handleFormUpdate()" 
+                        style="padding: 8px 16px; background: #ff9800; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: 600;">
+                        💾 Update
+                    </button>
+                    <button onclick="handleFormDelete()" 
+                        style="padding: 8px 16px; background: #f44336; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: 600;">
+                        🗑️ Delete
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>

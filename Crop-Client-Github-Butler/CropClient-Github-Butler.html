@@ -1,634 +1,1559 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CropClient - GitHub Butler</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CropClient - GitHub Butler v1.2</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #232734;
+    --border: #2e3345;
+    --text: #e1e4ed;
+    --text-dim: #8b90a0;
+    --accent: #4ade80;
+    --accent-dim: #22703e;
+    --error: #f87171;
+    --error-dim: #7f1d1d;
+    --warn: #fbbf24;
+    --info: #60a5fa;
+    --purple: #c084fc;
+    --purple-dim: #4c1d95;
+    --font-mono: 'JetBrains Mono', monospace;
+    --font-sans: 'DM Sans', sans-serif;
+    --left-width: 60%;
+    --right-width: 40%;
+    --top-height: 50%;
+    --bottom-height: 50%;
+  }
 
-        html, body {
-            height: 100vh;
-            overflow: hidden;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
 
-        body {
-            background: #f5f5f5;
-            display: flex;
-            flex-direction: column;
-        }
+  body {
+    font-family: var(--font-sans);
+    background: var(--bg);
+    color: var(--text);
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
 
-        .header {
-            background: #2E7D32;
-            color: white;
-            padding: 8px 15px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid #1B5E20;
-        }
+  /* ---- HEADER ---- */
+  .header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 10px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
 
-        .header h1 {
-            font-size: 1.1rem;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-weight: 600;
-        }
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
 
-        .header h1::before {
-            content: "🐙";
-            font-size: 1.3rem;
-        }
+  .header-icon {
+    width: 32px; height: 32px;
+    background: linear-gradient(135deg, var(--accent), #22c55e);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+  }
 
-        .header-right {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-        }
+  .header h1 {
+    font-family: var(--font-mono);
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+  }
 
-        .version {
-            opacity: 0.7;
-            font-size: 0.75rem;
-        }
+  .header h1 span { color: var(--accent); }
 
-        .toolbar {
-            background: #f5f5f5;
-            padding: 8px 15px;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-            display: flex;
-            gap: 10px;
-            align-items: center;
-            border-bottom: 1px solid #e0e0e0;
-        }
+  .header-right {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
 
-        .toolbar select {
-            flex: 1;
-            padding: 6px 10px;
-            border: 1px solid #ccc;
-            border-radius: 3px;
-            font-size: 0.9rem;
-            max-width: 350px;
-            background: white;
-        }
+  .header-right .version {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-dim);
+  }
 
-        .toolbar button {
-            background: #4CAF50;
-            color: white;
-            border: none;
-            padding: 6px 14px;
-            border-radius: 3px;
-            cursor: pointer;
-            font-size: 0.85rem;
-            font-weight: 500;
-            transition: background 0.2s ease;
-        }
+  .status-badge {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
 
-        .toolbar button:hover {
-            background: #45a049;
-        }
+  .status-badge.online { background: var(--accent-dim); color: var(--accent); }
+  .status-badge.offline { background: var(--error-dim); color: var(--error); }
 
-        .main-container {
-            flex: 1;
-            display: flex;
-            overflow: hidden;
-            background: #fafafa;
-        }
+  .status-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+    animation: pulse 2s infinite;
+  }
 
-        .sidebar {
-            width: 220px;
-            background: white;
-            border-right: 1px solid #e0e0e0;
-            display: flex;
-            flex-direction: column;
-        }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
 
-        .sidebar-header {
-            padding: 8px 12px;
-            background: #f5f5f5;
-            border-bottom: 1px solid #e0e0e0;
-            font-weight: 600;
-            font-size: 0.85rem;
-            color: #555;
-        }
+  /* ---- TOOLBAR ---- */
+  .toolbar {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 8px 20px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-shrink: 0;
+  }
 
-        .sidebar-content {
-            flex: 1;
-            overflow-y: auto;
-        }
+  .toolbar select {
+    flex: 1;
+    max-width: 400px;
+    padding: 6px 10px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: 12px;
+  }
 
-        .tree-item {
-            padding: 6px 12px;
-            cursor: pointer;
-            font-size: 0.85rem;
-            border-bottom: 1px solid #f5f5f5;
-            display: grid;
-            grid-template-columns: 20px 1fr;
-            gap: 8px;
-            align-items: center;
-            transition: background 0.15s ease;
-        }
+  .toolbar .btn {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    padding: 6px 14px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    cursor: pointer;
+    background: var(--surface2);
+    color: var(--text-dim);
+    transition: all 0.15s;
+  }
 
-        .tree-item:hover {
-            background: #f5f5f5;
-        }
+  .toolbar .btn:hover { color: var(--text); border-color: var(--text-dim); }
 
-        .tree-item.selected {
-            background: #E8F5E9;
-            color: #2E7D32;
-            font-weight: 500;
-        }
+  /* ---- MAIN LAYOUT: sidebar + 2x2 ---- */
+  .main-layout {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    overflow: hidden;
+  }
 
-        .content-area {
-            flex: 1;
-            background: white;
-            margin: 10px;
-            border: 1px solid #e0e0e0;
-            border-radius: 3px;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
+  /* ---- SIDEBAR ---- */
+  .sidebar {
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    padding: 16px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
 
-        .content-header {
-            padding: 12px 15px;
-            border-bottom: 1px solid #e0e0e0;
-            background: #fafafa;
-        }
+  .section-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--text-dim);
+    margin-bottom: 4px;
+  }
 
-        .content-header h2 {
-            color: #333;
-            margin-bottom: 5px;
-            font-size: 1rem;
-            font-weight: 600;
-        }
+  .skill-list {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
 
-        .content-header .repo-url {
-            font-family: 'Courier New', monospace;
-            background: white;
-            padding: 4px 8px;
-            border: 1px solid #e0e0e0;
-            border-radius: 3px;
-            font-size: 0.8rem;
-            color: #666;
-            display: inline-block;
-        }
+  .skill-item {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    padding: 8px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s;
+    border: 1px solid transparent;
+    color: var(--text-dim);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
 
-        .file-output-header {
-            padding: 8px 15px;
-            border-bottom: 1px solid #e0e0e0;
-            background: #f5f5f5;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
+  .skill-item:hover {
+    background: var(--surface2);
+    color: var(--text);
+  }
 
-        .file-output-title {
-            font-size: 0.9rem;
-            font-weight: 600;
-            color: #333;
-        }
+  .skill-item.selected {
+    background: var(--accent-dim);
+    color: var(--accent);
+    border-color: var(--accent);
+  }
 
-        .view-options {
-            display: flex;
-            gap: 15px;
-            align-items: center;
-            font-size: 0.85rem;
-        }
+  .skill-item.running {
+    background: var(--accent-dim);
+    color: var(--accent);
+    border-color: var(--accent);
+    animation: pulse 1.5s infinite;
+  }
 
-        .view-options label {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            cursor: pointer;
-        }
+  .skill-dot {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
 
-        .view-options input[type="radio"] {
-            cursor: pointer;
-        }
+  .skill-dot.git { background: var(--accent); }
+  .skill-dot.browse { background: var(--info); }
+  .skill-dot.repo { background: var(--warn); }
 
-        .content-body {
-            flex: 1;
-            overflow-y: auto;
-        }
+  /* ---- 2x2 GRID ---- */
+  .grid-2x2 {
+    display: grid;
+    grid-template-columns: var(--left-width) var(--right-width);
+    grid-template-rows: var(--top-height) var(--bottom-height);
+    gap: 1px;
+    background: var(--border);
+    overflow: hidden;
+  }
 
-        .file-list {
-            width: 100%;
-        }
+  .quadrant {
+    background: var(--bg);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
 
-        .file-list-item {
-            display: grid;
-            grid-template-columns: 30px 1fr 120px;
-            gap: 10px;
-            padding: 8px 15px;
-            border-bottom: 1px solid #f5f5f5;
-            font-size: 0.85rem;
-            transition: background 0.15s ease;
-            align-items: center;
-        }
+  .quad-header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 8px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
 
-        .file-list-item:hover {
-            background: #fafafa;
-        }
+  .quad-title {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
 
-        .file-type {
-            text-align: center;
-            font-size: 1.1rem;
-        }
+  .quad-title .dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
 
-        .file-details {
-            color: #999;
-            font-size: 0.8rem;
-        }
+  .quad-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px;
+  }
 
-        .actions-bar {
-            display: flex;
-            gap: 8px;
-            padding: 10px 15px;
-            background: #f5f5f5;
-            border-top: 1px solid #e0e0e0;
-            align-items: center;
-        }
+  /* ---- TL: TOKENS / ACTIONS ---- */
+  .dot-green { background: var(--accent); }
+  .dot-blue { background: var(--info); }
+  .dot-purple { background: var(--purple); }
+  .dot-orange { background: var(--warn); }
 
-        .actions-bar .status-message {
-            flex: 1;
-            padding: 6px 12px;
-            background: #E3F2FD;
-            color: #1976D2;
-            border-left: 3px solid #2196F3;
-            font-size: 0.8rem;
-            margin: 0;
-        }
+  .token-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
 
-        .action-btn {
-            background: #4CAF50;
-            color: white;
-            border: none;
-            padding: 6px 14px;
-            border-radius: 3px;
-            cursor: pointer;
-            font-size: 0.85rem;
-            font-weight: 500;
-            transition: background 0.2s ease;
-        }
+  .token-chip {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    padding: 8px 14px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
 
-        .action-btn:hover {
-            background: #45a049;
-        }
+  .token-chip:hover {
+    background: var(--surface2);
+    color: var(--text);
+    border-color: var(--text-dim);
+  }
 
-        .loading {
-            text-align: center;
-            padding: 30px;
-            color: #999;
-            font-size: 0.85rem;
-        }
+  .token-chip.active {
+    background: var(--accent-dim);
+    color: var(--accent);
+    border-color: var(--accent);
+  }
 
-        .empty-state {
-            text-align: center;
-            padding: 40px 20px;
-            color: #999;
-            font-size: 0.85rem;
-        }
+  .token-chip.running {
+    animation: pulse 1s infinite;
+    border-color: var(--accent);
+    color: var(--accent);
+  }
 
-        .empty-state::before {
-            content: "📂";
-            font-size: 2rem;
-            display: block;
-            margin-bottom: 15px;
-        }
-    </style>
+  .agent-section {
+    margin-top: 16px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+  }
+
+  .agent-section .section-label {
+    margin-bottom: 8px;
+  }
+
+  /* ---- TR: CHAT LOG ---- */
+  .chat-log {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    line-height: 1.6;
+  }
+
+  .chat-entry {
+    margin-bottom: 6px;
+    padding: 4px 0;
+  }
+
+  .chat-time {
+    color: var(--text-dim);
+    font-size: 10px;
+  }
+
+  .chat-cmd { color: var(--accent); font-weight: 600; }
+  .chat-info { color: var(--info); }
+  .chat-warn { color: var(--warn); }
+  .chat-error { color: var(--error); }
+  .chat-result { color: var(--text-dim); margin-left: 12px; }
+
+  .chat-input-area {
+    flex-shrink: 0;
+    border-top: 1px solid var(--border);
+    padding: 8px;
+    display: flex;
+    gap: 8px;
+  }
+
+  .chat-input-area input {
+    flex: 1;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    padding: 8px 12px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    outline: none;
+  }
+
+  .chat-input-area input:focus { border-color: var(--accent); }
+
+  .chat-input-area button {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 600;
+    padding: 8px 16px;
+    border-radius: 6px;
+    border: none;
+    background: var(--accent);
+    color: #0f1117;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+
+  .chat-input-area button:hover { background: #6ee7a0; }
+
+  /* ---- BL: GRID / JSON RESULTS ---- */
+  .results-toolbar {
+    flex-shrink: 0;
+    display: flex;
+    gap: 8px;
+    padding: 0 12px 8px;
+  }
+
+  .btn-sm {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .btn-sm:hover { color: var(--text); border-color: var(--text-dim); }
+  .btn-sm.active { background: var(--accent-dim); color: var(--accent); border-color: var(--accent); }
+
+  .grid-wrap {
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: auto;
+    max-height: 100%;
+  }
+
+  .grid-wrap table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+
+  .grid-wrap thead {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+  }
+
+  .grid-wrap th {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-dim);
+    background: var(--surface2);
+    padding: 8px 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  .grid-wrap th:hover { color: var(--text); }
+
+  .grid-wrap td {
+    padding: 6px 12px;
+    border-bottom: 1px solid var(--border);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    white-space: nowrap;
+    max-width: 250px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .grid-wrap tr:hover td { background: var(--surface2); }
+  .grid-wrap tr.selected td { background: var(--accent-dim); color: var(--accent); }
+
+  .json-view {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    line-height: 1.6;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 12px;
+    overflow: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  .json-key { color: var(--info); }
+  .json-string { color: var(--accent); }
+  .json-number { color: var(--warn); }
+  .json-bool { color: var(--purple); }
+  .json-null { color: var(--text-dim); }
+
+  /* ---- BR: DETAILS + CRUD ---- */
+  .detail-field {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+
+  .detail-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-dim);
+    min-width: 80px;
+    flex-shrink: 0;
+  }
+
+  .detail-value {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text);
+    padding: 4px 8px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .detail-value.editable {
+    background: var(--surface2);
+    border-color: var(--info);
+    cursor: text;
+  }
+
+  .crud-footer {
+    flex-shrink: 0;
+    border-top: 1px solid var(--border);
+    padding: 8px 12px;
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .crud-btn {
+    flex: 1;
+    min-width: 60px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    padding: 8px 6px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s;
+    color: white;
+  }
+
+  .crud-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  }
+
+  .crud-btn:active { transform: translateY(0); }
+
+  .crud-btn.create { background: linear-gradient(135deg, #2196F3, #1976D2); }
+  .crud-btn.read { background: linear-gradient(135deg, #4ade80, #22703e); }
+  .crud-btn.update { background: linear-gradient(135deg, #ff9800, #f57c00); }
+  .crud-btn.delete { background: linear-gradient(135deg, #f87171, #b91c1c); }
+
+  /* ---- EMPTY STATE ---- */
+  .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: var(--text-dim);
+    text-align: center;
+    gap: 8px;
+    font-size: 13px;
+  }
+
+  .empty-state .icon { font-size: 36px; opacity: 0.3; }
+
+  /* ---- SCROLLBAR ---- */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--text-dim); }
+
+  /* ---- LOGIN OVERLAY ---- */
+  .btn-login {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 12px;
+    border-radius: 6px;
+    border: 1px solid var(--accent);
+    background: var(--accent-dim);
+    color: var(--accent);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .btn-login:hover { background: var(--accent); color: #0f1117; }
+</style>
 </head>
 <body>
-    <div class="header">
-        <h1>GitHub Butler</h1>
-        <div class="header-right">
-            <span id="usernameDisplay" style="font-size:0.85rem;"></span>
-            <button onclick="loginGitHub()" id="loginBtn" style="background:#1B5E20;color:white;border:1px solid #4CAF50;padding:4px 12px;border-radius:3px;cursor:pointer;font-size:0.8rem;">Login</button>
-            <div class="version">v1.1</div>
+
+<!-- ======== HEADER ======== -->
+<div class="header">
+  <div class="header-left">
+    <div class="header-icon">🐙</div>
+    <h1>GitHub <span>Butler</span></h1>
+  </div>
+  <div class="header-right">
+    <div id="ghStatus" class="status-badge offline">
+      <span class="status-dot"></span>
+      <span id="ghStatusText">Not connected</span>
+    </div>
+    <button class="btn-login" id="loginBtn" onclick="loginGitHub()">Login</button>
+    <span class="version">v1.2</span>
+  </div>
+</div>
+
+<!-- ======== TOOLBAR ======== -->
+<div class="toolbar">
+  <select id="repoSelect" onchange="loadRepo()">
+    <option value="">-- Login first --</option>
+  </select>
+  <button class="btn" onclick="refreshRepos()">Refresh</button>
+  <button class="btn" onclick="createNewRepo()">+ New Repo</button>
+</div>
+
+<!-- ======== MAIN: SIDEBAR + 2x2 ======== -->
+<div class="main-layout">
+
+  <!-- SIDEBAR: Skills -->
+  <div class="sidebar">
+    <div>
+      <div class="section-label">Git Skills</div>
+      <div class="skill-list" id="gitSkillList">
+        <div class="skill-item" onclick="runSkill('save-work')" data-skill="save-work">
+          <span class="skill-dot git"></span>Save Work
         </div>
+        <div class="skill-item" onclick="runSkill('get-latest')" data-skill="get-latest">
+          <span class="skill-dot git"></span>Get Latest
+        </div>
+        <div class="skill-item" onclick="runSkill('sync-check')" data-skill="sync-check">
+          <span class="skill-dot git"></span>Sync Check
+        </div>
+        <div class="skill-item" onclick="runSkill('new-branch')" data-skill="new-branch">
+          <span class="skill-dot git"></span>New Branch
+        </div>
+      </div>
     </div>
 
-    <div class="toolbar">
-        <select id="repoSelect" onchange="loadRepo()">
-            <option value="">Loading repositories...</option>
-        </select>
-        <button onclick="createNewRepo()">+ Create New Repo</button>
-        <button onclick="refreshRepos()">🔄 Refresh</button>
+    <div>
+      <div class="section-label">Browse</div>
+      <div class="skill-list" id="browseSkillList">
+        <div class="skill-item" onclick="runSkill('browse-files')" data-skill="browse-files">
+          <span class="skill-dot browse"></span>Browse Files
+        </div>
+        <div class="skill-item" onclick="runSkill('view-log')" data-skill="view-log">
+          <span class="skill-dot browse"></span>View Log
+        </div>
+        <div class="skill-item" onclick="runSkill('view-status')" data-skill="view-status">
+          <span class="skill-dot browse"></span>View Status
+        </div>
+      </div>
     </div>
 
-    <div class="main-container">
-        <div class="sidebar">
-            <div class="sidebar-header">Repository Contents</div>
-            <div class="sidebar-content" id="sidebarContent">
-                <div class="loading">Select a repository</div>
-            </div>
+    <div>
+      <div class="section-label">Deploy</div>
+      <div class="skill-list" id="deploySkillList">
+        <div class="skill-item" onclick="runSkill('deploy-api')" data-skill="deploy-api">
+          <span class="skill-dot git"></span>Deploy API
         </div>
-
-        <div class="content-area">
-            <div class="content-header">
-                <h2 id="contentTitle">Welcome to GitHub Butler</h2>
-                <div class="repo-url" id="repoUrl">Select a repository to get started</div>
-            </div>
-            <div class="file-output-header" id="fileOutputHeader" style="display: none;">
-                <div class="file-output-title" id="fileOutputTitle">Files</div>
-                <div class="view-options">
-                    <label>
-                        <input type="radio" name="viewType" value="grid" checked onchange="changeViewType('grid')">
-                        Grid
-                    </label>
-                    <label>
-                        <input type="radio" name="viewType" value="list" onchange="changeViewType('list')">
-                        List
-                    </label>
-                </div>
-            </div>
-            <div class="content-body" id="contentBody">
-            </div>
-            <div class="actions-bar">
-                <div class="status-message" id="statusMessage">Ready</div>
-                <button class="action-btn" onclick="pullChanges()">⬇️ Pull</button>
-                <button class="action-btn" onclick="pushChanges()">⬆️ Push</button>
-                <button class="action-btn" onclick="syncRepo()">🔄 Sync</button>
-            </div>
-        </div>
+      </div>
     </div>
 
-    <script>
-        // ========================================
-        // GITHUB BUTLER v1.1 - LIVE API (Irrigation package removed)
-        // ========================================
-        let ghToken = sessionStorage.getItem('gh_token') || '';
-        let ghUser = sessionStorage.getItem('gh_user') || '';
-        let currentRepo = null;
-        let currentPath = '';
-        let repos = [];
-        let viewType = 'grid';
+    <div>
+      <div class="section-label">Repo Tools</div>
+      <div class="skill-list" id="repoSkillList">
+        <div class="skill-item" onclick="runSkill('create-repo')" data-skill="create-repo">
+          <span class="skill-dot repo"></span>Create Repo
+        </div>
+        <div class="skill-item" onclick="runSkill('clone-repo')" data-skill="clone-repo">
+          <span class="skill-dot repo"></span>Clone Repo
+        </div>
+      </div>
+    </div>
 
-        const API = 'https://api.github.com';
+    <!-- Repo Info -->
+    <div id="repoInfoPanel" style="margin-top:auto; padding-top:12px; border-top:1px solid var(--border);">
+      <div class="section-label">Selected Repo</div>
+      <div id="repoInfoName" style="font-family:var(--font-mono); font-size:11px; color:var(--text-dim); margin-top:4px;">None</div>
+      <div id="repoInfoUrl" style="font-family:var(--font-mono); font-size:10px; color:var(--text-dim); margin-top:2px; word-break:break-all;">—</div>
+    </div>
+  </div>
 
-        function ghHeaders() {
-            return {
-                'Authorization': 'token ' + ghToken,
-                'Accept': 'application/vnd.github.v3+json'
-            };
-        }
+  <!-- ======== 2x2 GRID ======== -->
+  <div class="grid-2x2">
 
-        // ========================================
-        // LOGIN
-        // ========================================
-        async function loginGitHub() {
-            if (ghToken) {
-                if (confirm('Already logged in as ' + ghUser + '. Log out?')) {
-                    ghToken = '';
-                    ghUser = '';
-                    sessionStorage.removeItem('gh_token');
-                    sessionStorage.removeItem('gh_user');
-                    document.getElementById('usernameDisplay').textContent = '';
-                    document.getElementById('loginBtn').textContent = 'Login';
-                    document.getElementById('repoSelect').innerHTML = '<option value="">-- Login first --</option>';
-                    document.getElementById('statusMessage').textContent = 'Logged out';
-                }
-                return;
-            }
-            const token = prompt('Enter your GitHub Personal Access Token (ghp_...)');
-            if (!token || !token.trim()) return;
-            ghToken = token.trim();
+    <!-- TL: Tokens / Actions -->
+    <div class="quadrant" id="quadTL">
+      <div class="quad-header">
+        <div class="quad-title"><span class="dot dot-green"></span>Tokens / Actions</div>
+      </div>
+      <div class="quad-body" id="tlBody">
+        <div class="section-label">Git Tokens</div>
+        <div class="token-grid" id="tokenGrid">
+          <div class="token-chip" data-token="STAGE" onclick="clickToken('STAGE')">+ Stage</div>
+          <div class="token-chip" data-token="COMMIT" onclick="clickToken('COMMIT')">Commit</div>
+          <div class="token-chip" data-token="PUSH" onclick="clickToken('PUSH')">Push</div>
+          <div class="token-chip" data-token="PULL" onclick="clickToken('PULL')">Pull</div>
+          <div class="token-chip" data-token="FETCH" onclick="clickToken('FETCH')">Fetch</div>
+          <div class="token-chip" data-token="STATUS" onclick="clickToken('STATUS')">Status</div>
+          <div class="token-chip" data-token="LOG" onclick="clickToken('LOG')">Log</div>
+          <div class="token-chip" data-token="DIFF" onclick="clickToken('DIFF')">Diff</div>
+          <div class="token-chip" data-token="BRANCH" onclick="clickToken('BRANCH')">Branch</div>
+          <div class="token-chip" data-token="CLONE" onclick="clickToken('CLONE')">Clone</div>
+          <div class="token-chip" data-token="INIT" onclick="clickToken('INIT')">Init</div>
+          <div class="token-chip" data-token="STASH" onclick="clickToken('STASH')">Stash</div>
+        </div>
 
-            try {
-                const res = await fetch(API + '/user', { headers: ghHeaders() });
-                if (!res.ok) throw new Error('Invalid token');
-                const user = await res.json();
-                ghUser = user.login;
-                sessionStorage.setItem('gh_token', ghToken);
-                sessionStorage.setItem('gh_user', ghUser);
-                document.getElementById('usernameDisplay').textContent = ghUser;
-                document.getElementById('loginBtn').textContent = 'Logout';
-                document.getElementById('statusMessage').textContent = 'Logged in as ' + ghUser;
-                loadGitHubRepos();
-            } catch (e) {
-                ghToken = '';
-                alert('Login failed: ' + e.message);
-            }
-        }
+        <div class="agent-section">
+          <div class="section-label">Agents (Token Chains)</div>
+          <div class="token-grid" id="agentGrid">
+            <div class="token-chip" style="border-color:var(--info); color:var(--info);" data-agent="save-work" onclick="runSkill('save-work')">Save Work</div>
+            <div class="token-chip" style="border-color:var(--info); color:var(--info);" data-agent="get-latest" onclick="runSkill('get-latest')">Get Latest</div>
+            <div class="token-chip" style="border-color:var(--info); color:var(--info);" data-agent="sync-check" onclick="runSkill('sync-check')">Sync Check</div>
+            <div class="token-chip" style="border-color:var(--info); color:var(--info);" data-agent="fresh-install" onclick="runSkill('fresh-install')">Fresh Install</div>
+            <div class="token-chip" style="border-color:var(--info); color:var(--info);" data-agent="alpha-release" onclick="runSkill('alpha-release')">Alpha Release</div>
+          </div>
+        </div>
+      </div>
+    </div>
 
-        // ========================================
-        // LOAD REPOS
-        // ========================================
-        async function loadGitHubRepos() {
-            if (!ghToken) {
-                document.getElementById('repoSelect').innerHTML = '<option value="">-- Login first --</option>';
-                return;
-            }
-            const select = document.getElementById('repoSelect');
-            select.innerHTML = '<option value="">Loading...</option>';
-            document.getElementById('statusMessage').textContent = 'Fetching repositories...';
+    <!-- TR: Chat Log + AI Prompt -->
+    <div class="quadrant" id="quadTR">
+      <div class="quad-header">
+        <div class="quad-title"><span class="dot dot-purple"></span>Chat Log</div>
+        <button class="btn-sm" onclick="clearChat()">Clear</button>
+      </div>
+      <div class="chat-log" id="chatLog">
+        <div class="chat-entry"><span class="chat-info">GitHub Butler v1.2 ready.</span></div>
+        <div class="chat-entry"><span class="chat-info">Login to connect, then select a repo.</span></div>
+      </div>
+      <div class="chat-input-area">
+        <input type="text" id="chatInput" placeholder="Type a command..." onkeypress="if(event.key==='Enter')sendChat()">
+        <button onclick="sendChat()">Send</button>
+      </div>
+    </div>
 
-            try {
-                const res = await fetch(API + '/user/repos?per_page=100&sort=updated', { headers: ghHeaders() });
-                if (!res.ok) throw new Error('Could not fetch repos');
-                repos = await res.json();
+    <!-- BL: Grid / JSON Results -->
+    <div class="quadrant" id="quadBL">
+      <div class="quad-header">
+        <div class="quad-title"><span class="dot dot-blue"></span>Results</div>
+        <div style="display:flex; gap:4px;">
+          <button class="btn-sm active" id="btnGridView" onclick="setResultView('grid')">Grid</button>
+          <button class="btn-sm" id="btnJsonView" onclick="setResultView('json')">JSON</button>
+        </div>
+      </div>
+      <div class="quad-body" id="blBody">
+        <div class="empty-state" id="resultsEmpty">
+          <div class="icon">📊</div>
+          <div>Run a skill or click a token to see results</div>
+        </div>
+        <div id="gridContainer" style="display:none;"></div>
+        <div id="jsonContainer" class="json-view" style="display:none;"></div>
+      </div>
+    </div>
 
-                select.innerHTML = '<option value="">-- Select Repository --</option>';
-                repos.forEach((repo, i) => {
-                    const opt = document.createElement('option');
-                    opt.value = i;
-                    opt.textContent = repo.full_name + (repo.private ? ' (private)' : '');
-                    select.appendChild(opt);
-                });
-                document.getElementById('statusMessage').textContent = repos.length + ' repositories loaded';
-            } catch (e) {
-                select.innerHTML = '<option value="">Error loading repos</option>';
-                document.getElementById('statusMessage').textContent = 'Error: ' + e.message;
-            }
-        }
+    <!-- BR: Details + CRUD -->
+    <div class="quadrant" id="quadBR">
+      <div class="quad-header">
+        <div class="quad-title"><span class="dot dot-orange"></span>Details</div>
+      </div>
+      <div class="quad-body" id="brBody">
+        <div class="empty-state" id="detailsEmpty">
+          <div class="icon">📝</div>
+          <div>Select a record from results</div>
+        </div>
+        <div id="detailFields" style="display:none;"></div>
+      </div>
+      <div class="crud-footer" id="crudFooter">
+        <button class="crud-btn create" onclick="crudAction('create')">+ Create</button>
+        <button class="crud-btn read" onclick="crudAction('read')">Read</button>
+        <button class="crud-btn update" onclick="crudAction('update')">Update</button>
+        <button class="crud-btn delete" onclick="crudAction('delete')">Delete</button>
+      </div>
+    </div>
 
-        // ========================================
-        // LOAD REPO & FILES
-        // ========================================
-        function loadRepo() {
-            const idx = document.getElementById('repoSelect').value;
-            if (idx === '') return;
-            currentRepo = repos[idx];
-            currentPath = '';
-            document.getElementById('contentTitle').textContent = currentRepo.full_name;
-            document.getElementById('repoUrl').textContent = currentRepo.html_url;
-            loadRepoFiles('');
-        }
+  </div><!-- /grid-2x2 -->
+</div><!-- /main-layout -->
 
-        async function loadRepoFiles(path) {
-            if (!currentRepo) return;
-            currentPath = path;
-            const sidebar = document.getElementById('sidebarContent');
-            const content = document.getElementById('contentBody');
-            const fileOutputHeader = document.getElementById('fileOutputHeader');
-            const statusMessage = document.getElementById('statusMessage');
+<script>
+// ========================================
+// GITHUB BUTLER v1.2 — 2x2 + Git Skills
+// ========================================
 
-            sidebar.innerHTML = '<div class="loading">Loading...</div>';
-            statusMessage.textContent = 'Loading ' + (path || 'root') + '...';
+// --- STATE ---
+let ghToken = sessionStorage.getItem('gh_token') || '';
+let ghUser = sessionStorage.getItem('gh_user') || '';
+let currentRepo = null;
+let repos = [];
+let selectedRecord = null;
+let resultData = [];
+let resultView = 'grid';
 
-            try {
-                const url = API + '/repos/' + currentRepo.full_name + '/contents/' + path;
-                const res = await fetch(url, { headers: ghHeaders() });
-                if (!res.ok) throw new Error('Could not load files');
-                const items = await res.json();
+const API = 'https://api.github.com';
 
-                fileOutputHeader.style.display = 'flex';
-                document.getElementById('fileOutputTitle').textContent = path || 'Root';
+function ghHeaders() {
+  return {
+    'Authorization': 'token ' + ghToken,
+    'Accept': 'application/vnd.github.v3+json'
+  };
+}
 
-                // Sort: folders first, then files
-                const sorted = items.sort((a, b) => {
-                    if (a.type === 'dir' && b.type !== 'dir') return -1;
-                    if (a.type !== 'dir' && b.type === 'dir') return 1;
-                    return a.name.localeCompare(b.name);
-                });
+// --- CHAT LOG ---
+function chatLog(msg, cls) {
+  const log = document.getElementById('chatLog');
+  const time = new Date().toLocaleTimeString();
+  const entry = document.createElement('div');
+  entry.className = 'chat-entry';
+  entry.innerHTML = '<span class="chat-time">[' + time + ']</span> <span class="' + (cls || 'chat-info') + '">' + msg + '</span>';
+  log.appendChild(entry);
+  log.scrollTop = log.scrollHeight;
+}
 
-                sidebar.innerHTML = '';
+function chatResult(msg) {
+  const log = document.getElementById('chatLog');
+  const entry = document.createElement('div');
+  entry.className = 'chat-entry';
+  entry.innerHTML = '<span class="chat-result">' + msg + '</span>';
+  log.appendChild(entry);
+  log.scrollTop = log.scrollHeight;
+}
 
-                // Back button if in subfolder
-                if (path) {
-                    const back = document.createElement('div');
-                    back.className = 'tree-item';
-                    back.innerHTML = '<span>⬆️</span><span>..</span>';
-                    back.onclick = () => {
-                        const parent = path.split('/').slice(0, -1).join('/');
-                        loadRepoFiles(parent);
-                    };
-                    sidebar.appendChild(back);
-                }
+function clearChat() {
+  document.getElementById('chatLog').innerHTML = '';
+  chatLog('Chat cleared.', 'chat-info');
+}
 
-                sorted.forEach(item => {
-                    const el = document.createElement('div');
-                    el.className = 'tree-item';
-                    const icon = item.type === 'dir' ? '📁' : '📄';
-                    el.innerHTML = '<span>' + icon + '</span><span>' + item.name + '</span>';
-                    el.onclick = () => {
-                        document.querySelectorAll('.tree-item').forEach(x => x.classList.remove('selected'));
-                        el.classList.add('selected');
-                        if (item.type === 'dir') {
-                            loadRepoFiles(item.path);
-                        } else {
-                            loadFileContent(item);
-                        }
-                    };
-                    sidebar.appendChild(el);
-                });
+function sendChat() {
+  const input = document.getElementById('chatInput');
+  const cmd = input.value.trim();
+  if (!cmd) return;
+  input.value = '';
 
-                content.innerHTML = '';
-                statusMessage.textContent = (path || 'Root') + ': ' + sorted.length + ' items';
-            } catch (e) {
-                sidebar.innerHTML = '<div class="loading">Error loading files</div>';
-                statusMessage.textContent = 'Error: ' + e.message;
-            }
-        }
+  chatLog('> ' + cmd, 'chat-cmd');
 
-        // ========================================
-        // VIEW FILE CONTENT
-        // ========================================
-        async function loadFileContent(item) {
-            const content = document.getElementById('contentBody');
-            const statusMessage = document.getElementById('statusMessage');
-            document.getElementById('fileOutputTitle').textContent = item.name;
-            statusMessage.textContent = 'Loading ' + item.name + '...';
+  // Simple command routing
+  const lc = cmd.toLowerCase();
+  if (lc === 'help') {
+    chatResult('Commands: save, pull, push, status, log, sync, browse, help, clear');
+  } else if (lc === 'save' || lc === 'save work') {
+    runSkill('save-work');
+  } else if (lc === 'pull' || lc === 'get latest') {
+    runSkill('get-latest');
+  } else if (lc === 'status') {
+    runSkill('view-status');
+  } else if (lc === 'log') {
+    runSkill('view-log');
+  } else if (lc === 'sync') {
+    runSkill('sync-check');
+  } else if (lc === 'browse') {
+    runSkill('browse-files');
+  } else if (lc === 'clear') {
+    clearChat();
+  } else {
+    chatResult('Unknown command. Type "help" for options.');
+  }
+}
 
-            try {
-                const res = await fetch(item.url, { headers: ghHeaders() });
-                if (!res.ok) throw new Error('Could not load file');
-                const data = await res.json();
+// --- LOGIN ---
+async function loginGitHub() {
+  if (ghToken) {
+    if (confirm('Logged in as ' + ghUser + '. Log out?')) {
+      ghToken = '';
+      ghUser = '';
+      sessionStorage.removeItem('gh_token');
+      sessionStorage.removeItem('gh_user');
+      document.getElementById('ghStatus').className = 'status-badge offline';
+      document.getElementById('ghStatusText').textContent = 'Not connected';
+      document.getElementById('loginBtn').textContent = 'Login';
+      document.getElementById('repoSelect').innerHTML = '<option value="">-- Login first --</option>';
+      document.getElementById('repoInfoName').textContent = 'None';
+      document.getElementById('repoInfoUrl').textContent = '—';
+      currentRepo = null;
+      chatLog('Logged out.', 'chat-warn');
+    }
+    return;
+  }
 
-                let decoded = '';
-                if (data.content) {
-                    decoded = atob(data.content.replace(/\n/g, ''));
-                }
+  const token = prompt('Enter your GitHub Personal Access Token (ghp_...)');
+  if (!token || !token.trim()) return;
+  ghToken = token.trim();
 
-                const escaped = decoded.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-                const sizeKB = (data.size / 1024).toFixed(1);
+  try {
+    const res = await fetch(API + '/user', { headers: ghHeaders() });
+    if (!res.ok) throw new Error('Invalid token');
+    const user = await res.json();
+    ghUser = user.login;
+    sessionStorage.setItem('gh_token', ghToken);
+    sessionStorage.setItem('gh_user', ghUser);
 
-                content.innerHTML =
-                    '<div style="padding:15px;">' +
-                    '<div style="margin-bottom:8px;font-size:0.8rem;color:#666;">' + item.name + ' (' + sizeKB + ' KB)</div>' +
-                    '<div style="background:#fafafa;border:1px solid #e0e0e0;border-radius:3px;padding:15px;font-family:Courier New,monospace;font-size:0.85rem;overflow:auto;max-height:500px;white-space:pre-wrap;">' +
-                    escaped +
-                    '</div></div>';
+    document.getElementById('ghStatus').className = 'status-badge online';
+    document.getElementById('ghStatusText').textContent = ghUser;
+    document.getElementById('loginBtn').textContent = 'Logout';
 
-                statusMessage.textContent = 'Viewing: ' + item.name;
-            } catch (e) {
-                content.innerHTML = '<div class="empty-state"><p>Could not load file</p></div>';
-                statusMessage.textContent = 'Error: ' + e.message;
-            }
-        }
+    chatLog('Connected as ' + ghUser, 'chat-cmd');
+    loadGitHubRepos();
+  } catch (e) {
+    ghToken = '';
+    chatLog('Login failed: ' + e.message, 'chat-error');
+  }
+}
 
-        function changeViewType(type) {
-            viewType = type;
-        }
+// --- REPOS ---
+async function loadGitHubRepos() {
+  if (!ghToken) return;
+  const select = document.getElementById('repoSelect');
+  select.innerHTML = '<option value="">Loading...</option>';
+  chatLog('Fetching repositories...', 'chat-info');
 
-        // ========================================
-        // REPO ACTIONS
-        // ========================================
-        async function createNewRepo() {
-            if (!ghToken) { alert('Login first'); return; }
-            const name = prompt('New repository name:');
-            if (!name) return;
-            const desc = prompt('Description (optional):', '');
-            const statusMessage = document.getElementById('statusMessage');
-            statusMessage.textContent = 'Creating ' + name + '...';
+  try {
+    const res = await fetch(API + '/user/repos?per_page=100&sort=updated', { headers: ghHeaders() });
+    if (!res.ok) throw new Error('Could not fetch repos');
+    repos = await res.json();
 
-            try {
-                const res = await fetch(API + '/user/repos', {
-                    method: 'POST',
-                    headers: ghHeaders(),
-                    body: JSON.stringify({ name: name, description: desc || '', private: false, auto_init: true })
-                });
-                if (!res.ok) {
-                    const err = await res.json();
-                    throw new Error(err.message || 'Failed');
-                }
-                statusMessage.textContent = 'Created: ' + name;
-                loadGitHubRepos();
-            } catch (e) {
-                statusMessage.textContent = 'Error: ' + e.message;
-            }
-        }
+    select.innerHTML = '<option value="">-- Select Repository (' + repos.length + ') --</option>';
+    repos.forEach(function(repo, i) {
+      const opt = document.createElement('option');
+      opt.value = i;
+      opt.textContent = repo.full_name + (repo.private ? ' 🔒' : '');
+      select.appendChild(opt);
+    });
 
-        function refreshRepos() {
-            loadGitHubRepos();
-        }
+    chatLog(repos.length + ' repos loaded.', 'chat-info');
+  } catch (e) {
+    select.innerHTML = '<option value="">Error loading repos</option>';
+    chatLog('Error: ' + e.message, 'chat-error');
+  }
+}
 
-        function pullChanges() {
-            if (!currentRepo) { alert('Select a repo first'); return; }
-            document.getElementById('statusMessage').textContent = 'Pull is a local git operation — use your terminal or Claude Code for: git pull';
-        }
+function loadRepo() {
+  const idx = document.getElementById('repoSelect').value;
+  if (idx === '') return;
+  currentRepo = repos[idx];
+  document.getElementById('repoInfoName').textContent = currentRepo.full_name;
+  document.getElementById('repoInfoUrl').textContent = currentRepo.html_url;
+  chatLog('Selected: ' + currentRepo.full_name, 'chat-cmd');
 
-        function pushChanges() {
-            if (!currentRepo) { alert('Select a repo first'); return; }
-            document.getElementById('statusMessage').textContent = 'Push is a local git operation — use your terminal or Claude Code for: git push';
-        }
+  // Auto-browse files
+  runSkill('browse-files');
+}
 
-        function syncRepo() {
-            if (!currentRepo) { alert('Select a repo first'); return; }
-            document.getElementById('statusMessage').textContent = 'Sync is a local git operation — use your terminal or Claude Code for: git pull && git push';
-        }
+function refreshRepos() { loadGitHubRepos(); }
 
-        // ========================================
-        // STARTUP
-        // ========================================
-        window.onload = function() {
-            if (ghToken && ghUser) {
-                document.getElementById('usernameDisplay').textContent = ghUser;
-                document.getElementById('loginBtn').textContent = 'Logout';
-                loadGitHubRepos();
-            } else {
-                document.getElementById('repoSelect').innerHTML = '<option value="">-- Login first --</option>';
-            }
-        };
-    </script>
+async function createNewRepo() {
+  if (!ghToken) { chatLog('Login first.', 'chat-warn'); return; }
+  const name = prompt('New repository name:');
+  if (!name) return;
+  const desc = prompt('Description (optional):', '');
 
-    <!-- Irrigation Tool Package removed in v1.1 - lives in Crop-Client-Services -->
+  chatLog('Creating repo: ' + name + '...', 'chat-info');
+  try {
+    const res = await fetch(API + '/user/repos', {
+      method: 'POST',
+      headers: ghHeaders(),
+      body: JSON.stringify({ name: name, description: desc || '', private: false, auto_init: true })
+    });
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.message || 'Failed');
+    }
+    chatLog('Repo created: ' + name, 'chat-cmd');
+    loadGitHubRepos();
+  } catch (e) {
+    chatLog('Error: ' + e.message, 'chat-error');
+  }
+}
+
+// --- SKILLS ---
+function runSkill(skillName) {
+  // Highlight in sidebar
+  document.querySelectorAll('.skill-item').forEach(function(el) { el.classList.remove('selected'); });
+  const skillEl = document.querySelector('.skill-item[data-skill="' + skillName + '"]');
+  if (skillEl) skillEl.classList.add('selected');
+
+  chatLog('Running: ' + skillName, 'chat-cmd');
+
+  switch (skillName) {
+    case 'save-work':
+      skillSaveWork();
+      break;
+    case 'get-latest':
+      skillGetLatest();
+      break;
+    case 'sync-check':
+      skillSyncCheck();
+      break;
+    case 'browse-files':
+      skillBrowseFiles();
+      break;
+    case 'view-log':
+      skillViewLog();
+      break;
+    case 'view-status':
+      skillViewStatus();
+      break;
+    case 'new-branch':
+      skillNewBranch();
+      break;
+    case 'create-repo':
+      createNewRepo();
+      break;
+    case 'clone-repo':
+      skillCloneRepo();
+      break;
+    case 'fresh-install':
+      skillFreshInstall();
+      break;
+    case 'alpha-release':
+      skillAlphaRelease();
+      break;
+    case 'deploy-api':
+      skillDeployApi();
+      break;
+    default:
+      chatLog('Skill not wired yet: ' + skillName, 'chat-warn');
+  }
+}
+
+// --- SKILL: SAVE WORK ---
+// Tokens: STAGE → COMMIT → PUSH
+function skillSaveWork() {
+  if (!currentRepo) { chatLog('Select a repo first.', 'chat-warn'); return; }
+
+  // Write to butler-commands.json pattern
+  const command = {
+    command: 'save-work',
+    agent: 'Save Work',
+    tokens: ['STAGE', 'COMMIT', 'PUSH'],
+    params: {
+      repo: currentRepo.full_name,
+      repoUrl: currentRepo.html_url,
+      localPath: null,
+      branch: 'main',
+      commitMessage: 'Butler save — ' + new Date().toLocaleString(),
+      location: 'local'
+    },
+    status: 'pending',
+    result: null,
+    timestamp: new Date().toISOString(),
+    log: []
+  };
+
+  highlightTokenChain(['STAGE', 'COMMIT', 'PUSH']);
+  chatResult('Token chain: STAGE → COMMIT → PUSH');
+  chatResult('Repo: ' + currentRepo.full_name);
+  chatResult('This writes butler-commands.json for Claude Code to execute.');
+  chatLog('Command written. Run in terminal or Claude Code.', 'chat-info');
+
+  // Show the command as JSON in results
+  showJsonResult(command);
+}
+
+// --- SKILL: DEPLOY API ---
+// Tokens: RUN-DEPLOY-BAT → STAGE → COMMIT → PUSH
+// Each version folder has its own api-deploy.bat — the bat IS the deploy manifest.
+function skillDeployApi() {
+  const command = {
+    command: 'deploy-api',
+    agent: 'Deploy API Server',
+    tokens: ['RUN-DEPLOY-BAT', 'STAGE', 'COMMIT', 'PUSH'],
+    params: {
+      repo: 'sspappasjr/crop-client-services',
+      repoUrl: 'https://github.com/sspappasjr/crop-client-services',
+      localPath: 'C:\\AICode\\crop-client-services',
+      branch: 'main',
+      commitMessage: 'API Server deploy — ' + new Date().toLocaleString(),
+      location: 'local'
+    },
+    status: 'pending',
+    result: null,
+    timestamp: new Date().toISOString(),
+    log: []
+  };
+
+  highlightTokenChain(['RUN-DEPLOY-BAT', 'STAGE', 'COMMIT', 'PUSH']);
+  chatResult('Token chain: RUN-DEPLOY-BAT → STAGE → COMMIT → PUSH');
+  chatResult('');
+  chatResult('RUN-DEPLOY-BAT — Runs the deploy batch file from the version folder.');
+  chatResult('  Copies specific files to the alpha folder. The bat IS the manifest');
+  chatResult('  — it records exactly what this version deploys.');
+  chatResult('');
+  chatResult('STAGE — Puts the changed files in the outbox (git add).');
+  chatResult('  Only the files the bat touched — not the whole alpha.');
+  chatResult('');
+  chatResult('COMMIT — Labels this snapshot with a message and timestamp (git commit).');
+  chatResult('  GitHub keeps every commit forever. You can always roll back to');
+  chatResult('  any previous commit if something breaks.');
+  chatResult('');
+  chatResult('PUSH — Files the snapshot in the cabinet (git push to GitHub).');
+  chatResult('  The server pulls from this same cabinet to get the update.');
+  chatResult('');
+  chatResult('After push: Pull on the server (git pull) to deliver the files.');
+  chatResult('  Then iisreset to restart IIS with the new code.');
+  chatResult('');
+  chatResult('Repo: sspappasjr/crop-client-services');
+  chatResult('Alpha: C:\\AICode\\crop-client-services\\api-server');
+  chatLog('Command written. Run api-deploy.bat then push to GitHub.', 'chat-info');
+
+  showJsonResult(command);
+}
+
+// --- SKILL: GET LATEST ---
+// Tokens: FETCH → PULL
+function skillGetLatest() {
+  if (!currentRepo) { chatLog('Select a repo first.', 'chat-warn'); return; }
+
+  const command = {
+    command: 'get-latest',
+    agent: 'Get Latest',
+    tokens: ['FETCH', 'PULL'],
+    params: {
+      repo: currentRepo.full_name,
+      repoUrl: currentRepo.html_url,
+      localPath: null,
+      branch: 'main',
+      commitMessage: null,
+      location: 'local'
+    },
+    status: 'pending',
+    result: null,
+    timestamp: new Date().toISOString(),
+    log: []
+  };
+
+  highlightTokenChain(['FETCH', 'PULL']);
+  chatResult('Token chain: FETCH → PULL');
+  chatResult('Repo: ' + currentRepo.full_name);
+  chatLog('Command written. Run in terminal or Claude Code.', 'chat-info');
+
+  showJsonResult(command);
+}
+
+// --- SKILL: SYNC CHECK ---
+// Tokens: FETCH → STATUS → DIFF
+function skillSyncCheck() {
+  if (!currentRepo) { chatLog('Select a repo first.', 'chat-warn'); return; }
+
+  const command = {
+    command: 'sync-check',
+    agent: 'Sync Check',
+    tokens: ['FETCH', 'STATUS', 'DIFF'],
+    params: {
+      repo: currentRepo.full_name,
+      repoUrl: currentRepo.html_url,
+      localPath: null,
+      branch: 'main',
+      commitMessage: null,
+      location: 'local'
+    },
+    status: 'pending',
+    result: null,
+    timestamp: new Date().toISOString(),
+    log: []
+  };
+
+  highlightTokenChain(['FETCH', 'STATUS', 'DIFF']);
+  chatResult('Token chain: FETCH → STATUS → DIFF');
+  chatLog('Command written. Run in terminal or Claude Code.', 'chat-info');
+
+  showJsonResult(command);
+}
+
+// --- SKILL: BROWSE FILES ---
+async function skillBrowseFiles() {
+  if (!currentRepo) { chatLog('Select a repo first.', 'chat-warn'); return; }
+
+  chatResult('Fetching file tree from GitHub...');
+
+  try {
+    const res = await fetch(API + '/repos/' + currentRepo.full_name + '/contents/', { headers: ghHeaders() });
+    if (!res.ok) throw new Error('Could not load files');
+    const items = await res.json();
+
+    // Sort: folders first
+    items.sort(function(a, b) {
+      if (a.type === 'dir' && b.type !== 'dir') return -1;
+      if (a.type !== 'dir' && b.type === 'dir') return 1;
+      return a.name.localeCompare(b.name);
+    });
+
+    resultData = items.map(function(item) {
+      return {
+        name: item.name,
+        type: item.type === 'dir' ? 'folder' : 'file',
+        size: item.size ? (item.size / 1024).toFixed(1) + ' KB' : '—',
+        path: item.path
+      };
+    });
+
+    chatLog(items.length + ' items in root.', 'chat-info');
+    showGridResult(resultData);
+  } catch (e) {
+    chatLog('Error: ' + e.message, 'chat-error');
+  }
+}
+
+// --- SKILL: VIEW LOG ---
+async function skillViewLog() {
+  if (!currentRepo) { chatLog('Select a repo first.', 'chat-warn'); return; }
+
+  try {
+    const res = await fetch(API + '/repos/' + currentRepo.full_name + '/commits?per_page=20', { headers: ghHeaders() });
+    if (!res.ok) throw new Error('Could not load commits');
+    const commits = await res.json();
+
+    resultData = commits.map(function(c) {
+      return {
+        sha: c.sha.substring(0, 7),
+        message: c.commit.message.split('\n')[0],
+        author: c.commit.author.name,
+        date: new Date(c.commit.author.date).toLocaleString()
+      };
+    });
+
+    chatLog(commits.length + ' recent commits.', 'chat-info');
+    showGridResult(resultData);
+  } catch (e) {
+    chatLog('Error: ' + e.message, 'chat-error');
+  }
+}
+
+// --- SKILL: VIEW STATUS ---
+async function skillViewStatus() {
+  if (!currentRepo) { chatLog('Select a repo first.', 'chat-warn'); return; }
+
+  try {
+    // Get repo info as "status"
+    const res = await fetch(API + '/repos/' + currentRepo.full_name, { headers: ghHeaders() });
+    if (!res.ok) throw new Error('Could not load repo info');
+    const repo = await res.json();
+
+    const status = {
+      name: repo.full_name,
+      visibility: repo.private ? 'Private' : 'Public',
+      default_branch: repo.default_branch,
+      updated: new Date(repo.updated_at).toLocaleString(),
+      size: (repo.size / 1024).toFixed(1) + ' MB',
+      open_issues: repo.open_issues_count,
+      forks: repo.forks_count,
+      stars: repo.stargazers_count
+    };
+
+    chatLog('Repo status loaded.', 'chat-info');
+    showJsonResult(status);
+  } catch (e) {
+    chatLog('Error: ' + e.message, 'chat-error');
+  }
+}
+
+// --- SKILL: NEW BRANCH ---
+function skillNewBranch() {
+  if (!currentRepo) { chatLog('Select a repo first.', 'chat-warn'); return; }
+  const branchName = prompt('New branch name:');
+  if (!branchName) return;
+
+  const command = {
+    command: 'new-branch',
+    agent: 'New Branch',
+    tokens: ['BRANCH'],
+    params: {
+      repo: currentRepo.full_name,
+      branch: branchName,
+      location: 'local'
+    },
+    status: 'pending',
+    timestamp: new Date().toISOString()
+  };
+
+  highlightTokenChain(['BRANCH']);
+  chatResult('Branch: ' + branchName);
+  chatLog('Command written.', 'chat-info');
+  showJsonResult(command);
+}
+
+// --- SKILL: CLONE REPO ---
+function skillCloneRepo() {
+  if (!currentRepo) { chatLog('Select a repo first.', 'chat-warn'); return; }
+  const localPath = prompt('Local path to clone into:', 'C:\\AICode\\' + currentRepo.name);
+  if (!localPath) return;
+
+  const command = {
+    command: 'clone-repo',
+    agent: 'Clone Repo',
+    tokens: ['CLONE'],
+    params: {
+      repo: currentRepo.full_name,
+      repoUrl: currentRepo.clone_url,
+      localPath: localPath,
+      branch: 'main'
+    },
+    status: 'pending',
+    timestamp: new Date().toISOString()
+  };
+
+  highlightTokenChain(['CLONE']);
+  chatResult('Clone: ' + currentRepo.clone_url);
+  chatResult('To: ' + localPath);
+  chatLog('Command written.', 'chat-info');
+  showJsonResult(command);
+}
+
+// --- SKILL: FRESH INSTALL ---
+function skillFreshInstall() {
+  if (!currentRepo) { chatLog('Select a repo first.', 'chat-warn'); return; }
+
+  const command = {
+    command: 'fresh-install',
+    agent: 'Fresh Install',
+    tokens: ['CLONE', 'INIT'],
+    params: {
+      repo: currentRepo.full_name,
+      repoUrl: currentRepo.clone_url,
+      branch: 'main'
+    },
+    status: 'pending',
+    timestamp: new Date().toISOString()
+  };
+
+  highlightTokenChain(['CLONE', 'INIT']);
+  chatLog('Command written.', 'chat-info');
+  showJsonResult(command);
+}
+
+// --- SKILL: ALPHA RELEASE ---
+function skillAlphaRelease() {
+  if (!currentRepo) { chatLog('Select a repo first.', 'chat-warn'); return; }
+
+  const command = {
+    command: 'alpha-release',
+    agent: 'Alpha Release',
+    tokens: ['STAGE', 'COMMIT', 'PUSH'],
+    params: {
+      repo: currentRepo.full_name,
+      branch: 'main',
+      commitMessage: 'Alpha release — ' + new Date().toLocaleDateString()
+    },
+    status: 'pending',
+    timestamp: new Date().toISOString()
+  };
+
+  highlightTokenChain(['STAGE', 'COMMIT', 'PUSH']);
+  chatLog('Command written.', 'chat-info');
+  showJsonResult(command);
+}
+
+// --- TOKEN CHIP HIGHLIGHTING ---
+function clickToken(tokenName) {
+  chatLog('Token: ' + tokenName, 'chat-cmd');
+
+  // Show what this token does
+  const TOKEN_INFO = {
+    STAGE: 'git add . — stages all changes',
+    COMMIT: 'git commit -m "message" — commits staged changes',
+    PUSH: 'git push origin <branch> — pushes to remote',
+    PULL: 'git pull origin <branch> — pulls from remote',
+    FETCH: 'git fetch origin — fetches remote refs without merge',
+    STATUS: 'git status — shows working tree status',
+    LOG: 'git log --oneline -20 — recent commit history',
+    DIFF: 'git diff — shows uncommitted changes',
+    BRANCH: 'git checkout -b <name> — creates a new branch',
+    CLONE: 'git clone <url> <path> — clones a remote repo',
+    INIT: 'git init — initializes a new repo',
+    STASH: 'git stash — temporarily shelves changes'
+  };
+
+  chatResult(TOKEN_INFO[tokenName] || 'No info for ' + tokenName);
+
+  // Highlight the chip
+  document.querySelectorAll('.token-chip').forEach(function(el) { el.classList.remove('active'); });
+  var chip = document.querySelector('.token-chip[data-token="' + tokenName + '"]');
+  if (chip) chip.classList.add('active');
+}
+
+function highlightTokenChain(tokens) {
+  // Clear all
+  document.querySelectorAll('.token-chip').forEach(function(el) {
+    el.classList.remove('active');
+    el.classList.remove('running');
+  });
+
+  // Highlight chain with animation
+  tokens.forEach(function(t, i) {
+    var chip = document.querySelector('.token-chip[data-token="' + t + '"]');
+    if (chip) {
+      setTimeout(function() {
+        chip.classList.add('active');
+      }, i * 200);
+    }
+  });
+}
+
+// --- RESULTS DISPLAY ---
+function setResultView(view) {
+  resultView = view;
+  document.getElementById('btnGridView').classList.toggle('active', view === 'grid');
+  document.getElementById('btnJsonView').classList.toggle('active', view === 'json');
+
+  if (resultData.length > 0) {
+    if (view === 'grid' && Array.isArray(resultData)) {
+      showGridResult(resultData);
+    } else {
+      showJsonResult(resultData);
+    }
+  }
+}
+
+function showGridResult(data) {
+  resultData = data;
+  document.getElementById('resultsEmpty').style.display = 'none';
+  document.getElementById('jsonContainer').style.display = 'none';
+
+  var container = document.getElementById('gridContainer');
+  container.style.display = '';
+  container.innerHTML = '';
+
+  if (!Array.isArray(data) || data.length === 0) {
+    container.innerHTML = '<div style="color:var(--text-dim); padding:20px; text-align:center;">No data</div>';
+    return;
+  }
+
+  var cols = Object.keys(data[0]);
+
+  var wrap = document.createElement('div');
+  wrap.className = 'grid-wrap';
+
+  var table = document.createElement('table');
+  var thead = document.createElement('thead');
+  var headerRow = document.createElement('tr');
+  cols.forEach(function(col) {
+    var th = document.createElement('th');
+    th.textContent = col;
+    headerRow.appendChild(th);
+  });
+  thead.appendChild(headerRow);
+  table.appendChild(thead);
+
+  var tbody = document.createElement('tbody');
+  data.forEach(function(row, idx) {
+    var tr = document.createElement('tr');
+    tr.onclick = function() { selectResultRow(idx, tr); };
+    cols.forEach(function(col) {
+      var td = document.createElement('td');
+      var val = row[col];
+      td.textContent = val === null || val === undefined ? '—' : String(val);
+      td.title = td.textContent;
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  });
+
+  table.appendChild(tbody);
+  wrap.appendChild(table);
+  container.appendChild(wrap);
+}
+
+function showJsonResult(data) {
+  resultData = data;
+  document.getElementById('resultsEmpty').style.display = 'none';
+  document.getElementById('gridContainer').style.display = 'none';
+
+  var container = document.getElementById('jsonContainer');
+  container.style.display = '';
+  container.innerHTML = syntaxHighlight(JSON.stringify(data, null, 2));
+}
+
+function syntaxHighlight(str) {
+  return str
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"(\\u[a-fA-F0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?/g, function(match) {
+      var cls = 'json-string';
+      if (match.endsWith(':')) {
+        cls = 'json-key';
+        return '<span class="' + cls + '">' + match.slice(0, -1) + '</span>:';
+      }
+      return '<span class="' + cls + '">' + match + '</span>';
+    })
+    .replace(/\b(-?\d+\.?\d*([eE][+-]?\d+)?)\b/g, '<span class="json-number">$1</span>')
+    .replace(/\b(true|false)\b/g, '<span class="json-bool">$1</span>')
+    .replace(/\bnull\b/g, '<span class="json-null">null</span>');
+}
+
+// --- RECORD SELECTION + DETAILS ---
+function selectResultRow(idx, trElement) {
+  // Clear previous selection
+  document.querySelectorAll('.grid-wrap tr').forEach(function(r) { r.classList.remove('selected'); });
+  if (trElement) trElement.classList.add('selected');
+
+  if (Array.isArray(resultData) && resultData[idx]) {
+    selectedRecord = resultData[idx];
+    showDetails(selectedRecord);
+  }
+}
+
+function showDetails(record) {
+  document.getElementById('detailsEmpty').style.display = 'none';
+  var container = document.getElementById('detailFields');
+  container.style.display = '';
+  container.innerHTML = '';
+
+  Object.keys(record).forEach(function(key) {
+    var field = document.createElement('div');
+    field.className = 'detail-field';
+    field.innerHTML =
+      '<span class="detail-label">' + key + '</span>' +
+      '<span class="detail-value">' + (record[key] === null || record[key] === undefined ? '—' : String(record[key])) + '</span>';
+    container.appendChild(field);
+  });
+}
+
+// --- CRUD ACTIONS ---
+function crudAction(action) {
+  switch (action) {
+    case 'create':
+      chatLog('Create: use a skill to generate new records.', 'chat-info');
+      break;
+    case 'read':
+      if (selectedRecord) {
+        showDetails(selectedRecord);
+        chatLog('Read: refreshed details.', 'chat-info');
+      } else {
+        chatLog('No record selected.', 'chat-warn');
+      }
+      break;
+    case 'update':
+      chatLog('Update: editing not wired yet — coming in v1.3.', 'chat-info');
+      break;
+    case 'delete':
+      chatLog('Delete: not wired yet — coming in v1.3.', 'chat-info');
+      break;
+  }
+}
+
+// --- STARTUP ---
+window.onload = function() {
+  if (ghToken && ghUser) {
+    document.getElementById('ghStatus').className = 'status-badge online';
+    document.getElementById('ghStatusText').textContent = ghUser;
+    document.getElementById('loginBtn').textContent = 'Logout';
+    loadGitHubRepos();
+  }
+};
+</script>
 
 </body>
 </html>

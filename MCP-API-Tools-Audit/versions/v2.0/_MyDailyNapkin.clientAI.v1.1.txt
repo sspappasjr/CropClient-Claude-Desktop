@@ -1,0 +1,78 @@
+=====================================================================
+                   MyDailyNapkin.ClientAI  v1.1  2.28.2026
+  Specs behind MyDailyLog.Today. Short and sweet so we both get it.
+  Coach comments, Mac updates, until it clicks for both of us.
+=====================================================================
+                        CLIENTAI MODULE ASSIGNMENTS
+                        Where each of the 3 modules lives
+=====================================================================
+
+STATUS: test-apiserver1.4a.html COMPLETE ✅
+  - 3 @@@ marked modules embedded and tested
+  - ClientAI button exports test-apiserver1.4a.ClientAI.js
+  - Gold standard baseline confirmed working
+
+---------------------------------------------------------------------
+MODULE 1 - SERVER PRESETS
+  Code:      setServerLocal() / setServerProduction()
+  Belongs:   api-component2.0.js
+  Why:       Every component that talks to the server needs to know
+             which server to talk to. This is the URL source of truth.
+             api-component owns the connection - not the dashboard,
+             not the irrigation component.
+---------------------------------------------------------------------
+MODULE 2 - TOKEN STAGING
+  Code:      setFields(toolName, data)
+  Belongs:   api-component2.0.js
+  Why:       Staging is the act of preparing a token call - tool name
+             + JSON params. This is the api layer's job. It feeds
+             directly into the fetch engine (Module 3).
+             Dashboard reads results. Irrigation does CRUD.
+             Neither one stages tokens - api-component does.
+---------------------------------------------------------------------
+MODULE 3 - FETCH/SEND ENGINE
+  Code:      sendCustomCall()
+  Belongs:   api-component2.0.js
+  Why:       This IS api-component2.0. The POST fetch to the server,
+             the result routing to grid/log - this is the crown jewel.
+             Irrigation-component will CALL this engine for its CRUD.
+             Dashboard will CALL this engine for display operations.
+             Neither replaces it - they consume it.
+---------------------------------------------------------------------
+
+COMPONENT SUMMARY:
+  api-component2.0.js   <- All 3 modules live here (source of truth)
+  token-staging.js      <- Will wrap Module 1 + 2 for reuse pattern
+  irrigation-component  <- Calls api-component for token CRUD (Lilly)
+  dashboard             <- Calls api-component for display/read ops
+
+---------------------------------------------------------------------
+BONUS SAVE - LOGIN BAR (from test-apiserver1.4.4)
+  The S1 header login bar with popup is a KEEPER for the new baseline.
+  What it does:
+    - Top right of S1 header: shows current email + LOGON button
+    - Click LOGON -> popup modal with email + password fields
+    - On submit -> runs get_token automatically with credentials
+    - Fills saveUsername from email prefix
+    - Shows credential email in header after login
+  Save this for: new baseline harness S1 header
+  It belongs in: command-panel.js (S1 component)
+  Note: The popup pattern (modal overlay) is clean and reusable.
+        Keep it exactly as it is in 1.4.4 - do not simplify it.
+---------------------------------------------------------------------
+
+PATTERN (unchanged):
+  Design -> Harness Test -> Extract -> Reuse
+
+GATEKEEPER TEST (must pass before any extract):
+  get_irrigation_details -> load_into_displayRecords
+  Must return clean displayRecords. No exceptions.
+
+NEXT SESSION:
+  Steve will share new folder structure for the new test harness.
+  George to get up to speed on that first before any new code.
+  Login bar from 1.4.4 to be included in new baseline S1 header.
+
+=====================================================================
+  Happy Trails ... the napkin never lies.
+=====================================================================

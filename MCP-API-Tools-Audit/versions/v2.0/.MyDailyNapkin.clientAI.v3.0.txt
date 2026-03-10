@@ -1,0 +1,152 @@
+=====================================================================
+              MyDailyNapkin.ClientAI  v3.0  3.5.2026
+       The day we stopped planning and started running.
+       Component is loaded. Chain fires on open. Grid fills.
+=====================================================================
+
+
+WHAT WE BUILT TODAY
+=====================================================================
+
+1. CLIENT-AI-COMPONENT v2.2  (the baseline)
+   File: AIToolKit/Client-AI-Component.js
+   What it is: Single JS file. Both engines + JSON tokens + CRUD.
+   Injected verbatim from source engine files. This is the truth.
+
+   MCP-ENGINE v2.1 — the HANDS
+     mcpEngineURL(target)                — which server. local or production
+     mcpEngineStaging(target, tool, params) — build the staged object
+     mcpEngineSend(staged)              — POST /tools/:toolName, get result
+
+   AI-ENGINE v2.1 — the BRAIN
+     aiEngineURL(provider)              — lilly (OpenAI) or karen (Anthropic)
+     aiEngineSend(...)                  — send question + tools to AI
+     aiEngineReader(aiMessage, provider) — parse response: text or tool_call
+     aiEngineRouter(...)                — full loop: AI → tool → AI → answer
+
+   JSON TOKENS (7)  — loadJsonWrite, loadJsonRead, loadJsonUpdate,
+                      loadJsonDelete, loadJsonList, loadJsonExists,
+                      loadDataOperation
+   CRUD (5)         — crudCreate, crudReset, crudApply, crudUpdate, crudDelete
+
+   NAMING RULE (non-negotiable):
+     Any function or variable that sets or carries a URL must use
+     "URL" in its name. mcpEngineURL. aiEngineURL. No exceptions.
+
+
+2. TEST HARNESS v1.7.3
+   File: test-apiserver1.7.3.html
+   What changed from 1.7.2:
+
+   a) Component loaded via script tag
+      <script src="AIToolKit/Client-AI-Component.js"></script>
+      mcpEngineStaging and mcpEngineSend are live in the page.
+
+   b) 4-step onload chain — fires automatically on DOMContentLoaded
+      Step 1: Component loaded (script tag)
+      Step 2: setServerProduction() — go online
+      Step 3: mcpEngineSend get_token — token stored server-side
+      Step 4: mcpEngineSend get_ranches → ranchGuid captured
+              mcpEngineSend get_plantings → grid fills with plantings
+      If you open the app and the grid has data — all 4 steps worked.
+
+   c) Row selection — selected record drives the right side
+      Grid renders → first row auto-selected
+      Click any row → that row becomes selected
+      Right side JSON editor always shows selected record
+      selectRow() captures eventId and plantingId from the record
+
+   d) eventId capture — completes the chain
+      get_irrigation_details → captures eventId from displayRecords[0]
+      load_into_displayRecords → same
+      data_operation (RESTORE) → captures eventId and plantingId
+      stageUpdateIrrigation() now uses real eventId — no more placeholder
+
+   e) stageGetToken() fixed
+      Was reading document.getElementById('password') — didn't exist
+      Now stages with blank password, tells user to use LOGON button
+
+   f) Title fixed — was showing v1.6, now v1.7.3 everywhere
+
+   g) Button functions renamed loadXxx → stageXxx
+      More accurate. They stage the call. SEND fires it.
+
+
+3. STATE VARIABLES (harness)
+   ranchGuid   — captured from get_ranches response
+   plantingId  — captured from get_plantings or selected row
+   eventId     — captured from get_irrigation_details or selected row
+   selectedRow — current selected record object
+   currentGridData — full grid dataset for save/restore
+
+
+THE DESIGN WE AGREED ON (for future versions)
+=====================================================================
+
+CURRENT (1.7.3): IT harness. One screen. Developer tool.
+
+NEXT STEPS (one at a time, keep this one working):
+  - AI prompt bar: full-width bar above status bar
+      [ Karen ◉  Lilly ○ ] [ API Key ] [ Ask a question... ] [ ASK ]
+      Results flow into existing message log and data grid
+      aiEngineRouter wired to ASK button
+      tool-definitions.json needed for AI to know the 15 tools
+
+  - Right side form/JSON toggle
+      JSON view: current textarea (IT mode)
+      Form view: labeled fields from selected record (user mode)
+      Toggle in quad header
+
+  - get_recommendation token
+      New API tool. Passes eventId. Returns server recommended hours.
+      Server does the math. Harness just calls it.
+
+PHILOSOPHY:
+  Same engine under every version.
+  User app = same tokens, same engines, different skin.
+  MobileFrame just changes the forms and grids.
+  The harness proves the engine. The engine never changes.
+
+THE CHAIN (proven path):
+  Online → get_token → get_ranches → ranchGuid
+        → get_plantings → plantingId → grid fills
+        → get_irrigation_details → eventId → displayRecords
+        → update_irrigation or batch_post_queue
+
+SAVE/RESTORE:
+  saveCurrent() → stages data_operation write → SEND saves to server
+  restoreCurrent() → stages data_operation read → SEND loads grid
+  Saved file contains full records with eventId + plantingId baked in
+  RESTORE auto-captures eventId from first record
+
+
+FILE LOCATIONS
+=====================================================================
+  Harness:    v2.0-apiupdate\TestHarness\test-apiserver1.7.3.html
+  Component:  v2.0-apiupdate\TestHarness\AIToolKit\Client-AI-Component.js  (v2.2)
+  MCP Engine: v2.0-apiupdate\TestHarness\AIToolKit\mcp-engine.js           (v2.1)
+  AI Engine:  v2.0-apiupdate\TestHarness\AIToolKit\ai-engine.js            (v2.1)
+  CLAUDE.md:  MCP-API-Tools-Audit\CLAUDE.md
+  Server:     crop-client-services\api-server\APIServer2.0.js
+  Saved data: crop-client-services\api-server\data\APIsteve.json (example)
+
+
+RULES
+=====================================================================
+  1. APIServer2.0.js is the source of truth. Always.
+  2. URL always uppercase in any function or variable name.
+  3. Tell me the plan first. Wait for GOFORIT before touching code.
+  4. One step at a time. Keep the working version working.
+  5. Dot notation for all file versions (1.7.3 not 173).
+  6. Bash tools run on Linux — cannot access Windows paths directly.
+
+
+OPEN QUESTION FOR NEXT SESSION
+=====================================================================
+  tool-definitions.json — does it exist yet?
+  The AI engine needs it to know what tools to call.
+  If not built, that is step 1 before wiring the AI prompt bar.
+
+=====================================================================
+  Happy Trails ... the chain fires, the grid fills, we are on our way.
+=====================================================================

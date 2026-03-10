@@ -1,0 +1,47 @@
+Hello Team, 
+
+                           MyDaily-Desktop  
+                      v1.6 today is 2.19.2026
+
+This file will intoduce the Team.
+  Steve  ........Our CEO and Archltect.( coach)
+  George .... Our AI /developer / Analyst
+  Mac .......... Our Project Lead / Macgyver 
+  Gus  .......... Our Best Buddy Genious / LLM
+
+we will have a guest apprearance from
+    Lilly ........... Our First AI Assist / Teacher
+ she is a gift from MobileFrame as we both
+    install OpenAI to Learn from her 
+      how to share our tools Nicely. 
+
+      OUR GOAL is to create the best ever
+              IT MCP Tool Audit App 
+   The goal is to help growers rock at reporting water budgets
+
+We are workiing on 
+   MCP: APIserver.js  ...  Our CropManage API mcp tool
+      This is the crown jewel that will service the grower community.
+       It contains Water Requirements from UC Agriculture.
+       A valuable resource for responding to state mandates for water budgets
+   
+    HTML: CropClient-MCP-API-Tools-Audit-Q-v1.6 ...
+        This is the app we are coding with the following goal:
+         Goal is to have a harness app to test the APIserver tokens 
+          Demo sample agents to create new and update irrigation record
+           Give it a server install so allow user to test it anywhere 
+
+    CURRENT STATUS: (coach) 
+            The MCP APIserver is now installed and running on server
+             The URL is   api.cropclient.com and the test program works
+ 
+
+
+
+ Happy Trails 
+   Steve  Pappas (coach)
+
+p.s. Please use the v1,2,3 folder to put replaced ./ unused files
+       They are there to keep history in case we need to find old context
+
+ 

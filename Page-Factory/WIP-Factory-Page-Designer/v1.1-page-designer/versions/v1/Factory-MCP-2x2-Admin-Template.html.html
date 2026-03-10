@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Factory-MCP-2x2-Admin-Template.html</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:Arial,sans-serif; height:100vh; padding:8px; background:#f0f0f0; }
+  .container { display:grid; grid-template-columns:60% 40%; grid-template-rows:50% 50%; height:100%; gap:6px; }
+  .quad { border:2px solid #333; border-radius:6px; background:#fff; display:flex; flex-direction:column; }
+  .quad-header { background:#2c3e50; color:#fff; padding:6px 12px; font-weight:bold; font-size:14px; border-radius:4px 4px 0 0; }
+  .quad-body { flex:1; padding:10px; position:relative; }
+  .component { border:2px solid #333; border-radius:4px; background:#fff; overflow:hidden; }
+  .component-body { padding:8px; }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <div class="quad">
+    <div class="quad-header">Tokens / Actions</div>
+    <div class="quad-body">
+      <!-- @@@@ SAVE_DASHBOARD id:box @@@@ -->
+      <div class="component" style="width:186px;height:43px;">
+        <div class="component-body">
+          <!-- FACTORY: inject box component here -->
+        </div>
+      </div>
+      <!-- @@@@ /SAVE_DASHBOARD @@@@ -->
+      <!-- @@@@ _RESTORE_DASHBOARD id:box @@@@ -->
+      <div class="component" style="width:201px;height:43px;">
+        <div class="component-body">
+          <!-- FACTORY: inject box component here -->
+        </div>
+      </div>
+      <!-- @@@@ /_RESTORE_DASHBOARD @@@@ -->
+      <!-- @@@@ REFRESH_IRRIGATION_RECORDS id:box @@@@ -->
+      <div class="component" style="width:201px;height:43px;">
+        <div class="component-body">
+          <!-- FACTORY: inject box component here -->
+        </div>
+      </div>
+      <!-- @@@@ /REFRESH_IRRIGATION_RECORDS @@@@ -->
+      <!-- @@@@ _UPDATE_IRRIGATAION_RECORDS id:box @@@@ -->
+      <div class="component" style="width:201px;height:43px;">
+        <div class="component-body">
+          <!-- FACTORY: inject box component here -->
+        </div>
+      </div>
+      <!-- @@@@ /_UPDATE_IRRIGATAION_RECORDS @@@@ -->
+      <!-- @@@@ POST_IRRIGATION_RECORDS id:box @@@@ -->
+      <div class="component" style="width:201px;height:43px;">
+        <div class="component-body">
+          <!-- FACTORY: inject box component here -->
+        </div>
+      </div>
+      <!-- @@@@ /POST_IRRIGATION_RECORDS @@@@ -->
+      <!-- @@@@ PROMPT id:text @@@@ -->
+      <div class="component" style="width:861px;height:47px;">
+        <div class="component-body">
+          <!-- FACTORY: inject text component here -->
+        </div>
+      </div>
+      <!-- @@@@ /PROMPT @@@@ -->
+      <!-- @@@@ _SEND id:button @@@@ -->
+      <div class="component" style="width:126px;height:46px;">
+        <div class="component-body">
+          <!-- FACTORY: inject button component here -->
+        </div>
+      </div>
+      <!-- @@@@ /_SEND @@@@ -->
+      <!-- @@@@ DROPDOWN id:dropdown @@@@ -->
+      <div class="component" style="width:140px;height:34px;">
+        <div class="component-body">
+          <!-- FACTORY: inject dropdown component here -->
+        </div>
+      </div>
+      <!-- @@@@ /DROPDOWN @@@@ -->
+      <!-- @@@@ PLANTINGS id:grid @@@@ -->
+      <div class="component" style="width:272px;height:161px;">
+        <div class="component-body">
+          <!-- TOKEN: get-plantings -->
+          <!-- FACTORY: inject grid component here -->
+        </div>
+      </div>
+      <!-- @@@@ /PLANTINGS @@@@ -->
+      <!-- @@@@ _RANCHES id:grid @@@@ -->
+      <div class="component" style="width:272px;height:161px;">
+        <div class="component-body">
+          <!-- TOKEN: get-ranches -->
+          <!-- FACTORY: inject grid component here -->
+        </div>
+      </div>
+      <!-- @@@@ /_RANCHES @@@@ -->
+      <!-- @@@@ TOKENS id:grid @@@@ -->
+      <div class="component" style="width:426px;height:161px;">
+        <div class="component-body">
+          <!-- FACTORY: inject grid component here -->
+        </div>
+      </div>
+      <!-- @@@@ /TOKENS @@@@ -->
+      <!-- @@@@ TABS id:tabs @@@@ -->
+      <div class="component" style="width:200px;height:34px;">
+        <div class="component-body">
+          <!-- FACTORY: inject tabs component here -->
+        </div>
+      </div>
+      <!-- @@@@ /TABS @@@@ -->
+      <!-- @@@@ TABS id:tabs @@@@ -->
+      <div class="component" style="width:200px;height:34px;">
+        <div class="component-body">
+          <!-- FACTORY: inject tabs component here -->
+        </div>
+      </div>
+      <!-- @@@@ /TABS @@@@ -->
+      <!-- @@@@ TABS id:tabs @@@@ -->
+      <div class="component" style="width:200px;height:34px;">
+        <div class="component-body">
+          <!-- FACTORY: inject tabs component here -->
+        </div>
+      </div>
+      <!-- @@@@ /TABS @@@@ -->
+      <!-- @@@@ _ALL_TOKENS id:tabs @@@@ -->
+      <div class="component" style="width:136px;height:41px;">
+        <div class="component-body">
+          <!-- FACTORY: inject tabs component here -->
+        </div>
+      </div>
+      <!-- @@@@ /_ALL_TOKENS @@@@ -->
+      <!-- @@@@ TEXT id:text @@@@ -->
+      <div class="component" style="width:180px;height:80px;">
+        <div class="component-body">
+          <!-- FACTORY: inject text component here -->
+        </div>
+      </div>
+      <!-- @@@@ /TEXT @@@@ -->
+      <!-- @@@@ TEXT id:text @@@@ -->
+      <div class="component" style="width:180px;height:80px;">
+        <div class="component-body">
+          <!-- FACTORY: inject text component here -->
+        </div>
+      </div>
+      <!-- @@@@ /TEXT @@@@ -->
+      <!-- @@@@ TEXT id:text @@@@ -->
+      <div class="component" style="width:860px;height:47px;">
+        <div class="component-body">
+          <!-- FACTORY: inject text component here -->
+        </div>
+      </div>
+      <!-- @@@@ /TEXT @@@@ -->
+      <!-- @@@@ _SEND id:button @@@@ -->
+      <div class="component" style="width:126px;height:46px;">
+        <div class="component-body">
+          <!-- FACTORY: inject button component here -->
+        </div>
+      </div>
+      <!-- @@@@ /_SEND @@@@ -->
+      <!-- @@@@ _ALL_TOKENS id:tabs @@@@ -->
+      <div class="component" style="width:136px;height:41px;">
+        <div class="component-body">
+          <!-- FACTORY: inject tabs component here -->
+        </div>
+      </div>
+      <!-- @@@@ /_ALL_TOKENS @@@@ -->
+      <!-- @@@@ _ALL_TOKENS id:tabs @@@@ -->
+      <div class="component" style="width:136px;height:41px;">
+        <div class="component-body">
+          <!-- FACTORY: inject tabs component here -->
+        </div>
+      </div>
+      <!-- @@@@ /_ALL_TOKENS @@@@ -->
+      <!-- @@@@ TEXT id:text @@@@ -->
+      <div class="component" style="width:180px;height:80px;">
+        <div class="component-body">
+          <!-- FACTORY: inject text component here -->
+        </div>
+      </div>
+      <!-- @@@@ /TEXT @@@@ -->
+      <!-- @@@@ TEXT id:text @@@@ -->
+      <div class="component" style="width:180px;height:80px;">
+        <div class="component-body">
+          <!-- FACTORY: inject text component here -->
+        </div>
+      </div>
+      <!-- @@@@ /TEXT @@@@ -->
+      <!-- @@@@ _NAME id:text @@@@ -->
+      <div class="component" style="width:269px;height:41px;">
+        <div class="component-body">
+          <!-- FACTORY: inject text component here -->
+        </div>
+      </div>
+      <!-- @@@@ /_NAME @@@@ -->
+      <!-- @@@@ LABEL id:label @@@@ -->
+      <div class="component" style="width:100px;height:28px;">
+        <div class="component-body">
+          <!-- FACTORY: inject label component here -->
+        </div>
+      </div>
+      <!-- @@@@ /LABEL @@@@ -->
+      <!-- @@@@ _USER_LOGON id:label @@@@ -->
+      <div class="component" style="width:268px;height:39px;">
+        <div class="component-body">
+          <!-- FACTORY: inject label component here -->
+        </div>
+      </div>
+      <!-- @@@@ /_USER_LOGON @@@@ -->
+      <!-- @@@@ LABEL id:label @@@@ -->
+      <div class="component" style="width:100px;height:28px;">
+        <div class="component-body">
+          <!-- FACTORY: inject label component here -->
+        </div>
+      </div>
+      <!-- @@@@ /LABEL @@@@ -->
+      <!-- @@@@ LOGO id:label @@@@ -->
+      <div class="component" style="width:82px;height:43px;">
+        <div class="component-body">
+          <!-- FACTORY: inject label component here -->
+        </div>
+      </div>
+      <!-- @@@@ /LOGO @@@@ -->
+      <!-- @@@@ BUTTON id:button @@@@ -->
+      <div class="component" style="width:100px;height:38px;">
+        <div class="component-body">
+          <!-- FACTORY: inject button component here -->
+        </div>
+      </div>
+      <!-- @@@@ /BUTTON @@@@ -->
+      <!-- @@@@ _SIGN_IN id:button @@@@ -->
+      <div class="component" style="width:161px;height:48px;">
+        <div class="component-body">
+          <!-- FACTORY: inject button component here -->
+        </div>
+      </div>
+      <!-- @@@@ /_SIGN_IN @@@@ -->
+    </div>
+  </div>
+
+  <div class="quad">
+    <div class="quad-header">Chat</div>
+    <div class="quad-body">
+    </div>
+  </div>
+
+  <div class="quad">
+    <div class="quad-header">Grid / Results</div>
+    <div class="quad-body">
+    </div>
+  </div>
+
+  <div class="quad">
+    <div class="quad-header">Details</div>
+    <div class="quad-body">
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

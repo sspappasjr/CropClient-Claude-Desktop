@@ -1,0 +1,56 @@
+=====================================================================
+                   MyDailyNapkin.Today  v2.0  2.28.2026
+  Specs behind MyDailyLog.Today. Short and sweet so we both get it.
+  Coach comments, Mac updates, until it clicks for both of us.
+===================================================================== 
+                                   APISERVER 2.0 and PAGEBUILDER
+                                                       RULES !!!
+
+  SSP I AM STILL WORKING ON THIS PLAN TODAY. I WILL START SESSION WHEN DONE !!!
+---------------------------------------------------------------------------------------------------------------------------------
+ APIServer2.0.js → api-component2.0.js → Q-v1.1
+       (source of truth)  (derived from)     (inject into)
+       DO NOT CHANGE       DO NOT CHANGE      @@@@ APISERVICE_COMPONENT id:api-sync @@@@
+postponed the harness demo for now
+test apiserver 1.4 is still the magic 
+
+1st list deploy 2.0 and test local and online in audit-q-v1.1 
+2nd develop the openAPI install plan 
+   I received a zip file from openapi that traing and install package.
+
+I will assign both  you and george to look at first Intro MD to start
+as soon as we have 2.0 installed and audit Q app is working 
+
+ NEXT: Save/Restore tokens → IRRIGATION_COMPONENT
+    - Save and Restore are irrigation domain tokens
+    - They go into the irrigation-component (not api-component)
+    - Server target: APIServer v2.1 (NOT 2.0 — 2.0 stays untouched)
+    - Plan the tokens now so we can code and test in the harness tonight
+
+check the plan out Mac ... anything to add ?
+
+go for it MAC the knife and george. 
+
+source → bat → Alpha + Pre-Test → git push → Server (184.168.20.205)
+
+Prime Directive on this build. 
+  APIServer2.0.js is the source of truth. Do not assume anything else.
+
+  END Goal. 
+    We need a harness / demo that shows our tech folks ( MobileFrame/Tyler) we rock.
+
+
+
+CLIENTAI MODULE:
+  - Separate napkin: ClientAI
+  - George is commenting proven working code pieces across versions
+  - Test-apiserver1.4 is the gold standard benchmark
+  - Extract the winners → clean next-gen toolkit
+  - Pattern: Design → Harness Test → Extract → Reuse
+  - Auto-chain test (get_irrigation_details → loadIntoDisplayRecords)
+    is the gatekeeper — must return clean displayRecords, no exceptions
+  - Coach reviewing George's code to find his copy of the module
+
+=====================================================================
+  Happy Trails ... the napkin never lies.
+=====================================================================

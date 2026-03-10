@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -s -X POST https://api.cropclient.com/tools/json_list -H \"Content-Type: application/json\" -d \"{\"\"directory\"\": \"\".\"\"}\")",
+      "Bash(curl -s -X POST https://api.cropclient.com/mcp -H \"Content-Type: application/json\" -d \"{\"\"jsonrpc\"\":\"\"2.0\"\",\"\"id\"\":1,\"\"method\"\":\"\"tools/call\"\",\"\"params\"\":{\"\"name\"\":\"\"json_list\"\",\"\"arguments\"\":{\"\"directory\"\":\"\".\"\"}}}\")",
+      "Bash(curl -s -X POST https://api.cropclient.com/tools/json_write -H \"Content-Type: application/json\" -d \"{\"\"filepath\"\":\"\"karen-test.json\"\",\"\"data\"\":{\"\"message\"\":\"\"Karen was here\"\",\"\"timestamp\"\":\"\"2026-03-05\"\",\"\"test\"\":true}}\")",
+      "Bash(curl -s \"https://api.cropclient.com/api/json/read?filepath=karen-test.json\")",
+      "Bash(curl -s -X POST https://api.cropclient.com/tools/json_write -H \"Content-Type: application/json\" -d \"{\"\"filepath\"\":\"\"chain-test.json\"\",\"\"data\"\":{\"\"test\"\":\"\"mcp-engine chain\"\",\"\"timestamp\"\":\"\"2026-03-05\"\"}}\")",
+      "Bash(curl -s https://api.cropclient.com/tools)",
+      "Bash(curl -s -X POST https://api.cropclient.com/tools/json_read -H \"Content-Type: application/json\" -d \"{\"\"filepath\"\":\"\"chain-test.json\"\"}\")",
+      "Bash(curl -s -X POST https://api.anthropic.com/v1/messages -H \"Content-Type: application/json\" -H \"x-api-key: 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\" -H \"anthropic-version: 2023-06-01\" -d '{\"\"model\"\":\"\"claude-sonnet-4-20250514\"\",\"\"max_tokens\"\":50,\"\"messages\"\":[{\"\"role\"\":\"\"user\"\",\"\"content\"\":\"\"Say hello in one word\"\"}]}')",
+      "Bash(ls -lh \"C:\\\\AICode\\\\CropClient-Claude-Desktop\\\\MCP-API-Tools-Audit\\\\v1.8-restructure\"\" | grep -E \"v1.8.html)",
+      "Bash(irrigation-component)",
+      "Bash(mcp-engine)",
+      "Bash(ai-engine \")",
+      "Bash(dir \"C:\\\\AICode\\\\CropClient-Claude-Desktop\\\\MCP-API-Tools-Audit\\\\v1.8-restructure\"\" | findstr /i \"v1.8.html irrigation-component mcp-engine ai-engine \")"
+    ]
+  }
+}

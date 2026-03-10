@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CropClient - GitHub Butler</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100vh;
+            overflow: hidden;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: #f5f5f5;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: #2E7D32;
+            color: white;
+            padding: 8px 15px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #1B5E20;
+        }
+
+        .header h1 {
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+        }
+
+        .header h1::before {
+            content: "🐙";
+            font-size: 1.3rem;
+        }
+
+        .header-right {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .version {
+            opacity: 0.7;
+            font-size: 0.75rem;
+        }
+
+        .toolbar {
+            background: #f5f5f5;
+            padding: 8px 15px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .toolbar select {
+            flex: 1;
+            padding: 6px 10px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            font-size: 0.9rem;
+            max-width: 350px;
+            background: white;
+        }
+
+        .toolbar button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 6px 14px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: background 0.2s ease;
+        }
+
+        .toolbar button:hover {
+            background: #45a049;
+        }
+
+        .main-container {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+            background: #fafafa;
+        }
+
+        .sidebar {
+            width: 220px;
+            background: white;
+            border-right: 1px solid #e0e0e0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-header {
+            padding: 8px 12px;
+            background: #f5f5f5;
+            border-bottom: 1px solid #e0e0e0;
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: #555;
+        }
+
+        .sidebar-content {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .tree-item {
+            padding: 6px 12px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            border-bottom: 1px solid #f5f5f5;
+            display: grid;
+            grid-template-columns: 20px 1fr;
+            gap: 8px;
+            align-items: center;
+            transition: background 0.15s ease;
+        }
+
+        .tree-item:hover {
+            background: #f5f5f5;
+        }
+
+        .tree-item.selected {
+            background: #E8F5E9;
+            color: #2E7D32;
+            font-weight: 500;
+        }
+
+        .content-area {
+            flex: 1;
+            background: white;
+            margin: 10px;
+            border: 1px solid #e0e0e0;
+            border-radius: 3px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .content-header {
+            padding: 12px 15px;
+            border-bottom: 1px solid #e0e0e0;
+            background: #fafafa;
+        }
+
+        .content-header h2 {
+            color: #333;
+            margin-bottom: 5px;
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        .content-header .repo-url {
+            font-family: 'Courier New', monospace;
+            background: white;
+            padding: 4px 8px;
+            border: 1px solid #e0e0e0;
+            border-radius: 3px;
+            font-size: 0.8rem;
+            color: #666;
+            display: inline-block;
+        }
+
+        .file-output-header {
+            padding: 8px 15px;
+            border-bottom: 1px solid #e0e0e0;
+            background: #f5f5f5;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .file-output-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .view-options {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            font-size: 0.85rem;
+        }
+
+        .view-options label {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+        }
+
+        .view-options input[type="radio"] {
+            cursor: pointer;
+        }
+
+        .content-body {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .file-list {
+            width: 100%;
+        }
+
+        .file-list-item {
+            display: grid;
+            grid-template-columns: 30px 1fr 120px;
+            gap: 10px;
+            padding: 8px 15px;
+            border-bottom: 1px solid #f5f5f5;
+            font-size: 0.85rem;
+            transition: background 0.15s ease;
+            align-items: center;
+        }
+
+        .file-list-item:hover {
+            background: #fafafa;
+        }
+
+        .file-type {
+            text-align: center;
+            font-size: 1.1rem;
+        }
+
+        .file-details {
+            color: #999;
+            font-size: 0.8rem;
+        }
+
+        .actions-bar {
+            display: flex;
+            gap: 8px;
+            padding: 10px 15px;
+            background: #f5f5f5;
+            border-top: 1px solid #e0e0e0;
+            align-items: center;
+        }
+
+        .actions-bar .status-message {
+            flex: 1;
+            padding: 6px 12px;
+            background: #E3F2FD;
+            color: #1976D2;
+            border-left: 3px solid #2196F3;
+            font-size: 0.8rem;
+            margin: 0;
+        }
+
+        .action-btn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 6px 14px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: background 0.2s ease;
+        }
+
+        .action-btn:hover {
+            background: #45a049;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 30px;
+            color: #999;
+            font-size: 0.85rem;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #999;
+            font-size: 0.85rem;
+        }
+
+        .empty-state::before {
+            content: "📂";
+            font-size: 2rem;
+            display: block;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>GitHub Butler</h1>
+        <div class="header-right">
+            <span id="usernameDisplay" style="font-size:0.85rem;"></span>
+            <button onclick="loginGitHub()" id="loginBtn" style="background:#1B5E20;color:white;border:1px solid #4CAF50;padding:4px 12px;border-radius:3px;cursor:pointer;font-size:0.8rem;">Login</button>
+            <div class="version">v1.1</div>
+        </div>
+    </div>
+
+    <div class="toolbar">
+        <select id="repoSelect" onchange="loadRepo()">
+            <option value="">Loading repositories...</option>
+        </select>
+        <button onclick="createNewRepo()">+ Create New Repo</button>
+        <button onclick="refreshRepos()">🔄 Refresh</button>
+    </div>
+
+    <div class="main-container">
+        <div class="sidebar">
+            <div class="sidebar-header">Repository Contents</div>
+            <div class="sidebar-content" id="sidebarContent">
+                <div class="loading">Select a repository</div>
+            </div>
+        </div>
+
+        <div class="content-area">
+            <div class="content-header">
+                <h2 id="contentTitle">Welcome to GitHub Butler</h2>
+                <div class="repo-url" id="repoUrl">Select a repository to get started</div>
+            </div>
+            <div class="file-output-header" id="fileOutputHeader" style="display: none;">
+                <div class="file-output-title" id="fileOutputTitle">Files</div>
+                <div class="view-options">
+                    <label>
+                        <input type="radio" name="viewType" value="grid" checked onchange="changeViewType('grid')">
+                        Grid
+                    </label>
+                    <label>
+                        <input type="radio" name="viewType" value="list" onchange="changeViewType('list')">
+                        List
+                    </label>
+                </div>
+            </div>
+            <div class="content-body" id="contentBody">
+            </div>
+            <div class="actions-bar">
+                <div class="status-message" id="statusMessage">Ready</div>
+                <button class="action-btn" onclick="pullChanges()">⬇️ Pull</button>
+                <button class="action-btn" onclick="pushChanges()">⬆️ Push</button>
+                <button class="action-btn" onclick="syncRepo()">🔄 Sync</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ========================================
+        // GITHUB BUTLER v1.1 - LIVE API (Irrigation package removed)
+        // ========================================
+        let ghToken = sessionStorage.getItem('gh_token') || '';
+        let ghUser = sessionStorage.getItem('gh_user') || '';
+        let currentRepo = null;
+        let currentPath = '';
+        let repos = [];
+        let viewType = 'grid';
+
+        const API = 'https://api.github.com';
+
+        function ghHeaders() {
+            return {
+                'Authorization': 'token ' + ghToken,
+                'Accept': 'application/vnd.github.v3+json'
+            };
+        }
+
+        // ========================================
+        // LOGIN
+        // ========================================
+        async function loginGitHub() {
+            if (ghToken) {
+                if (confirm('Already logged in as ' + ghUser + '. Log out?')) {
+                    ghToken = '';
+                    ghUser = '';
+                    sessionStorage.removeItem('gh_token');
+                    sessionStorage.removeItem('gh_user');
+                    document.getElementById('usernameDisplay').textContent = '';
+                    document.getElementById('loginBtn').textContent = 'Login';
+                    document.getElementById('repoSelect').innerHTML = '<option value="">-- Login first --</option>';
+                    document.getElementById('statusMessage').textContent = 'Logged out';
+                }
+                return;
+            }
+            const token = prompt('Enter your GitHub Personal Access Token (ghp_...)');
+            if (!token || !token.trim()) return;
+            ghToken = token.trim();
+
+            try {
+                const res = await fetch(API + '/user', { headers: ghHeaders() });
+                if (!res.ok) throw new Error('Invalid token');
+                const user = await res.json();
+                ghUser = user.login;
+                sessionStorage.setItem('gh_token', ghToken);
+                sessionStorage.setItem('gh_user', ghUser);
+                document.getElementById('usernameDisplay').textContent = ghUser;
+                document.getElementById('loginBtn').textContent = 'Logout';
+                document.getElementById('statusMessage').textContent = 'Logged in as ' + ghUser;
+                loadGitHubRepos();
+            } catch (e) {
+                ghToken = '';
+                alert('Login failed: ' + e.message);
+            }
+        }
+
+        // ========================================
+        // LOAD REPOS
+        // ========================================
+        async function loadGitHubRepos() {
+            if (!ghToken) {
+                document.getElementById('repoSelect').innerHTML = '<option value="">-- Login first --</option>';
+                return;
+            }
+            const select = document.getElementById('repoSelect');
+            select.innerHTML = '<option value="">Loading...</option>';
+            document.getElementById('statusMessage').textContent = 'Fetching repositories...';
+
+            try {
+                const res = await fetch(API + '/user/repos?per_page=100&sort=updated', { headers: ghHeaders() });
+                if (!res.ok) throw new Error('Could not fetch repos');
+                repos = await res.json();
+
+                select.innerHTML = '<option value="">-- Select Repository --</option>';
+                repos.forEach((repo, i) => {
+                    const opt = document.createElement('option');
+                    opt.value = i;
+                    opt.textContent = repo.full_name + (repo.private ? ' (private)' : '');
+                    select.appendChild(opt);
+                });
+                document.getElementById('statusMessage').textContent = repos.length + ' repositories loaded';
+            } catch (e) {
+                select.innerHTML = '<option value="">Error loading repos</option>';
+                document.getElementById('statusMessage').textContent = 'Error: ' + e.message;
+            }
+        }
+
+        // ========================================
+        // LOAD REPO & FILES
+        // ========================================
+        function loadRepo() {
+            const idx = document.getElementById('repoSelect').value;
+            if (idx === '') return;
+            currentRepo = repos[idx];
+            currentPath = '';
+            document.getElementById('contentTitle').textContent = currentRepo.full_name;
+            document.getElementById('repoUrl').textContent = currentRepo.html_url;
+            loadRepoFiles('');
+        }
+
+        async function loadRepoFiles(path) {
+            if (!currentRepo) return;
+            currentPath = path;
+            const sidebar = document.getElementById('sidebarContent');
+            const content = document.getElementById('contentBody');
+            const fileOutputHeader = document.getElementById('fileOutputHeader');
+            const statusMessage = document.getElementById('statusMessage');
+
+            sidebar.innerHTML = '<div class="loading">Loading...</div>';
+            statusMessage.textContent = 'Loading ' + (path || 'root') + '...';
+
+            try {
+                const url = API + '/repos/' + currentRepo.full_name + '/contents/' + path;
+                const res = await fetch(url, { headers: ghHeaders() });
+                if (!res.ok) throw new Error('Could not load files');
+                const items = await res.json();
+
+                fileOutputHeader.style.display = 'flex';
+                document.getElementById('fileOutputTitle').textContent = path || 'Root';
+
+                // Sort: folders first, then files
+                const sorted = items.sort((a, b) => {
+                    if (a.type === 'dir' && b.type !== 'dir') return -1;
+                    if (a.type !== 'dir' && b.type === 'dir') return 1;
+                    return a.name.localeCompare(b.name);
+                });
+
+                sidebar.innerHTML = '';
+
+                // Back button if in subfolder
+                if (path) {
+                    const back = document.createElement('div');
+                    back.className = 'tree-item';
+                    back.innerHTML = '<span>⬆️</span><span>..</span>';
+                    back.onclick = () => {
+                        const parent = path.split('/').slice(0, -1).join('/');
+                        loadRepoFiles(parent);
+                    };
+                    sidebar.appendChild(back);
+                }
+
+                sorted.forEach(item => {
+                    const el = document.createElement('div');
+                    el.className = 'tree-item';
+                    const icon = item.type === 'dir' ? '📁' : '📄';
+                    el.innerHTML = '<span>' + icon + '</span><span>' + item.name + '</span>';
+                    el.onclick = () => {
+                        document.querySelectorAll('.tree-item').forEach(x => x.classList.remove('selected'));
+                        el.classList.add('selected');
+                        if (item.type === 'dir') {
+                            loadRepoFiles(item.path);
+                        } else {
+                            loadFileContent(item);
+                        }
+                    };
+                    sidebar.appendChild(el);
+                });
+
+                content.innerHTML = '';
+                statusMessage.textContent = (path || 'Root') + ': ' + sorted.length + ' items';
+            } catch (e) {
+                sidebar.innerHTML = '<div class="loading">Error loading files</div>';
+                statusMessage.textContent = 'Error: ' + e.message;
+            }
+        }
+
+        // ========================================
+        // VIEW FILE CONTENT
+        // ========================================
+        async function loadFileContent(item) {
+            const content = document.getElementById('contentBody');
+            const statusMessage = document.getElementById('statusMessage');
+            document.getElementById('fileOutputTitle').textContent = item.name;
+            statusMessage.textContent = 'Loading ' + item.name + '...';
+
+            try {
+                const res = await fetch(item.url, { headers: ghHeaders() });
+                if (!res.ok) throw new Error('Could not load file');
+                const data = await res.json();
+
+                let decoded = '';
+                if (data.content) {
+                    decoded = atob(data.content.replace(/\n/g, ''));
+                }
+
+                const escaped = decoded.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                const sizeKB = (data.size / 1024).toFixed(1);
+
+                content.innerHTML =
+                    '<div style="padding:15px;">' +
+                    '<div style="margin-bottom:8px;font-size:0.8rem;color:#666;">' + item.name + ' (' + sizeKB + ' KB)</div>' +
+                    '<div style="background:#fafafa;border:1px solid #e0e0e0;border-radius:3px;padding:15px;font-family:Courier New,monospace;font-size:0.85rem;overflow:auto;max-height:500px;white-space:pre-wrap;">' +
+                    escaped +
+                    '</div></div>';
+
+                statusMessage.textContent = 'Viewing: ' + item.name;
+            } catch (e) {
+                content.innerHTML = '<div class="empty-state"><p>Could not load file</p></div>';
+                statusMessage.textContent = 'Error: ' + e.message;
+            }
+        }
+
+        function changeViewType(type) {
+            viewType = type;
+        }
+
+        // ========================================
+        // REPO ACTIONS
+        // ========================================
+        async function createNewRepo() {
+            if (!ghToken) { alert('Login first'); return; }
+            const name = prompt('New repository name:');
+            if (!name) return;
+            const desc = prompt('Description (optional):', '');
+            const statusMessage = document.getElementById('statusMessage');
+            statusMessage.textContent = 'Creating ' + name + '...';
+
+            try {
+                const res = await fetch(API + '/user/repos', {
+                    method: 'POST',
+                    headers: ghHeaders(),
+                    body: JSON.stringify({ name: name, description: desc || '', private: false, auto_init: true })
+                });
+                if (!res.ok) {
+                    const err = await res.json();
+                    throw new Error(err.message || 'Failed');
+                }
+                statusMessage.textContent = 'Created: ' + name;
+                loadGitHubRepos();
+            } catch (e) {
+                statusMessage.textContent = 'Error: ' + e.message;
+            }
+        }
+
+        function refreshRepos() {
+            loadGitHubRepos();
+        }
+
+        function pullChanges() {
+            if (!currentRepo) { alert('Select a repo first'); return; }
+            document.getElementById('statusMessage').textContent = 'Pull is a local git operation — use your terminal or Claude Code for: git pull';
+        }
+
+        function pushChanges() {
+            if (!currentRepo) { alert('Select a repo first'); return; }
+            document.getElementById('statusMessage').textContent = 'Push is a local git operation — use your terminal or Claude Code for: git push';
+        }
+
+        function syncRepo() {
+            if (!currentRepo) { alert('Select a repo first'); return; }
+            document.getElementById('statusMessage').textContent = 'Sync is a local git operation — use your terminal or Claude Code for: git pull && git push';
+        }
+
+        // ========================================
+        // STARTUP
+        // ========================================
+        window.onload = function() {
+            if (ghToken && ghUser) {
+                document.getElementById('usernameDisplay').textContent = ghUser;
+                document.getElementById('loginBtn').textContent = 'Logout';
+                loadGitHubRepos();
+            } else {
+                document.getElementById('repoSelect').innerHTML = '<option value="">-- Login first --</option>';
+            }
+        };
+    </script>
+
+    <!-- Irrigation Tool Package removed in v1.1 - lives in Crop-Client-Services -->
+
+</body>
+</html>

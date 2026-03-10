@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PageBuilder v1.2 - Section Painter</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #2E7D32 0%, #4CAF50 100%);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ── Top Header ── */
+        .top-header {
+            height: 48px;
+            background: linear-gradient(135deg, #1B5E20 0%, #2E7D32 100%);
+            display: flex;
+            align-items: center;
+            padding: 0 16px;
+            gap: 12px;
+            flex-shrink: 0;
+        }
+        .top-header .logo-link {
+            font-size: 1.3rem;
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .top-header .app-title {
+            color: #A5D6A7;
+            font-size: 0.95rem;
+            flex: 1;
+        }
+        .top-header .version-badge {
+            background: #388E3C;
+            color: #C8E6C9;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.75rem;
+        }
+        .header-back-btn {
+            background: rgba(255,255,255,0.15);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.3);
+            padding: 4px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+        .header-back-btn:hover { background: rgba(255,255,255,0.25); }
+
+        /* ── Main 3-Panel Layout ── */
+        .painter-layout {
+            display: grid;
+            grid-template-columns: 220px 1fr 200px;
+            flex: 1;
+            overflow: hidden;
+            gap: 0;
+        }
+
+        /* ── Left: Section List ── */
+        .section-list-panel {
+            background: #1B5E20;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .panel-header {
+            padding: 10px 14px;
+            font-weight: bold;
+            font-size: 0.9rem;
+            background: rgba(0,0,0,0.2);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .section-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 8px;
+        }
+        .section-item {
+            padding: 8px 10px;
+            border-radius: 5px;
+            margin-bottom: 4px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid transparent;
+            transition: all 0.15s;
+        }
+        .section-item:hover { background: rgba(255,255,255,0.15); }
+        .section-item.active {
+            background: #4CAF50;
+            border-color: #81C784;
+            font-weight: bold;
+        }
+        .section-name { font-weight: bold; font-size: 0.8rem; }
+        .section-status {
+            font-size: 0.72rem;
+            color: #A5D6A7;
+            margin-top: 2px;
+        }
+        .section-item.active .section-status { color: #C8E6C9; }
+        .no-sections-msg {
+            color: #A5D6A7;
+            font-size: 0.8rem;
+            padding: 12px;
+            text-align: center;
+        }
+
+        /* ── Center: Canvas ── */
+        .canvas-panel {
+            background: #f5f5f5;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            border-left: 2px solid #2E7D32;
+            border-right: 2px solid #2E7D32;
+        }
+        .canvas-toolbar {
+            background: #2E7D32;
+            padding: 6px 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .canvas-toolbar span {
+            color: white;
+            font-size: 0.85rem;
+            font-weight: bold;
+            flex: 1;
+        }
+        .canvas-btn {
+            padding: 4px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.82rem;
+            font-weight: bold;
+        }
+        .canvas-btn-preview { background: #81D4FA; color: #01579B; }
+        .canvas-btn-save    { background: #C8E6C9; color: #2E7D32; }
+        .canvas-btn-clear   { background: #FFCDD2; color: #C62828; }
+        .canvas-btn:hover { opacity: 0.85; }
+
+        .canvas-drop-zone {
+            flex: 1;
+            overflow: auto;
+            padding: 16px;
+            position: relative;
+        }
+        .canvas-drop-zone.drag-over {
+            outline: 3px dashed #4CAF50;
+            background: #E8F5E9;
+        }
+        .canvas-empty-msg {
+            color: #bbb;
+            text-align: center;
+            margin-top: 60px;
+            font-size: 1rem;
+        }
+        .canvas-empty-msg .big { font-size: 2rem; display: block; margin-bottom: 8px; }
+
+        /* Dropped components on canvas */
+        .canvas-component {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 5px;
+            margin-bottom: 8px;
+            padding: 10px 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: grab;
+            position: relative;
+        }
+        .canvas-component:hover { border-color: #4CAF50; }
+        .canvas-component.selected { border-color: #2196F3; background: #E3F2FD; }
+        .canvas-component .comp-icon { font-size: 1.2rem; }
+        .canvas-component .comp-label { flex: 1; font-size: 0.85rem; font-weight: bold; }
+        .canvas-component .comp-remove {
+            color: #f44336;
+            cursor: pointer;
+            font-size: 1rem;
+            padding: 2px 6px;
+            border-radius: 3px;
+        }
+        .canvas-component .comp-remove:hover { background: #FFCDD2; }
+
+        /* Preview iframe */
+        .canvas-preview {
+            flex: 1;
+            border: none;
+            display: none;
+        }
+
+        /* ── Right: Objects Palette ── */
+        .palette-panel {
+            background: white;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            border-left: 1px solid #e0e0e0;
+        }
+        .palette-objects {
+            flex: 1;
+            overflow-y: auto;
+            padding: 8px;
+        }
+        .palette-group-label {
+            font-size: 0.72rem;
+            font-weight: bold;
+            color: #888;
+            text-transform: uppercase;
+            padding: 6px 4px 2px 4px;
+            border-bottom: 1px solid #eee;
+            margin-bottom: 4px;
+        }
+        .palette-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 7px 8px;
+            border-radius: 5px;
+            cursor: grab;
+            margin-bottom: 2px;
+            font-size: 0.82rem;
+            border: 1px solid #e8e8e8;
+            background: #fafafa;
+            transition: all 0.15s;
+            user-select: none;
+        }
+        .palette-item:hover { background: #E8F5E9; border-color: #4CAF50; }
+        .palette-item:active { cursor: grabbing; }
+        .palette-item .pi-icon { font-size: 1rem; }
+        .palette-item .pi-name { font-weight: bold; }
+        .palette-item .pi-desc { color: #999; font-size: 0.72rem; }
+
+        /* Save-back status bar */
+        .status-bar {
+            background: #E8F5E9;
+            border-top: 1px solid #4CAF50;
+            padding: 6px 14px;
+            font-size: 0.8rem;
+            color: #2E7D32;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Top Header -->
+    <div class="top-header">
+        <a class="logo-link" href="#">🌱</a>
+        <span class="app-title">CropClient Services | Section Painter</span>
+        <span class="version-badge">v1.2</span>
+        <button class="header-back-btn" onclick="window.close()">← Back to Builder</button>
+    </div>
+
+    <!-- 3-Panel Layout -->
+    <div class="painter-layout">
+
+        <!-- LEFT: Section List -->
+        <div class="section-list-panel">
+            <div class="panel-header">📋 Sections</div>
+            <div class="section-list" id="sectionList">
+                <div class="no-sections-msg">Loading sections from Builder...</div>
+            </div>
+        </div>
+
+        <!-- CENTER: Painter Canvas -->
+        <div class="canvas-panel">
+            <div class="canvas-toolbar">
+                <span id="canvasTitle">No section selected</span>
+                <button class="canvas-btn canvas-btn-clear" onclick="clearCanvas()">🗑 Clear</button>
+                <button class="canvas-btn canvas-btn-preview" onclick="togglePreview()">👁 Preview</button>
+                <button class="canvas-btn canvas-btn-save" onclick="saveSection()">💾 Save Back</button>
+            </div>
+            <div class="canvas-drop-zone" id="canvasDropZone">
+                <div class="canvas-empty-msg" id="canvasEmptyMsg">
+                    <span class="big">🎨</span>
+                    Select a section on the left,<br>then drag objects from the palette →
+                </div>
+            </div>
+            <iframe class="canvas-preview" id="canvasPreview"></iframe>
+        </div>
+
+        <!-- RIGHT: Objects Palette -->
+        <div class="palette-panel">
+            <div class="panel-header">🧩 Objects</div>
+            <div class="palette-objects" id="paletteObjects"></div>
+        </div>
+
+    </div>
+
+    <!-- Status Bar -->
+    <div class="status-bar" id="statusBar">
+        💡 Drag objects onto the canvas to build your section.
+    </div>
+
+    <script>
+        // ── State ──
+        const state = {
+            sections: [],       // loaded from localStorage (Builder handoff)
+            activeSection: null,
+            canvasItems: [],    // objects dropped on canvas
+            showingPreview: false
+        };
+
+        // ── Objects Palette Definition ──
+        const PALETTE_GROUPS = [
+            {
+                label: 'Layout',
+                items: [
+                    { icon: '▭', name: 'Header Bar',  desc: 'Top title bar',       tag: 'header',  html: '<div class="section-header" style="background:#2E7D32;color:white;padding:12px 16px;font-weight:bold;font-size:1.1rem;">Section Header</div>' },
+                    { icon: '⬜', name: 'Divider',     desc: 'Horizontal rule',     tag: 'divider', html: '<hr style="border:none;border-top:2px solid #e0e0e0;margin:10px 0;">' },
+                    { icon: '⊞',  name: '2-Column',    desc: 'Side by side layout', tag: '2col',    html: '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:8px;"><div style="background:#f5f5f5;padding:12px;border-radius:4px;min-height:60px;">Left</div><div style="background:#f5f5f5;padding:12px;border-radius:4px;min-height:60px;">Right</div></div>' },
+                ]
+            },
+            {
+                label: 'Content',
+                items: [
+                    { icon: '🔤', name: 'Label',       desc: 'Text label',          tag: 'label',   html: '<label style="font-weight:bold;color:#333;font-size:0.9rem;">Field Label</label>' },
+                    { icon: '📝', name: 'Text Input',  desc: 'Single line input',   tag: 'input',   html: '<div style="margin:6px 0;"><label style="font-size:0.85rem;color:#555;">Input Label</label><input type="text" placeholder="Enter value..." style="display:block;width:100%;padding:8px;border:2px solid #e0e0e0;border-radius:4px;margin-top:4px;font-size:0.9rem;"></div>' },
+                    { icon: '📄', name: 'Textarea',    desc: 'Multi-line text',     tag: 'textarea',html: '<div style="margin:6px 0;"><label style="font-size:0.85rem;color:#555;">Notes</label><textarea rows="3" placeholder="Enter notes..." style="display:block;width:100%;padding:8px;border:2px solid #e0e0e0;border-radius:4px;margin-top:4px;font-size:0.9rem;resize:vertical;"></textarea></div>' },
+                    { icon: '🔽', name: 'Dropdown',    desc: 'Select box',          tag: 'select',  html: '<div style="margin:6px 0;"><label style="font-size:0.85rem;color:#555;">Select Option</label><select style="display:block;width:100%;padding:8px;border:2px solid #e0e0e0;border-radius:4px;margin-top:4px;font-size:0.9rem;"><option>Option 1</option><option>Option 2</option><option>Option 3</option></select></div>' },
+                ]
+            },
+            {
+                label: 'Actions',
+                items: [
+                    { icon: '🟢', name: 'Primary Btn', desc: 'Main action button',  tag: 'btn-primary', html: '<button style="padding:10px 20px;background:#4CAF50;color:white;border:none;border-radius:5px;font-size:0.9rem;font-weight:bold;cursor:pointer;margin:4px 4px 4px 0;">Submit</button>' },
+                    { icon: '🔵', name: 'Secondary Btn',desc: 'Secondary action',   tag: 'btn-secondary',html: '<button style="padding:10px 20px;background:#2196F3;color:white;border:none;border-radius:5px;font-size:0.9rem;font-weight:bold;cursor:pointer;margin:4px 4px 4px 0;">Action</button>' },
+                    { icon: '🔴', name: 'Danger Btn',  desc: 'Delete/cancel',       tag: 'btn-danger',  html: '<button style="padding:10px 20px;background:#f44336;color:white;border:none;border-radius:5px;font-size:0.9rem;font-weight:bold;cursor:pointer;margin:4px 4px 4px 0;">Delete</button>' },
+                ]
+            },
+            {
+                label: 'Data',
+                items: [
+                    { icon: '📊', name: 'Data Grid',   desc: 'Table with rows',     tag: 'grid',    html: '<table style="width:100%;border-collapse:collapse;font-size:0.85rem;margin:8px 0;"><thead><tr><th style="background:#4CAF50;color:white;padding:8px;text-align:left;">Column A</th><th style="background:#4CAF50;color:white;padding:8px;text-align:left;">Column B</th><th style="background:#4CAF50;color:white;padding:8px;text-align:left;">Column C</th></tr></thead><tbody><tr><td style="padding:8px;border-bottom:1px solid #eee;">Row 1</td><td style="padding:8px;border-bottom:1px solid #eee;">Data</td><td style="padding:8px;border-bottom:1px solid #eee;">Value</td></tr><tr><td style="padding:8px;border-bottom:1px solid #eee;">Row 2</td><td style="padding:8px;border-bottom:1px solid #eee;">Data</td><td style="padding:8px;border-bottom:1px solid #eee;">Value</td></tr></tbody></table>' },
+                    { icon: '🏷',  name: 'Status Badge',desc: 'Colored status pill', tag: 'badge',   html: '<span style="display:inline-block;padding:4px 12px;background:#E8F5E9;color:#2E7D32;border-radius:12px;font-size:0.8rem;font-weight:bold;margin:4px;">Active</span>' },
+                    { icon: '📈', name: 'Stat Card',   desc: 'KPI / number card',   tag: 'stat',    html: '<div style="background:#E3F2FD;border-left:4px solid #2196F3;padding:12px 16px;border-radius:4px;margin:6px 0;"><div style="font-size:0.75rem;color:#555;text-transform:uppercase;">Metric Name</div><div style="font-size:1.8rem;font-weight:bold;color:#1976D2;margin-top:4px;">42</div></div>' },
+                ]
+            }
+        ];
+
+        // ── Init ──
+        document.addEventListener('DOMContentLoaded', () => {
+            buildPalette();
+            loadSectionsFromBuilder();
+            setupDropZone();
+        });
+
+        // ── Build Palette ──
+        function buildPalette() {
+            const container = document.getElementById('paletteObjects');
+            PALETTE_GROUPS.forEach(group => {
+                const label = document.createElement('div');
+                label.className = 'palette-group-label';
+                label.textContent = group.label;
+                container.appendChild(label);
+
+                group.items.forEach(item => {
+                    const el = document.createElement('div');
+                    el.className = 'palette-item';
+                    el.draggable = true;
+                    el.innerHTML = `<span class="pi-icon">${item.icon}</span><div><div class="pi-name">${item.name}</div><div class="pi-desc">${item.desc}</div></div>`;
+                    el.addEventListener('dragstart', (e) => {
+                        e.dataTransfer.setData('paletteTag', item.tag);
+                        e.dataTransfer.setData('paletteHtml', item.html);
+                        e.dataTransfer.setData('paletteName', item.name);
+                        e.dataTransfer.setData('paletteIcon', item.icon);
+                    });
+                    container.appendChild(el);
+                });
+            });
+        }
+
+        // ── Load Sections from Builder (localStorage) ──
+        function loadSectionsFromBuilder() {
+            try {
+                const raw = localStorage.getItem('pagefactory_sections');
+                if (raw) {
+                    state.sections = JSON.parse(raw);
+                    renderSectionList();
+                    setStatus('✅ ' + state.sections.length + ' sections loaded from Builder.');
+                } else {
+                    setStatus('⚠️ No sections from Builder yet. Open Builder → mark sections → they appear here.');
+                    renderSectionList();
+                }
+            } catch(e) {
+                setStatus('❌ Could not load sections from Builder.');
+            }
+
+            // Also check URL param for direct section launch
+            const params = new URLSearchParams(window.location.search);
+            const slotParam = params.get('slot');
+            if (slotParam) {
+                const match = state.sections.find(s => s.slotName === slotParam);
+                if (match) selectSection(match);
+            }
+        }
+
+        // ── Render Section List ──
+        function renderSectionList() {
+            const list = document.getElementById('sectionList');
+            list.innerHTML = '';
+            if (state.sections.length === 0) {
+                list.innerHTML = '<div class="no-sections-msg">No sections yet.<br><br>In Builder: load a template, mark sections, then open Painter.</div>';
+                return;
+            }
+            state.sections.forEach(sec => {
+                const item = document.createElement('div');
+                item.className = 'section-item' + (state.activeSection?.slotName === sec.slotName ? ' active' : '');
+                item.innerHTML = `<div class="section-name">${sec.slotName}</div><div class="section-status">${sec.name}</div>`;
+                item.onclick = () => selectSection(sec);
+                list.appendChild(item);
+            });
+        }
+
+        // ── Select a Section ──
+        function selectSection(sec) {
+            state.activeSection = sec;
+            state.canvasItems = [];
+            state.showingPreview = false;
+
+            document.getElementById('canvasTitle').textContent = '🎨 ' + sec.slotName + ' — ' + sec.name;
+            document.getElementById('canvasPreview').style.display = 'none';
+            document.getElementById('canvasDropZone').style.display = 'flex';
+            document.getElementById('canvasDropZone').style.flexDirection = 'column';
+
+            // If section has saved HTML, load it into canvas items
+            const savedKey = 'pagefactory_painted_' + sec.slotName;
+            const savedHtml = localStorage.getItem(savedKey);
+            if (savedHtml) {
+                state.canvasItems = JSON.parse(localStorage.getItem(savedKey + '_items') || '[]');
+            }
+
+            renderCanvas();
+            renderSectionList();
+            setStatus('Editing: ' + sec.slotName);
+        }
+
+        // ── Render Canvas ──
+        function renderCanvas() {
+            const zone = document.getElementById('canvasDropZone');
+            const emptyMsg = document.getElementById('canvasEmptyMsg');
+
+            // Remove old components (keep empty msg)
+            zone.querySelectorAll('.canvas-component').forEach(el => el.remove());
+
+            if (state.canvasItems.length === 0) {
+                emptyMsg.style.display = 'block';
+            } else {
+                emptyMsg.style.display = 'none';
+                state.canvasItems.forEach((item, idx) => {
+                    zone.appendChild(createCanvasComponent(item, idx));
+                });
+            }
+        }
+
+        function createCanvasComponent(item, idx) {
+            const comp = document.createElement('div');
+            comp.className = 'canvas-component';
+            comp.draggable = true;
+            comp.innerHTML = `
+                <span class="comp-icon">${item.icon}</span>
+                <span class="comp-label">${item.name}</span>
+                <span class="comp-remove" onclick="removeCanvasItem(${idx})" title="Remove">✕</span>
+            `;
+            return comp;
+        }
+
+        function removeCanvasItem(idx) {
+            state.canvasItems.splice(idx, 1);
+            renderCanvas();
+        }
+
+        function clearCanvas() {
+            if (state.canvasItems.length === 0) return;
+            if (!confirm('Clear all objects from canvas?')) return;
+            state.canvasItems = [];
+            renderCanvas();
+        }
+
+        // ── Setup Drop Zone ──
+        function setupDropZone() {
+            const zone = document.getElementById('canvasDropZone');
+
+            zone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                zone.classList.add('drag-over');
+            });
+            zone.addEventListener('dragleave', () => {
+                zone.classList.remove('drag-over');
+            });
+            zone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                zone.classList.remove('drag-over');
+
+                if (!state.activeSection) {
+                    setStatus('⚠️ Select a section first.');
+                    return;
+                }
+
+                const tag  = e.dataTransfer.getData('paletteTag');
+                const html = e.dataTransfer.getData('paletteHtml');
+                const name = e.dataTransfer.getData('paletteName');
+                const icon = e.dataTransfer.getData('paletteIcon');
+
+                if (!tag) return;
+
+                state.canvasItems.push({ tag, html, name, icon });
+                renderCanvas();
+                setStatus('Added: ' + name);
+            });
+        }
+
+        // ── Toggle Preview ──
+        function togglePreview() {
+            const zone    = document.getElementById('canvasDropZone');
+            const preview = document.getElementById('canvasPreview');
+
+            state.showingPreview = !state.showingPreview;
+
+            if (state.showingPreview) {
+                const html = buildSectionHTML();
+                const blob = new Blob([html], { type: 'text/html' });
+                preview.src = URL.createObjectURL(blob);
+                preview.style.display = 'block';
+                zone.style.display = 'none';
+                setStatus('Preview mode — click Preview again to return to canvas.');
+            } else {
+                preview.style.display = 'none';
+                zone.style.display = 'flex';
+                setStatus('Back to canvas.');
+            }
+        }
+
+        // ── Build Section HTML from canvas items ──
+        function buildSectionHTML() {
+            const items = state.canvasItems.map(item => item.html).join('\n');
+            return `<!DOCTYPE html>
+<html><head>
+<meta charset="UTF-8">
+<style>
+  body { font-family: Arial, sans-serif; padding: 16px; background: white; }
+  * { box-sizing: border-box; }
+</style>
+</head><body>
+${items}
+</body></html>`;
+        }
+
+        // ── Save Section Back to Builder ──
+        function saveSection() {
+            if (!state.activeSection) {
+                setStatus('⚠️ No section selected.');
+                return;
+            }
+            const html  = state.canvasItems.map(item => item.html).join('\n');
+            const slot  = state.activeSection.slotName;
+
+            // Save to localStorage — Builder reads this
+            localStorage.setItem('pagefactory_painted_' + slot, html);
+            localStorage.setItem('pagefactory_painted_' + slot + '_items', JSON.stringify(state.canvasItems));
+
+            // Update sections list status
+            const sec = state.sections.find(s => s.slotName === slot);
+            if (sec) sec.status = 'Painted';
+            localStorage.setItem('pagefactory_sections', JSON.stringify(state.sections));
+
+            setStatus('✅ ' + slot + ' saved back to Builder.');
+        }
+
+        // ── Status Bar ──
+        function setStatus(msg) {
+            document.getElementById('statusBar').textContent = msg;
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,39 @@
+=====================================================================
+                   MyDailyNapkin.Today  v1.6  2.21.2026
+  Specs behind MyDailyLog.Today. Short and sweet so we both get it.
+  Coach comments, Mac updates, until it clicks for both of us.
+=====================================================================
+
+--- 1: CORS ---
+MCP = server-to-server. No browser cross-origin. No CORS error.
+
+--- 2: Name Bug ---
+populateIrrigationDetailsGrid had 7 columns. Grid header had 11.
+EventDate landed in Ranch column. IrrigationMethod in Planting.
+
+--- 3: Fix ---
+Rewrote to 11 columns. All 3 files synced: audit app, api-component, APIServer.
+
+--- 4: Name Stamp ---
+CropManage API doesn't return names. Stamp selectedRanchName/selectedPlantingName
+onto events BEFORE the loop. One forEach line, both paths.
+
+--- 5: Server Handlers ---
+get_plantings now sets selectedRanchName from ranchData.
+get_irrigation_details now sets selectedPlantingName from plantingsData.
+
+--- 6: Fallback Chain ---
+event.RanchName || selectedRanchName || '-'  — baseline from v1.2. Don't touch.
+
+--- 7: Butler Tokens ---
+DEPLOY, PUSH, PULL, ROLLBACK, TEST — each becomes a Butler skill.
+
+--- 8: Versioned Naming ---
+Source: web1.6.config. Deploy as: web.config + web1.6.config alongside.
+
+--- 9: Three Locations ---
+Source → bat → Alpha + Pre-Test → git push → Server (184.168.20.205)
+
+=====================================================================
+  Happy Trails ... the napkin never lies.
+=====================================================================

@@ -1,0 +1,22 @@
+{
+  "name": "cropclient-api-mcp-server",
+  "version": "1.6.0",
+  "description": "CropClient API MCP Server - CropManage Integration (iisnode + standalone)",
+  "main": "APIServer1.6.js",
+  "scripts": {
+    "start": "node APIServer1.6.js",
+    "test": "node test-client.js"
+  },
+  "keywords": [
+    "mcp",
+    "cropmanage",
+    "api"
+  ],
+  "author": "Steve Pappas",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.6",
+    "express": "^5.2.1"
+  },
+  "type": "commonjs"
+}

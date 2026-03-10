@@ -1,0 +1,184 @@
+=====================================================================
+         MyDailyNapkin.ClientAI  v4.0  3.6.2026
+     The day we decided to make Client-AI-Component Great Again.
+     Clean it out. Extract the real thing. Do it right.
+=====================================================================
+
+
+WHAT HAPPENED — WHY WE ARE HERE
+=====================================================================
+
+Client-AI-Component.js was labeled v2.2 but it was never viable.
+Someone injected a broken "irrigation-crud" block with renamed functions
+and dropped the two JSON persistence tokens that were the whole point.
+The server-side CRUD thin wrappers (crudCreate etc.) were also trash —
+they were never asked for. Placeholders for Save/Restore and SQLite
+added noise with no value.
+
+Coach reviewed Client-AI-Component1.0.js (his marked-up version)
+and called it clearly:
+  - DELETE the CRUD wrappers
+  - DELETE the wrong irrigation-crud block
+  - DELETE the placeholders
+  - Extract the REAL irrigation component as its own file
+
+The real source is IRRIGATION_COMPONENT v1.1 sitting in:
+  v1.6-restructure/CropClient-MCP-API-Tools-Audit-Q-v1.6.html
+  between the two <!-- @@@@ IRRIGATION_COMPONENT v1.1 id:irrigation-mcp @@@@ --> markers
+
+That is the bedrock. It has been running in harnesses since day one.
+It just never got extracted properly. Today that gets fixed.
+
+
+WHAT GETS DELETED FROM Client-AI-Component.js
+=====================================================================
+
+Block 1 — CRUD trash (5 functions + section header):
+  crudCreate / crudReset / crudApply / crudUpdate / crudDelete
+  These were thin wrappers around loadDataOperation. Never asked for.
+
+Block 2 — Placeholders (2 TODO stubs):
+  // TODO: Save and Restore tokens — planned for APIServer 2.1
+  // TODO: SQLite integration — same CRUD operations, real database
+  Gone. No replacements needed in the component.
+
+Block 3 — Wrong irrigation-crud block (everything between markers):
+  // @@@ BEGIN irrigation-crud @@@
+    parseEventDate, formatDate
+    irrigationCreateNext   ← wrong name
+    irrigationResetTable   ← wrong name
+    irrigationReadMeter    ← wrong name
+    irrigationUpdateRecord ← wrong name
+  // @@@ END irrigation-crud @@@
+  All of it. The function names were changed. saveDisplay and
+  retrieveDisplay were dropped entirely. This block is trash.
+
+
+WHAT GETS CREATED — irrigation-component.js
+=====================================================================
+
+New standalone file:
+  v2.0-apiupdate/TestHarness/AIToolKit/irrigation-component.js
+
+Source of truth for content:
+  v1.6-restructure/CropClient-MCP-API-Tools-Audit-Q-v1.6.html
+  Extract verbatim from between the @@@@ IRRIGATION_COMPONENT markers.
+
+Structure:
+  // ============================================================
+  // IRRIGATION_COMPONENT v1.1
+  // ============================================================
+  // Pure MCP tokens for irrigation domain operations
+  // NO DOM — params in, { returnCode, statusMessage, data } out
+  // Injectable via @@@ markers into any harness or component
+  // Source: CropClient-MCP-API-Tools-Audit-Q-v1.6.html
+  // ============================================================
+
+  // @@@ BEGIN irrigation-component @@@
+
+  [date helpers]
+    parseEventDate(dateStr)
+    formatDate(date)
+
+  [4 CRUD tokens — original names, original logic]
+    testCreateNext(ranch, planting, records)
+    resetTable(sourceData, targetRecords, dataSourceFlag)
+    testReadMeter(ranch, planting, records)
+    updateRecord(recordId, patch, records)
+
+  [2 JSON persistence tokens — were missing, now restored]
+    saveDisplay(records)
+    retrieveDisplay(jsonData, targetRecords)
+
+  // @@@ END irrigation-component @@@
+
+Contract (non-negotiable):
+  - NO DOM access anywhere in this file
+  - Every function: params in → { returnCode, statusMessage, data } out
+  - returnCode 0 = success, negative = error
+  - statusMessage is human-readable for the log
+  - data is the record or result object
+
+This file is self-contained and injectable into any harness
+via a script tag or copy-paste between @@@ markers.
+
+
+WHAT Client-AI-Component v1.0 LOOKS LIKE AFTER
+=====================================================================
+
+Three modules. Nothing else.
+
+  // @@@ BEGIN mcp-engine @@@       ← unchanged, v2.1
+    mcpEngineURL
+    mcpEngineStaging
+    mcpEngineSend
+  // @@@ END mcp-engine @@@
+
+  // @@@ BEGIN ai-engine @@@        ← unchanged, v2.1
+    aiEngineURL
+    aiEngineSend
+    aiEngineReader
+    aiEngineRouter
+  // @@@ END ai-engine @@@
+
+  JSON TOKENS (7 loaders)           ← unchanged
+    loadJsonWrite / Read / Update / Delete / List / Exists / DataOperation
+
+  [nothing else]
+
+irrigation-component.js is a SEPARATE file.
+It is NOT embedded in Client-AI-Component.
+Harness loads it via its own script tag.
+That is the right way. That is the KISS way.
+
+
+WHY THIS IS v1.0
+=====================================================================
+
+Because it is the first version that is truly viable for other uses.
+MobileFrame, Lilly, future harnesses — they all load:
+  <script src="AIToolKit/Client-AI-Component.js"></script>
+  <script src="AIToolKit/irrigation-component.js"></script>  (if needed)
+
+The engine never changes. Domain components are plug-in.
+That is the architecture Coach designed from day one.
+
+
+WHAT IS NEXT AFTER THIS SESSION
+=====================================================================
+
+1. Correct CRUD mini bar wiring in test-apiserver1.7.4.html
+   Harness calls must match: testCreateNext, resetTable, testReadMeter, updateRecord
+
+2. ask_karen server route
+   Add to APIServer2.0.js via full deploy path
+   ASK button already wired. Karen key live.
+
+3. Right side form/JSON toggle
+
+
+THE RULES (always)
+=====================================================================
+  1. APIServer2.0.js — READ ONLY for AI. Never touch. Ever.
+  2. URL always uppercase in function/variable names that carry a URL.
+  3. Tell the plan first. Wait for GOFORIT. Then execute.
+  4. One step at a time. Keep the working version working.
+  5. Dot notation for all file versions (1.7.4 not 174).
+  6. Bash tools run on Linux — cannot access Windows paths.
+
+
+FILE LOCATIONS
+=====================================================================
+  Harness:              v2.0-apiupdate/TestHarness/test-apiserver1.7.4.html
+  Component:            v2.0-apiupdate/TestHarness/AIToolKit/Client-AI-Component.js
+  Irrigation Component: v2.0-apiupdate/TestHarness/AIToolKit/irrigation-component.js
+  MCP Engine:           v2.0-apiupdate/TestHarness/AIToolKit/mcp-engine.js
+  AI Engine:            v2.0-apiupdate/TestHarness/AIToolKit/ai-engine.js
+  Source (v1.6):        v1.6-restructure/CropClient-MCP-API-Tools-Audit-Q-v1.6.html
+  CLAUDE.md:            MCP-API-Tools-Audit/CLAUDE.md
+  Server SOURCE:        C:\AICode\crop-client-services\api-server\APIServer2.0.js
+
+=====================================================================
+  Happy Trails. Three clean modules. One solid injectable.
+  The engine never changes. That is the whole game.
+=====================================================================
