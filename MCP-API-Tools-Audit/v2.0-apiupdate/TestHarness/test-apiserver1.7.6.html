@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Server Tester v1.7.6</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        header {
+            background: linear-gradient(135deg, #2e7d32 0%, #4caf50 100%);
+            color: white;
+            padding: 12px 25px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+        header h1 { font-size: 1.5em; margin-bottom: 2px; }
+        header p { opacity: 0.9; font-size: 0.95em; }
+        .grid-2x2 {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 60% 40%;
+            grid-template-rows: 50% 50%;
+            gap: 8px;
+            padding: 8px;
+            overflow: hidden;
+        }
+        .quad {
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            background: #fafafa;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .quad-header {
+            background: linear-gradient(135deg, #2e7d32 0%, #4caf50 100%);
+            color: white;
+            padding: 8px 15px;
+            font-weight: 700;
+            font-size: 1.0em;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .quad.interactive { border: 3px solid #ff9800; background: #fff3e0; }
+        .quad.interactive .quad-header { background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%); }
+        .quad-body { flex: 1; padding: 12px; overflow: auto; }
+        .section-label {
+            font-size: 0.9em; font-weight: 700; color: #2e7d32;
+            margin-bottom: 6px; margin-top: 10px;
+            padding-bottom: 4px; border-bottom: 2px solid #4caf50;
+        }
+        .section-label:first-child { margin-top: 0; }
+        .button-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+        .test-btn {
+            padding: 8px 16px; border: none; border-radius: 6px;
+            cursor: pointer; font-weight: 600; font-size: 0.9em; color: white;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .test-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+        .test-btn:active { transform: translateY(0); }
+        .test-btn.json  { background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%); }
+        .test-btn.api   { background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%); }
+        .test-btn.save  { background: linear-gradient(135deg, #4caf50 0%, #388e3c 100%); }
+        .test-btn.restore { background: linear-gradient(135deg, #9c27b0 0%, #7b1fa2 100%); }
+        .test-btn.logon { background: linear-gradient(135deg, #00796b 0%, #009688 100%); padding:5px 12px; font-size:0.85em; white-space:nowrap; }
+        .config-row {
+            display: flex; gap: 8px; align-items: center;
+            padding-top: 8px; border-top: 1px solid #ffcc80; margin-top: 8px;
+        }
+        .config-row label { font-size: 0.9em; font-weight: 600; color: #f57c00; white-space: nowrap; }
+        .config-row input { padding: 5px 8px; border: 2px solid #ddd; border-radius: 4px; font-size: 0.9em; }
+        .config-row input:focus { outline: none; border-color: #ff9800; }
+        .server-input { flex: 1; min-width: 160px; font-family: 'Courier New', monospace; }
+        .message-log {
+            flex: 1; background: #263238; color: #aed581;
+            font-family: 'Courier New', monospace; padding: 12px;
+            border-radius: 6px; overflow-y: auto; font-size: 0.9em; line-height: 1.6;
+        }
+        .message-log .success { color: #81c784; }
+        .message-log .error   { color: #ef5350; }
+        .message-log .info    { color: #64b5f6; }
+        .fields-row { display: flex; gap: 8px; align-items: center; padding-top: 8px; }
+        .fields-row label { font-weight: 600; font-size: 0.95em; color: #2e7d32; min-width: 45px; }
+        .fields-row input {
+            flex: 1; padding: 6px 10px; border: 2px solid #ddd; border-radius: 4px;
+            font-family: 'Courier New', monospace; font-size: 0.9em;
+        }
+        .fields-row input:focus { outline: none; border-color: #4caf50; }
+        .chat-actions { display: flex; gap: 8px; padding-top: 8px; flex-shrink: 0; }
+        .btn-send {
+            flex: 1; padding: 10px 20px; border: none; border-radius: 6px;
+            cursor: pointer; font-weight: 700; font-size: 1.0em; color: white;
+            background: linear-gradient(135deg, #4caf50 0%, #388e3c 100%);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .btn-send:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+        .btn-clear {
+            padding: 10px 20px; border: none; border-radius: 6px;
+            cursor: pointer; font-weight: 700; font-size: 1.0em; color: white;
+            background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .btn-clear:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+        .view-toggle { display: flex; gap: 10px; align-items: center; margin-left: auto; font-size: 0.9em; }
+        .view-toggle label { cursor: pointer; }
+        .data-grid { flex: 1; background: white; border: 1px solid #ddd; border-radius: 6px; overflow: auto; }
+        .data-grid table { width: 100%; border-collapse: collapse; font-size: 0.9em; }
+        .data-grid th {
+            background: linear-gradient(135deg, #2e7d32 0%, #4caf50 100%);
+            color: white; padding: 8px 10px; text-align: left; font-weight: 600;
+            position: sticky; top: 0; z-index: 10;
+        }
+        .data-grid td { padding: 6px 10px; border-bottom: 1px solid #eee; }
+        .data-grid tr:hover { background: #e8f5e9; cursor: pointer; }
+        .data-grid tr.selected { background: #c8e6c9 !important; }
+        .data-grid .empty-state { padding: 40px; text-align: center; color: #999; font-style: italic; }
+        .json-preview {
+            flex: 1; background: #263238; color: #aed581;
+            font-family: 'Courier New', monospace; padding: 12px;
+            border-radius: 6px; overflow: auto; font-size: 0.9em; line-height: 1.5; white-space: pre-wrap;
+        }
+        .json-editor {
+            flex: 1; width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 6px;
+            font-family: 'Courier New', monospace; font-size: 0.9em; resize: none;
+        }
+        .json-editor:focus { outline: none; border-color: #4caf50; }
+
+        /* ============================================================
+           AI PROMPT BAR
+           ============================================================ */
+        .ai-prompt-bar {
+            display: flex; gap: 8px; align-items: center;
+            background: #1a237e; color: white;
+            padding: 6px 12px; flex-shrink: 0;
+            border-top: 2px solid #283593;
+        }
+        .ai-prompt-bar label {
+            font-size: 0.85em; font-weight: 700; color: #90caf9; white-space: nowrap;
+        }
+        .ai-prompt-input {
+            flex: 1; padding: 6px 10px;
+            border: 2px solid #3949ab; border-radius: 6px;
+            font-size: 0.9em; background: #283593; color: white;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        .ai-prompt-input::placeholder { color: #90caf9; }
+        .ai-prompt-input:focus { outline: none; border-color: #64b5f6; }
+        .ai-provider { display: flex; gap: 10px; align-items: center; font-size: 0.85em; white-space: nowrap; }
+        .ai-provider label { cursor: pointer; color: #e3f2fd; display: flex; align-items: center; gap: 4px; }
+        .btn-ask {
+            padding: 7px 20px; border: none; border-radius: 6px;
+            cursor: pointer; font-weight: 700; font-size: 0.95em; color: white;
+            background: linear-gradient(135deg, #1565c0 0%, #0d47a1 100%);
+            border: 2px solid #42a5f5;
+            transition: transform 0.2s, box-shadow 0.2s;
+            white-space: nowrap;
+        }
+        .btn-ask:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(66,165,245,0.4); }
+        .btn-ask:active { transform: translateY(0); }
+        .btn-ask:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+        /* ============================================================
+           STATUS BAR
+           ============================================================ */
+        .status-bar {
+            background: #263238; color: #aed581; padding: 5px 20px;
+            font-size: 0.9em; font-family: 'Courier New', monospace; flex-shrink: 0;
+        }
+
+        /* ============================================================
+           CRUD MINI BAR (S4 bottom)
+           ============================================================ */
+        .crud-footer {
+            flex-shrink: 0;
+            padding: 6px 0 0 0;
+            border-top: 2px solid #e0e0e0;
+            background: #fafafa;
+        }
+        .crud-buttons {
+            display: flex; gap: 4px;
+        }
+        .crud-btn {
+            flex: 1; padding: 8px 4px; border: none; border-radius: 6px;
+            cursor: pointer; font-weight: 600; font-size: 0.85em; color: white;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .crud-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+        .crud-btn:active { transform: translateY(0); }
+        .crud-btn.create  { background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%); }
+        .crud-btn.reset   { background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%); }
+        .crud-btn.meter   { background: linear-gradient(135deg, #9c27b0 0%, #7b1fa2 100%); }
+        .crud-btn.update  { background: linear-gradient(135deg, #4caf50 0%, #388e3c 100%); }
+
+        /* MODAL */
+        .modal-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center; }
+        .modal-overlay.active { display:flex; }
+        .modal-box { background:white; border-radius:10px; padding:28px; width:360px; box-shadow:0 8px 32px rgba(0,0,0,0.3); }
+        .modal-box h3 { color:#2e7d32; margin-bottom:18px; font-size:1.15em; }
+        .modal-field { margin-bottom:14px; }
+        .modal-field label { display:block; font-weight:600; color:#555; margin-bottom:4px; font-size:0.9em; }
+        .modal-field input { width:100%; padding:10px; border:2px solid #ddd; border-radius:6px; font-size:0.95em; }
+        .modal-field input:focus { outline:none; border-color:#4caf50; }
+        .modal-actions { display:flex; gap:10px; margin-top:18px; }
+        .modal-actions button { flex:1; padding:12px; border:none; border-radius:6px; cursor:pointer; font-weight:600; font-size:0.95em; color:white; }
+        .btn-logon  { background:linear-gradient(135deg, #4caf50 0%, #388e3c 100%); }
+        .btn-cancel { background:linear-gradient(135deg, #9e9e9e 0%, #757575 100%); }
+    </style>
+</head>
+<body>
+
+<!-- LOGON MODAL -->
+<div class="modal-overlay" id="logonModal">
+    <div class="modal-box">
+        <h3>🔐 CropManage Logon</h3>
+        <div class="modal-field"><label>Name:</label><input type="text" id="modalName" value="steve"></div>
+        <div class="modal-field"><label>Email:</label><input type="text" id="modalEmail" value="stevep@sspnet.com"></div>
+        <div class="modal-field"><label>Password:</label><input type="password" id="modalPassword" value="gosteve1!"></div>
+        <div class="modal-actions">
+            <button class="btn-logon" onclick="doLogon()">🔑 LOGIN</button>
+            <button class="btn-cancel" onclick="closeLogon()">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<!-- HEADER -->
+<header>
+    <h1>🧪 CropClient API Tester v2.0</h1>
+    <p>CropClient v2.0 — 15 MCP Tools — Client-AI-Component v2.2</p>
+</header>
+
+<!-- 2x2 GRID -->
+<div class="grid-2x2">
+
+    <!-- TOP LEFT: Interactive Command Panel -->
+    <div class="quad interactive">
+        <div class="quad-header">⚡ Interactive Command Panel</div>
+        <div class="quad-body">
+            <!-- CREDENTIALS BAR -->
+            <div class="config-row" style="gap:8px; align-items:center; margin-bottom:8px; background:#fff3e0; padding:6px 10px; border-radius:6px; border-top:none; margin-top:0;">
+                <label style="color:#e65100; font-weight:700;">credentials:</label>
+                <input type="text" id="username" value="stevep@sspnet.com" style="flex:1; font-family:'Courier New',monospace; font-size:0.85em; padding:5px 8px; border:1px solid #ffcc80; border-radius:4px;">
+                <label style="color:#e65100; font-weight:700; margin-left:12px;">File Name:</label>
+                <input type="text" id="saveUsername" value="steve" style="width:100px; font-family:'Courier New',monospace; font-size:0.85em; padding:5px 8px; border:1px solid #ffcc80; border-radius:4px;">
+                <button class="test-btn logon" onclick="showLogon()">🔑 LOGON</button>
+            </div>
+            <!-- SERVER URL BAR -->
+            <div class="config-row" style="gap:8px; align-items:center; margin-bottom:8px;">
+                <label>Server URL:</label>
+                <input type="text" id="serverUrl" class="server-input" value="http://localhost:3101">
+                <button class="test-btn json" onclick="setServerLocal()"      style="padding:7px 13px; white-space:nowrap;">📍 Local</button>
+                <button class="test-btn api"  onclick="setServerProduction()" style="padding:7px 13px; white-space:nowrap;">🌐 Online</button>
+            </div>
+
+            <div class="section-label">📁 JSON Tools (7)</div>
+            <div class="button-row">
+                <button class="test-btn json" onclick="stageJsonWrite()">json_write</button>
+                <button class="test-btn json" onclick="stageJsonRead()">json_read</button>
+                <button class="test-btn json" onclick="stageJsonUpdate()">json_update</button>
+                <button class="test-btn json" onclick="stageJsonDelete()">json_delete</button>
+                <button class="test-btn json" onclick="stageJsonExists()">json_exists</button>
+                <button class="test-btn json" onclick="stageJsonList()">json_list</button>
+                <button class="test-btn json" onclick="stageDataOperation()">data_operation</button>
+            </div>
+
+            <div class="section-label">🌐 CropManage API (8)</div>
+            <div class="button-row">
+                <button class="test-btn api" onclick="stageGetToken()">get_token</button>
+                <button class="test-btn api" onclick="stageGetRanches()">get_ranches</button>
+                <button class="test-btn api" onclick="stageGetPlantings()">get_plantings</button>
+                <button class="test-btn api" onclick="stageGetIrrigationDetails()">get_irrigation_details</button>
+                <button class="test-btn api" onclick="stageDisplayRecords()">load_displayRecords</button>
+                <button class="test-btn api" onclick="stagePostIrrigation()">post_new_irrigation</button>
+                <button class="test-btn api" onclick="stageUpdateIrrigation()">update_irrigation</button>
+                <button class="test-btn api" onclick="stageBatchPost()">batch_post_queue</button>
+            </div>
+
+            <!-- AI PROMPT (moved into S1) -->
+            <div style="display:flex; gap:8px; align-items:center; background:#1a237e; padding:6px 10px; border-radius:6px; margin-top:8px;">
+                <label style="font-size:0.85em; font-weight:700; color:#90caf9; white-space:nowrap;">prompt:</label>
+                <input type="text" class="ai-prompt-input" id="aiPrompt"
+                       placeholder="Ask about your irrigation data..."
+                       onkeypress="if(event.key==='Enter') askAI()">
+                <div class="ai-provider">
+                    <label><input type="radio" name="aiProvider" value="karen" checked> Karen</label>
+                    <label><input type="radio" name="aiProvider" value="lilly"> Lilly</label>
+                </div>
+                <button class="btn-ask" id="btnAsk" onclick="askAI()">🤖 ASK</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOP RIGHT: Message Log -->
+    <div class="quad">
+        <div class="quad-header">💬 Message Log</div>
+        <div class="quad-body" style="display:flex; flex-direction:column;">
+            <div class="message-log" id="messageLog">
+                <span class="info">Click buttons to stage a call, edit if needed, then SEND...</span>
+            </div>
+            <div class="fields-row">
+                <label>Tool:</label>
+                <input type="text" id="toolName" value="" placeholder="Click a button or type tool name...">
+            </div>
+            <div class="chat-actions">
+                <button class="btn-send"         onclick="sendCustomCall()">📤 SEND</button>
+                <button class="test-btn save"    onclick="saveCurrent()">💾 SAVE</button>
+                <button class="test-btn restore" onclick="restoreCurrent()">📥 RESTORE</button>
+                <button class="btn-clear"        onclick="clearResults()">Clear</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- BOTTOM LEFT: Data Grid -->
+    <div class="quad">
+        <div class="quad-header">
+            📊 Results
+            <div class="view-toggle">
+                <label><input type="radio" name="viewMode" value="grid" checked onchange="switchView('grid')"> Grid</label>
+                <label><input type="radio" name="viewMode" value="json"        onchange="switchView('json')"> JSON</label>
+            </div>
+        </div>
+        <div class="quad-body" style="display:flex; flex-direction:column;">
+            <div class="data-grid"    id="dataGrid"><div class="empty-state">No data loaded. Click a tool button and SEND.</div></div>
+            <div class="json-preview" id="jsonView" style="display:none;">No data loaded.</div>
+        </div>
+    </div>
+
+    <!-- BOTTOM RIGHT: JSON Data + CRUD mini bar -->
+    <div class="quad">
+        <div class="quad-header">📝 JSON Data</div>
+        <div class="quad-body" style="display:flex; flex-direction:column;">
+            <textarea class="json-editor" id="jsonData" placeholder="JSON data will populate when you click a tool button...">{}</textarea>
+            <!-- CRUD MINI BAR — from IRRIGATION_COMPONENT v1.1 -->
+            <div class="crud-footer">
+                <div class="crud-buttons">
+                    <button class="crud-btn create" onclick="crudCreateNext()">➕ Create</button>
+                    <button class="crud-btn reset"  onclick="crudResetTable()">🔄 Reset</button>
+                    <button class="crud-btn meter"  onclick="crudReadMeter()">📊 Apply</button>
+                    <button class="crud-btn update" onclick="crudUpdateRecord()">💾 Update</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- AI PROMPT BAR — moved into S1 (v1.7.6) -->
+
+<!-- STATUS BAR -->
+<div class="status-bar"><span id="statusBar">✅ Ready</span></div>
+
+<!-- ============================================================
+     CLIENT-AI-COMPONENT v2.2
+     ============================================================ -->
+<script src="AIToolKit/Client-AI-Component.js"></script>
+
+<script>
+    // ============================================================
+    // HARNESS STATE
+    // ============================================================
+    let ranchGuid       = null;
+    let plantingId      = null;
+    let eventId         = null;
+    let selectedRow     = null;
+    let currentGridData = null;
+    let toolDefinitions = [];     // loaded from tool-definitions.json on startup
+
+    // ============================================================
+    // UTILITIES
+    // ============================================================
+    function log(text, type = 'info') {
+        const area = document.getElementById('messageLog');
+        const div  = document.createElement('div');
+        div.className  = type;
+        div.textContent = text;
+        area.appendChild(div);
+        area.scrollTop = area.scrollHeight;
+    }
+
+    function setFields(toolName, data) {
+        document.getElementById('toolName').value = toolName;
+        document.getElementById('jsonData').value = JSON.stringify(data, null, 2);
+        log(`✅ Staged: ${toolName}`, 'success');
+        document.getElementById('statusBar').textContent = `Staged: ${toolName}`;
+    }
+
+    function clearResults() {
+        document.getElementById('messageLog').innerHTML = '<span class="info">Log cleared.</span>';
+        document.getElementById('dataGrid').innerHTML   = '<div class="empty-state">No data loaded.</div>';
+        document.getElementById('jsonView').textContent = 'No data loaded.';
+        document.getElementById('toolName').value = '';
+        document.getElementById('jsonData').value = '{}';
+        document.getElementById('statusBar').textContent = '✅ Cleared';
+    }
+
+    // ============================================================
+    // LOGON MODAL
+    // ============================================================
+    function showLogon() {
+        document.getElementById('logonModal').classList.add('active');
+        setTimeout(() => document.getElementById('modalEmail').focus(), 100);
+    }
+    function closeLogon() {
+        document.getElementById('logonModal').classList.remove('active');
+    }
+    async function doLogon() {
+        const name     = document.getElementById('modalName').value.trim();
+        const email    = document.getElementById('modalEmail').value.trim();
+        const password = document.getElementById('modalPassword').value.trim();
+        if (!email || !password) { log('❌ Email and password required.', 'error'); return; }
+        closeLogon();
+        document.getElementById('username').value     = email;
+        document.getElementById('saveUsername').value = name || email.split('@')[0];
+        log(`🔑 Logging in as ${email}...`, 'info');
+        setFields('get_token', { username: email, password: password });
+        await sendCustomCall();
+    }
+
+    // ============================================================
+    // SERVER PRESETS
+    // ============================================================
+    function setServerLocal() {
+        document.getElementById('serverUrl').value = 'http://localhost:3101';
+        log('📍 Server set to localhost:3101', 'success');
+    }
+    function setServerProduction() {
+        document.getElementById('serverUrl').value = 'https://api.cropclient.com';
+        log('🌐 Server set to production', 'success');
+    }
+
+    // ============================================================
+    // VIEW TOGGLE
+    // ============================================================
+    function switchView(mode) {
+        const grid = document.getElementById('dataGrid');
+        const json = document.getElementById('jsonView');
+        if (mode === 'json') {
+            grid.style.display = 'none';
+            json.style.display = 'block';
+            if (currentGridData) json.textContent = JSON.stringify(currentGridData, null, 2);
+        } else {
+            grid.style.display = 'block';
+            json.style.display = 'none';
+        }
+    }
+
+    // ============================================================
+    // DATA GRID RENDERER
+    // ============================================================
+    function renderDataGrid(data) {
+        const grid = document.getElementById('dataGrid');
+        currentGridData = data;
+        selectedRow = null;
+        grid.innerHTML = '';
+
+        if (data === null || data === undefined) {
+            grid.innerHTML = '<div class="empty-state">No data returned.</div>';
+            return;
+        }
+
+        if (Array.isArray(data) && data.length > 0 && typeof data[0] === 'object') {
+            const table     = document.createElement('table');
+            const thead     = document.createElement('thead');
+            const headerRow = document.createElement('tr');
+            const keys      = Object.keys(data[0]);
+            keys.forEach(key => {
+                const th = document.createElement('th');
+                th.textContent = key;
+                headerRow.appendChild(th);
+            });
+            thead.appendChild(headerRow);
+            table.appendChild(thead);
+
+            const tbody = document.createElement('tbody');
+            data.forEach((row) => {
+                const tr = document.createElement('tr');
+                keys.forEach(key => {
+                    const td  = document.createElement('td');
+                    const val = row[key];
+                    td.textContent = (typeof val === 'object' && val !== null) ? JSON.stringify(val) : (val != null ? val : '');
+                    tr.appendChild(td);
+                });
+                tr.addEventListener('click', () => selectRow(tr, row));
+                tbody.appendChild(tr);
+            });
+            table.appendChild(tbody);
+            grid.appendChild(table);
+
+            const firstRow = tbody.querySelector('tr');
+            if (firstRow) selectRow(firstRow, data[0]);
+            return;
+        }
+
+        if (typeof data === 'object' && !Array.isArray(data)) {
+            const table = document.createElement('table');
+            const tbody = document.createElement('tbody');
+            Object.keys(data).forEach(key => {
+                const tr  = document.createElement('tr');
+                const tdK = document.createElement('td');
+                const tdV = document.createElement('td');
+                tdK.textContent      = key;
+                tdK.style.fontWeight = '600';
+                tdK.style.background = '#e8f5e9';
+                const val = data[key];
+                tdV.textContent = (typeof val === 'object' && val !== null) ? JSON.stringify(val, null, 2) : (val != null ? val : '');
+                tr.appendChild(tdK);
+                tr.appendChild(tdV);
+                tbody.appendChild(tr);
+            });
+            table.appendChild(tbody);
+            grid.appendChild(table);
+            return;
+        }
+
+        if (Array.isArray(data)) {
+            const table = document.createElement('table');
+            const tbody = document.createElement('tbody');
+            data.forEach((item, i) => {
+                const tr  = document.createElement('tr');
+                const tdI = document.createElement('td');
+                const tdV = document.createElement('td');
+                tdI.textContent      = i;
+                tdI.style.fontWeight = '600';
+                tdI.style.background = '#e8f5e9';
+                tdV.textContent = (typeof item === 'object' && item !== null) ? JSON.stringify(item, null, 2) : (item != null ? item : '');
+                tr.appendChild(tdI);
+                tr.appendChild(tdV);
+                tbody.appendChild(tr);
+            });
+            table.appendChild(tbody);
+            grid.appendChild(table);
+            return;
+        }
+
+        grid.innerHTML = `<div style="padding:20px; font-family:monospace; font-size:0.95em;">${String(data)}</div>`;
+    }
+
+    // ============================================================
+    // ROW SELECTION — drives right side JSON Data (S4)
+    // ============================================================
+    function selectRow(tr, rowData) {
+        const prev = document.querySelector('.data-grid tr.selected');
+        if (prev) prev.classList.remove('selected');
+        tr.classList.add('selected');
+        selectedRow = rowData;
+        document.getElementById('jsonData').value = JSON.stringify(rowData, null, 2);
+        // Capture chain IDs from whatever the row has
+        if (rowData.Ranch_External_GUID)                        { ranchGuid  = rowData.Ranch_External_GUID; log(`📌 ranchGuid: ${ranchGuid}`, 'info'); }
+        if (rowData.Id && !rowData.Ranch_External_GUID)         { plantingId = rowData.Id;                  log(`📌 plantingId: ${plantingId}`, 'info'); }
+        if (rowData.plantingId && rowData.plantingId !== 0)     { plantingId = rowData.plantingId;           log(`📌 plantingId: ${plantingId}`, 'info'); }
+        if (rowData.eventId)                                    { eventId    = rowData.eventId;              log(`📌 eventId: ${eventId}`, 'info'); }
+    }
+
+    // ============================================================
+    // SEND
+    // ============================================================
+    async function sendCustomCall() {
+        const serverUrl = document.getElementById('serverUrl').value.trim();
+        const toolName  = document.getElementById('toolName').value.trim();
+        const jsonText  = document.getElementById('jsonData').value.trim();
+
+        if (!toolName) { log('❌ Click a tool button first!', 'error'); return; }
+
+        let args = {};
+        if (jsonText) {
+            try { args = JSON.parse(jsonText); }
+            catch (e) { log(`❌ Invalid JSON: ${e.message}`, 'error'); return; }
+        }
+
+        try {
+            document.getElementById('statusBar').textContent = `⏳ Calling ${toolName}...`;
+            log(`→ ${toolName} → ${serverUrl}`, 'info');
+            log(`→ Args: ${JSON.stringify(args)}`, 'info');
+
+            const response = await fetch(`${serverUrl}/tools/${toolName}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(args)
+            });
+            const result = await response.json();
+
+            if (result.success || response.ok) {
+                log(`✅ ${toolName}: SUCCESS`, 'success');
+                document.getElementById('statusBar').textContent = `✅ ${toolName} — OK`;
+
+                const gridData = result.data || result.ranches || result.plantings ||
+                                 result.events || result.displayRecords ||
+                                 result.records || result.files || result;
+                renderDataGrid(gridData);
+
+                if (toolName === 'get_ranches' && result.ranches && result.ranches.length > 0) {
+                    ranchGuid = result.ranches[0].Ranch_External_GUID;
+                    log(`📌 Ranch GUID: ${ranchGuid}`, 'success');
+                }
+                if (toolName === 'get_plantings' && result.plantings && result.plantings.length > 0) {
+                    plantingId = result.plantings[0].Id;
+                    log(`📌 Planting ID: ${plantingId}`, 'success');
+                }
+                if ((toolName === 'get_irrigation_details' || toolName === 'load_into_displayRecords') &&
+                     result.displayRecords && result.displayRecords.length > 0) {
+                    eventId    = result.displayRecords[0].eventId;
+                    plantingId = result.displayRecords[0].plantingId || plantingId;
+                    log(`📌 Event ID: ${eventId}`, 'success');
+                }
+                if (toolName === 'data_operation' && result.data && Array.isArray(result.data) && result.data.length > 0) {
+                    if (result.data[0].eventId)    { eventId   = result.data[0].eventId;   log(`📌 Event ID (restored): ${eventId}`, 'success'); }
+                    if (result.data[0].plantingId) { plantingId = result.data[0].plantingId; }
+                }
+            } else {
+                log(`❌ ${toolName}: FAILED — ${result.error || result.message}`, 'error');
+                document.getElementById('statusBar').textContent = `❌ ${toolName} — FAILED`;
+                renderDataGrid(result);
+            }
+        } catch (error) {
+            if (error.message === 'Failed to fetch' || error.name === 'TypeError') {
+                log('❌ CORS blocked or server unreachable', 'error');
+                document.getElementById('statusBar').textContent = '❌ CORS / unreachable';
+            } else {
+                log(`❌ ERROR: ${error.message}`, 'error');
+                document.getElementById('statusBar').textContent = '❌ Error';
+            }
+        }
+    }
+
+    // ============================================================
+    // JSON TOOL STAGERS
+    // ============================================================
+    function stageJsonWrite()     { setFields('json_write',      { filepath: 'test.json', data: { testName: 'API Server Test', timestamp: new Date().toISOString(), version: '2.0', values: [1,2,3] } }); }
+    function stageJsonRead()      { setFields('json_read',       { filepath: 'test.json' }); }
+    function stageJsonUpdate()    { setFields('json_update',     { filepath: 'test.json', updates: { updated: true, lastModified: new Date().toISOString() } }); }
+    function stageJsonDelete()    { setFields('json_delete',     { filepath: 'test.json' }); }
+    function stageJsonExists()    { setFields('json_exists',     { filepath: 'test.json' }); }
+    function stageJsonList()      { setFields('json_list',       { directory: '/.' }); }
+    function stageDataOperation() { setFields('data_operation',  { action: 'read', table: 'test' }); }
+
+    // ============================================================
+    // API TOOL STAGERS
+    // ============================================================
+    function stageGetToken() {
+        setFields('get_token', { username: document.getElementById('username').value, password: document.getElementById('modalPassword').value });
+        log('✅ Staged: get_token with credentials', 'success');
+    }
+    function stageGetRanches()    { setFields('get_ranches', {}); }
+    function stageGetPlantings() {
+        if (!ranchGuid) log('⚠️ No Ranch GUID — run get_ranches first', 'error');
+        setFields('get_plantings', { ranchGuid: ranchGuid || 'ENTER_RANCH_GUID_HERE' });
+    }
+    function stageGetIrrigationDetails() {
+        if (!plantingId) log('⚠️ No Planting ID — run get_plantings first', 'error');
+        setFields('get_irrigation_details', { plantingId: plantingId || 'ENTER_PLANTING_ID_HERE' });
+    }
+    function stageDisplayRecords() {
+        if (!plantingId) log('⚠️ No Planting ID — run get_plantings first', 'error');
+        setFields('load_into_displayRecords', { plantingId: plantingId || 'ENTER_PLANTING_ID_HERE' });
+    }
+    function stagePostIrrigation() {
+        if (!plantingId) log('⚠️ No Planting ID — run get_plantings first', 'error');
+        setFields('post_new_irrigation', { plantingId: plantingId || 'ENTER_PLANTING_ID_HERE', scheduledDate: '12/28/24', recommendedInches: 1.5, appliedHours: 5.0, irrigationMethod: 'Sprinkler' });
+    }
+    function stageUpdateIrrigation() {
+        if (!eventId) log('⚠️ No Event ID — run get_irrigation_details or select a row', 'error');
+        setFields('update_irrigation', { eventId: eventId || 'ENTER_EVENT_ID_HERE', appliedHours: 6.0, mgrHours: 5.5 });
+    }
+    function stageBatchPost() {
+        setFields('batch_post_queue', { records: [{ id: 1, plantingId: plantingId || 'ENTER_PLANTING_ID', scheduledDate: '12/28/24', hours: 5.0, status: -1, isNew: true }] });
+    }
+
+    // ============================================================
+    // SAVE / RESTORE
+    // ============================================================
+    function saveCurrent() {
+        const saveUser = document.getElementById('saveUsername').value.trim();
+        if (!saveUser)        { log('❌ Enter a File Name for save!', 'error'); return; }
+        if (!currentGridData) { log('❌ No data in grid to save!', 'error'); return; }
+        setFields('data_operation', { action: 'write', table: saveUser, data: currentGridData });
+        log(`💾 Ready to save as "${saveUser}" — click SEND`, 'success');
+    }
+    function restoreCurrent() {
+        const saveUser = document.getElementById('saveUsername').value.trim();
+        if (!saveUser) { log('❌ Enter a File Name to restore!', 'error'); return; }
+        setFields('data_operation', { action: 'read', table: saveUser });
+        log(`📥 Ready to restore "${saveUser}" — click SEND`, 'success');
+    }
+
+    // ============================================================
+    // CRUD MINI BAR — wired to irrigationXxx() from Client-AI-Component
+    // Operates on currentGridData in memory, re-renders grid on success
+    // ============================================================
+    function crudCreateNext() {
+        if (!selectedRow)     { log('⚠️ Select a row first for Create', 'error'); return; }
+        if (!currentGridData) { log('⚠️ No grid data — run get_irrigation_details first', 'error'); return; }
+        const ranch    = selectedRow.ranch    || selectedRow.ranchName    || selectedRow.Name || null;
+        const planting = selectedRow.planting || selectedRow.plantingName || selectedRow.Name || null;
+        const result   = irrigationCreateNext(ranch, planting, currentGridData);
+        log(`➕ ${result.statusMessage}`, result.returnCode === 0 ? 'success' : 'error');
+        if (result.returnCode === 0) {
+            renderDataGrid(currentGridData);
+            document.getElementById('statusBar').textContent = '✅ Created next irrigation';
+        }
+    }
+    function crudResetTable() {
+        if (!currentGridData) { log('⚠️ No grid data to reset', 'error'); return; }
+        // snapshot stored in resetSnapshot on first load
+        if (!window.resetSnapshot || window.resetSnapshot.length === 0) {
+            log('⚠️ No snapshot — run get_irrigation_details first', 'error'); return;
+        }
+        const working = JSON.parse(JSON.stringify(currentGridData));
+        const result  = irrigationResetTable(window.resetSnapshot, working);
+        log(`🔄 ${result.statusMessage}`, result.returnCode === 0 ? 'success' : 'error');
+        if (result.returnCode === 0) {
+            currentGridData = working;
+            renderDataGrid(currentGridData);
+            document.getElementById('statusBar').textContent = '✅ Table reset';
+        }
+    }
+    function crudReadMeter() {
+        if (!selectedRow)     { log('⚠️ Select a row first for Apply', 'error'); return; }
+        if (!currentGridData) { log('⚠️ No grid data', 'error'); return; }
+        const ranch    = selectedRow.ranch    || selectedRow.ranchName    || null;
+        const planting = selectedRow.planting || selectedRow.plantingName || null;
+        const result   = irrigationReadMeter(ranch, planting, currentGridData);
+        log(`📊 ${result.statusMessage}`, result.returnCode === 0 ? 'success' : 'error');
+        if (result.returnCode === 0) {
+            document.getElementById('jsonData').value = JSON.stringify(result.data, null, 2);
+            document.getElementById('statusBar').textContent = '📊 Ready for meter reading — edit Applied in JSON then Update';
+        }
+    }
+    function crudUpdateRecord() {
+        if (!selectedRow)     { log('⚠️ Select a row first for Update', 'error'); return; }
+        if (!currentGridData) { log('⚠️ No grid data', 'error'); return; }
+        // Read patch values from JSON editor (user may have edited)
+        let patch = selectedRow;
+        try { patch = JSON.parse(document.getElementById('jsonData').value); } catch(e) {}
+        const result = irrigationUpdateRecord(selectedRow.id, patch, currentGridData);
+        log(`💾 ${result.statusMessage}`, result.returnCode === 0 ? 'success' : 'error');
+        if (result.returnCode === 0) {
+            renderDataGrid(currentGridData);
+            document.getElementById('statusBar').textContent = '✅ Record updated in memory';
+        }
+    }
+
+    // ============================================================
+    // AI PROMPT BAR — ASK
+    // Routes through APIServer2.0 ask_karen tool (server-side, no CORS)
+    // ============================================================
+    async function askAI() {
+        const prompt   = document.getElementById('aiPrompt').value.trim();
+        const provider = document.querySelector('input[name="aiProvider"]:checked').value;
+        const btn      = document.getElementById('btnAsk');
+        const serverUrl = document.getElementById('serverUrl').value.trim();
+
+        if (!prompt) { log('⚠️ Enter a question first', 'error'); return; }
+
+        btn.disabled    = true;
+        btn.textContent = '⏳ Thinking...';
+        document.getElementById('statusBar').textContent = `🤖 Karen thinking...`;
+        log(`🤖 ASK: ${prompt}`, 'info');
+
+        try {
+            // Pass selected record as context if available
+            const context = selectedRow ? JSON.stringify(selectedRow, null, 2) : null;
+
+            const response = await fetch(`${serverUrl}/tools/ask_karen`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ prompt, context })
+            });
+            const result = await response.json();
+
+            if (result.success) {
+                log(`🤖 Karen: ${result.answer}`, 'success');
+                document.getElementById('statusBar').textContent = '✅ Karen answered';
+                document.getElementById('aiPrompt').value = '';
+            } else {
+                log(`❌ Karen error: ${result.error}`, 'error');
+                document.getElementById('statusBar').textContent = '❌ Karen error';
+            }
+        } catch (err) {
+            log(`❌ ASK failed: ${err.message}`, 'error');
+            document.getElementById('statusBar').textContent = '❌ ASK failed';
+        } finally {
+            btn.disabled    = false;
+            btn.textContent = '🤖 ASK';
+        }
+    }
+
+    // ============================================================
+    // INIT — onload chain
+    // Step 0: load tool definitions
+    // Step 1: component loaded (script tag above)
+    // Step 2: set server to production
+    // Step 3: get_token
+    // Step 4: get_ranches → ranchGuid → get_plantings → grid fills
+    // ============================================================
+    window.addEventListener('DOMContentLoaded', async () => {
+        log('✅ API Server Tester v1.7.6 Ready', 'success');
+        log('📦 Client-AI-Component v2.2 loaded', 'success');
+
+        // Step 0 — tool definitions (inlined from AIToolKit/tool-definitions.json)
+        toolDefinitions = [
+            { name: 'get_token', description: 'Authenticate with CropManage API and obtain access token. Required before any other API calls.', input_schema: { type: 'object', properties: { username: { type: 'string' }, password: { type: 'string' } }, required: ['username', 'password'] } },
+            { name: 'get_ranches', description: 'Fetch all ranches from CropManage API. Requires authentication token.', input_schema: { type: 'object', properties: {}, required: [] } },
+            { name: 'get_plantings', description: 'Fetch all plantings for a specific ranch. Requires authentication token and ranch GUID.', input_schema: { type: 'object', properties: { ranchGuid: { type: 'string', description: 'Ranch external GUID from CropManage' } }, required: ['ranchGuid'] } },
+            { name: 'get_irrigation_details', description: 'Fetch irrigation event details and automatically load into displayRecords format. Returns enriched irrigation records ready for dashboard display.', input_schema: { type: 'object', properties: { plantingId: { type: 'string', description: 'Planting ID from CropManage' } }, required: ['plantingId'] } },
+            { name: 'load_into_displayRecords', description: 'Fetch irrigation events and transform to displayRecords JSON format for dashboard.', input_schema: { type: 'object', properties: { plantingId: { type: 'string' } }, required: [] } },
+            { name: 'post_new_irrigation', description: 'POST a new irrigation event to CropManage.', input_schema: { type: 'object', properties: { plantingId: { type: 'string' }, scheduledDate: { type: 'string' }, recommendedInches: { type: 'number' }, appliedHours: { type: 'number' }, irrigationMethod: { type: 'string' } }, required: ['plantingId', 'scheduledDate'] } },
+            { name: 'update_irrigation', description: 'Update an existing irrigation event in CropManage.', input_schema: { type: 'object', properties: { eventId: { type: 'string' }, appliedHours: { type: 'number' }, mgrHours: { type: 'number' } }, required: ['eventId'] } },
+            { name: 'batch_post_queue', description: 'Process all pending irrigation records (status=-1). Automatically POSTs new records and UPDATEs existing records.', input_schema: { type: 'object', properties: { records: { type: 'array' } }, required: ['records'] } },
+            { name: 'json_write', description: 'Write (create/overwrite) a JSON file on the MCP server under the data directory.', input_schema: { type: 'object', properties: { filepath: { type: 'string' }, data: {} }, required: ['filepath', 'data'] } },
+            { name: 'json_read', description: 'Read a JSON file from the MCP server data directory.', input_schema: { type: 'object', properties: { filepath: { type: 'string' } }, required: ['filepath'] } },
+            { name: 'json_update', description: 'Update a JSON file by shallow-merging an object into the existing JSON.', input_schema: { type: 'object', properties: { filepath: { type: 'string' }, updates: {} }, required: ['filepath', 'updates'] } },
+            { name: 'json_delete', description: 'Delete a JSON file from the MCP server data directory.', input_schema: { type: 'object', properties: { filepath: { type: 'string' } }, required: ['filepath'] } },
+            { name: 'json_list', description: 'List JSON files in a directory under the MCP server data directory.', input_schema: { type: 'object', properties: { directory: { type: 'string' } }, required: [] } },
+            { name: 'json_exists', description: 'Check whether a JSON file exists in the MCP server data directory.', input_schema: { type: 'object', properties: { filepath: { type: 'string' } }, required: ['filepath'] } },
+            { name: 'data_operation', description: 'Generic JSON table operation. action: read|write|update|delete. Used for save and restore of grid data by table name.', input_schema: { type: 'object', properties: { action: { type: 'string' }, table: { type: 'string' }, data: {} }, required: ['action', 'table'] } }
+        ];
+        log(`🛠️ Step 0 — Tool definitions ready (${toolDefinitions.length} tools)`, 'success');
+
+        // Step 2 — go online
+        setServerProduction();
+        log('🌐 Step 1 — Server: production', 'info');
+
+        // Step 3 — get_token
+        log('🔑 Step 2 — Getting token...', 'info');
+        const tokenResult = await mcpEngineSend(
+            mcpEngineStaging('production', 'get_token', {
+                username: 'stevep@sspnet.com',
+                password: 'gosteve1!'
+            })
+        );
+        if (tokenResult && tokenResult.success) {
+            log('✅ Step 2 — Token OK', 'success');
+        } else {
+            log(`⚠️ Step 2 — Token: ${JSON.stringify(tokenResult)}`, 'error');
+        }
+
+        // Step 4a — get_ranches
+        log('🏡 Step 3 — Getting ranches...', 'info');
+        const ranchResult = await mcpEngineSend(
+            mcpEngineStaging('production', 'get_ranches', {})
+        );
+        if (ranchResult && ranchResult.ranches && ranchResult.ranches.length > 0) {
+            ranchGuid = ranchResult.ranches[0].Ranch_External_GUID;
+            log(`✅ Step 3 — Ranch GUID: ${ranchGuid}`, 'success');
+        } else {
+            log(`⚠️ Step 3 — Ranches: ${JSON.stringify(ranchResult)}`, 'error');
+            return;
+        }
+
+        // Step 4b — get_plantings → fill grid
+        log('🌱 Step 4 — Getting plantings...', 'info');
+        const plantingResult = await mcpEngineSend(
+            mcpEngineStaging('production', 'get_plantings', { ranchGuid })
+        );
+        if (plantingResult && plantingResult.plantings && plantingResult.plantings.length > 0) {
+            plantingId = plantingResult.plantings[0].Id;
+            log(`✅ Step 4 — Planting ID: ${plantingId}`, 'success');
+            log(`✅ Grid loaded — ${plantingResult.plantings.length} plantings`, 'success');
+            renderDataGrid(plantingResult.plantings);
+            window.resetSnapshot = JSON.parse(JSON.stringify(plantingResult.plantings));
+            document.getElementById('statusBar').textContent = `✅ Ready — ${plantingResult.plantings.length} plantings loaded`;
+        } else {
+            log(`⚠️ Step 4 — Plantings: ${JSON.stringify(plantingResult)}`, 'error');
+        }
+    });
+</script>
+</body>
+</html>
