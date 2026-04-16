@@ -1,0 +1,30 @@
+irrigation-component-1.0.js — Test Results
+============================================
+Date: 2026-03-28
+Source: v1.6-1.2s (high water mark)
+Test: Node.js — pure functions, no browser needed
+
+PURE FUNCTIONS (6/6 PASS)
+--------------------------
+1. testCreateNext   ✅  id:4, date 10/20/24, hours 1.5, interval 2 days
+2. resetTable       ✅  reset to 3 records from source
+3. testReadMeter    ✅  found last record id:4, date 10/20/24
+4. updateRecord     ✅  mgrHours 1.5, applied 1.2, status -1 (pending)
+5. saveDisplay      ✅  saved 4 records to JSON
+6. retrieveDisplay  ✅  loaded 4 records from JSON
+
+ERROR HANDLING (4/4 PASS)
+--------------------------
+7. testCreateNext(null)    ✅  returnCode -1 (no selection)
+8. testReadMeter(99, 99Z)  ✅  returnCode -2 (no match)
+9. updateRecord(999)       ✅  returnCode -3 (not found)
+10. callTool('fake_tool')  ✅  success: false (bad tool)
+
+DISPATCHER
+-----------
+11. callTool('reset_table') ✅  fires handler, logs description
+    Note: waitQueueFilter is a dashboard variable — not a component bug.
+    Handler bridge needs dashboard vars (selectedRecord, displayRecords, etc.)
+    That's by design — pure functions are clean, handlers are the bridge.
+
+VERDICT: Component is solid. MCP ready. Wire to mcpEngine next.

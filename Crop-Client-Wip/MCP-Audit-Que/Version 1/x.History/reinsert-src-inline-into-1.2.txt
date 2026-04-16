@@ -1,0 +1,34 @@
+# TASK: Re-insert src= Scripts Inline into Que-1.3
+# Status: DONE
+# Date: 2026-03-29
+# Author: Mac
+
+## TASK LIST
+1. Copy Que-1.2 → Que-1.3 (working copy) — DONE
+2. Read irrigation-component-1.1.js from Src=/Inserts — DONE
+2a. Review for correctness — DONE
+    - No irr_ prefix — CLEAN
+    - No interwoven @@@@ markers — CLEAN
+    - CRUD matched: 6 pure functions → 6 registry entries — CLEAN
+3. Replace irrigation src= tag with inline <script> block — DONE
+4. Replace mcp-engine src= tag with inline <script> block — DONE
+5. Keep @@@@ markers in place — DONE
+6. Browser test — DONE
+
+## TEST RESULTS (Coach 3/29)
+- Online worked on load with CORS OFF
+- Token + all plantings loaded on Send
+- CRUD buttons worked perfectly (Create, Reset, Apply, Update)
+- No console errors after both src= tags removed
+
+## WHAT'S IN 1.3
+- irrigation-component-1.1.js — inline (was src=)
+- mcp-engine v2.1 — inline (was src=)
+- All 6 irrigation CRUD tools working
+- Online mode working with CORS off
+- Save/Restore buttons — NEXT (see separate plan)
+
+## FILES
+- Created: Version 1/Crop-Client-MCP-Audit-Que-1.3.html
+- Original: Version 1/Crop-Client-MCP-Audit-Que-1.2.html (untouched)
+- Sources: 2. Src=/Inserts/irrigation-component-1.1.js, mcp-engine.js

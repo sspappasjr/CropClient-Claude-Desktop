@@ -1,0 +1,31 @@
+TASK: Add Click-to-Filter Feature to Irrigation Component
+=========================================================
+
+FILE: C:\AICode\CropClient-Claude-Desktop\Crop-Client-Wip\MCP-Audit-Que\Version 1\2. Src=\irrigation-component-2.0.js
+
+FEATURE REQUEST:
+Add click-to-filter functionality to the irrigation grid component.
+
+REQUIREMENTS:
+- Allow user to click on ranch names or planting names in the grid
+- Filter the grid to show only matching rows
+- Works like checkbox filtering but triggered by clicking grid cells
+- Should work with existing irrigation grid structure
+
+DESIGN CONSIDERATIONS:
+- Where do the filter controls live? (Header? Side panel? Inline?)
+- Click-to-toggle or click-to-select-only?
+- Visual indicator for active filters?
+- Clear filter button needed?
+
+WORKFLOW:
+- DISCUSS design and UX approach first
+- Wait for GOFORIT before any code changes
+- Test in MCP-Audit-Que harness before production
+
+STATUS: ✅ DONE — Working in MCP-Audit-Que app with irrigation-component-3.0.js
+
+RELATED FILES:
+- irrigation-component-2.0.js (target file)
+- Crop-Client-MCP-Audit-Que-1.2-with3src.html (parent page)
+- api-component-3.4.js (data source)

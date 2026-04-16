@@ -1,0 +1,25 @@
+# TASK: Re-insert Irrigation src= Inline into Que-1.3
+# Status: DONE
+# Date: 2026-03-29
+# Author: Mac
+
+## TASK LIST
+1. Copy Que-1.2 → Que-1.3 (working copy) — DONE
+2. Read irrigation-component-1.1.js from Src=/Inserts — DONE
+2a. Review for correctness — DONE
+    - No irr_ prefix — CLEAN
+    - No interwoven @@@@ markers — CLEAN
+    - CRUD matched: 6 pure functions → 6 registry entries — CLEAN
+3. Replace src= tag at line 844 with inline <script> block — DONE
+4. Keep @@@@ markers in place — DONE
+5. Browser test — PENDING (Coach)
+
+## FILES
+- Source: 2. Src=/Inserts/irrigation-component-1.1.js
+- Created: Version 1/Crop-Client-MCP-Audit-Que-1.3.html
+- Original: Version 1/Crop-Client-MCP-Audit-Que-1.2.html (untouched)
+
+## WHAT CHANGED
+- Line 844: <script src="2. Src=/irrigation-component-1.1.js"> → inline <script> block
+- MCP engine src= at line 840 — NOT touched
+- 442 lines of irrigation code now inline inside @@@@ IRRIGATION_COMPONENT markers

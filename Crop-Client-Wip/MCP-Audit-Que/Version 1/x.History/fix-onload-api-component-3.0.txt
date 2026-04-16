@@ -1,0 +1,111 @@
+# TASK: Fix onload in api-component-3.0.js
+# Status: READY — waiting for next session
+# Date: 2026-04-04
+# Author: George (Claude)
+
+## WHAT WE FIGURED OUT THIS SESSION
+
+Two new variables belong in api-component-3.0.js:
+  mcpMode  — stores 'local', 'online', or 'offline'
+  mcpURL   — stores the server URL or null if offline
+
+These replace CC_STATE, getMcpBase(), base, and all DOM reads inside tokens.
+
+The dropdown (envSelect) sets them. A listener keeps them current when user changes mode.
+
+## WHAT THE ONLOAD NEEDS TO DO (in order)
+
+Step 1 — Set mcpMode = 'online' and mcpURL = mcpServers.online as the default.
+          Do NOT read the dropdown on load. Online is always the starting assumption.
+Step 2 — Register a change listener on the dropdown so mcpMode and mcpURL
+          update automatically when the user picks Local, Online, or Offline.
+Step 3 — Try to get token via online server.
+          IF token fails (server unreachable) — auto-switch mcpMode to 'offline'
+          AND update the dropdown to show 'offline' so the user can see it changed.
+          THEN continue with direct fetch fallback (CORS addon required).
+Step 4 — Get ranches
+Step 5 — Select default ranch
+
+## THE AUTO-SWITCH RULE
+
+The user should never have to manually switch to offline if the server is down.
+The onload tries online first. If it fails — it switches itself to offline.
+The dropdown updates to reflect the new mode visually.
+This means the dropdown is not just input — it is also output (shows current state).
+
+In plain English:
+  Try online → server answers → stay online → load normally
+  Try online → server fails  → switch to offline → update dropdown → continue with CORS
+
+## WHAT CHANGES IN THE TOKEN FUNCTION
+
+In getToken() — the set_token block currently does this:
+
+    const base = getMcpBase();
+    if (base) {
+        await mcpCall('set_token', { token: apiToken });
+        logToChat('MCP set_token ok (CC_STATE.mode @ base)');
+    } else {
+        logToChat('offline - token not sent');
+        // STOPS HERE — bug. Offline should still continue.
+    }
+
+The fix:
+
+    if (mcpMode !== 'offline') {
+        try {
+            await mcpCall('set_token', { token: apiToken });
+            logToChat('MCP set_token ok (mcpMode @ mcpURL)');
+        } catch (e) {
+            logToChat('set_token failed — continuing anyway');
+        }
+    }
+    // always continues — offline or failed set_token does not stop the flow
+
+## WHAT CHANGES IN ALL OTHER TOKENS
+
+Every token that has:
+    const base = getMcpBase();
+    if (base) { ... MCP path ... }
+
+Gets replaced with:
+    if (mcpMode !== 'offline') { ... MCP path using mcpURL ... }
+
+Same logic. Cleaner variable. No function call. No CC_STATE.
+
+## WHERE THE VARIABLES ARE DECLARED
+
+At the top of api-component-3.0.js — in the VARIABLES section:
+
+    // ========================================
+    // VARIABLES - MCP Connection
+    // ========================================
+    let mcpMode = 'online';                          // default — set by dropdown
+    let mcpURL  = 'https://api.cropclient.com';      // default — set by mcpMode
+    const mcpServers = {
+        local:  'http://localhost:3101',
+        online: 'https://api.cropclient.com'
+    };
+
+## FILES TO CHANGE
+
+1. api-component-3.0.js — add mcpMode, mcpURL, listener, fix onload and all tokens
+   (do NOT touch api-component-2.0.js — it is READ ONLY reference)
+
+2. mcp-engine-3.0.js — create new version
+   Kill 'production' entry
+   Rename parameter from 'target' to 'mode'
+   Return null for offline — not servers.local as default
+
+## WHAT DOES NOT CHANGE
+
+All the token functions below the IF statement — direct fetch fallbacks — untouched.
+All grid population functions — untouched.
+All CRUD functions — untouched.
+The DOMContentLoaded sequence (steps 3-5) — untouched except set_token fix.
+
+## TEST AFTER
+
+Offline: Load page — 12 JSON records load — mcpMode = 'offline' logged in console
+Local:   node APIServer3.0.js — load page — mcpMode = 'local' — token + ranches load via MCP
+Online:  Set dropdown to Online — mcpMode = 'online' — same flow against api.cropclient.com

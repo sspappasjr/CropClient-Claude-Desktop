@@ -1,0 +1,109 @@
+# TASK: Add get_event_recommendation Tool to APIServer2.5.2.js
+# Version 1 — Harness Server Fix
+# Date: 2026-03-29
+# Updated: 2026-03-30 — Added exact code blocks
+
+## GOAL
+Replace bare makeRequest in fetchEventRecommendation with MCP tool pattern.
+No fail-to-direct anywhere.
+
+## STEPS
+
+### Step 1: Replace fetchEventRecommendation function (around line 447)
+
+REMOVE THIS:
+```javascript
+                // Fetch full recommendation for a single event by ID                        this code is wrong. back into plan folder
+                    async function fetchEventRecommendation(eventId) {                                  coach 
+                        const options = {
+                         hostname: API_BASE_URL,
+                            path: `/${API_VERSION}/irrigation-events/${eventId}.json`,
+                              method: 'GET',
+        headers: { 'Authorization': `Bearer ${apiToken}` }
+    };
+    try {
+        const response = await makeRequest(options);
+        if (response.statusCode === 200) return response.data;
+    } catch (error) {
+        console.error(`Error fetching event ${eventId}:`, error.message);
+    }
+    return null;
+}
+```
+
+REPLACE WITH:
+```javascript
+// Fetch full recommendation for a single event by ID
+// Calls through MCP tool registry — no bare makeRequest
+async function fetchEventRecommendation(eventId) {
+    if (!apiToken || !eventId) return null;
+    const tool = server.tools.get('get_event_recommendation');
+    if (!tool) return null;
+    const result = await tool.handler({ eventId: String(eventId) });
+    return result.success ? result.event : null;
+}
+```
+
+### Step 2: Add new tool to apiServiceTools array
+Add AFTER the batch_post_queue tool entry (before the closing bracket of apiServiceTools):
+
+```javascript
+    {
+        name: "get_event_recommendation",
+        description: "Fetch full recommendation for a single irrigation event by event ID.",
+        inputSchema: {
+            type: "object",
+            properties: {
+                eventId: { type: "string", description: "CropManage irrigation event ID" }
+            },
+            required: ["eventId"]
+        },
+        handler: async (args) => {
+            if (!apiToken) return { success: false, message: 'No token available' };
+            if (!args.eventId) return { success: false, message: 'eventId required' };
+            const options = {
+                hostname: API_BASE_URL,
+                path: `/${API_VERSION}/irrigation-events/${args.eventId}.json`,
+                method: 'GET',
+                headers: { 'Authorization': `Bearer ${apiToken}` }
+            };
+            try {
+                const response = await makeRequest(options);
+                if (response.statusCode === 200) {
+                    return { success: true, event: response.data };
+                }
+                return { success: false, message: `Event fetch failed: ${response.statusCode}` };
+            } catch (error) {
+                return { success: false, message: error.message };
+            }
+        }
+    }
+```
+
+### Step 3: Verify no fail-to-direct
+- No fallback to direct CropManage URL anywhere
+- If MCP fails, return error. No URL change. No mode change.
+
+## TEST PLAN
+1. Offline test — load 1.2.html with dropdown set to Offline
+   - Should load 12 JSON records, no errors, no CropManage calls
+2. Local test — run `node "2. Src=/APIServer2.5.2.js"` from Version 1 folder
+   - Set dropdown to Local
+   - Get Token → Get Ranches → Pick planting → Refresh Selected Irrigations
+   - Bottom grid should populate with displayRecords from server
+   - Console should show tool calls, not bare makeRequest
+3. Online test — set dropdown to Online (hits api.cropclient.com)
+   - Same flow — but need to deploy 2.5.2 first
+
+## FILES
+- Source: Version 1/2. Src=/APIServer2.5.2.js (harness copy, editable)
+- Target: C:\AICode\crop-client-services\api-server\APIServer2.5.js (READ ONLY until deploy)
+- Client: Version 1/Crop-Client-MCP-Audit-Que-1.2.html (already fixed, no bare fetch)
+
+## NOTES
+- makeRequest stays inside the registered tool handler — ONE place
+- fetchEventRecommendation calls through tool registry — MCP pattern
+- loadIntoDisplayRecords calls fetchEventRecommendation — unchanged
+- get_irrigation_details calls loadIntoDisplayRecords — unchanged
+- Chain: get_irrigation_details → loadIntoDisplayRecords → fetchEventRecommendation → get_event_recommendation tool
+- Tool count goes from 15 to 16 (8+1 API + 7 JSON)

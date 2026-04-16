@@ -1,0 +1,72 @@
+# TASK: Add get_event_recommendation Tool to test-apiserver1.93.html
+# Status: PLAN — waiting for Coach GOFORIT
+# Date: 2026-03-29
+# Author: Mac
+
+## GOAL
+Add a 16th tool button to the 1.93 test harness so we can stage, fire, and
+inspect get_event_recommendation the same way we do the other 15 tools today.
+
+## WHAT CHANGES IN 1.93
+
+### 1. Add tool definition to toolDefinitions array
+```
+{
+    name: "get_event_recommendation",
+    description: "Fetch full recommendation for a single irrigation event by event ID.",
+    inputSchema: {
+        type: "object",
+        properties: {
+            eventId: { type: "string", description: "CropManage irrigation event ID" }
+        },
+        required: ["eventId"]
+    }
+}
+```
+
+### 2. Add button in the S1 tool button area
+New button after the existing irrigation details button:
+Label: "Get Event Rec"
+onClick: stages get_event_recommendation with eventId from selected record
+
+### 3. Add stageGetEventRecommendation() function
+- Reads eventId from the currently selected grid record (or manual input)
+- Stages tool definition + params into S4 panel
+- Sets toolName field to 'get_event_recommendation'
+
+### 4. Add response handler in executeTool()
+After the existing get_irrigation_details handler block:
+```
+if (toolName === 'get_event_recommendation' && result.event) {
+    renderResultGrid([result.event]);
+}
+```
+
+## WHAT CHANGES ON SERVER (APIServer — separate task)
+- Coach is considering calling it APIServer3.0 (major bump)
+- The tool definition + handler from the existing plan file applies there
+- Research file has open questions about endpoint verification
+- Server change is a SEPARATE task from the 1.93 harness button
+
+## FILES
+- Edit: MCP-API-Tools-Audit/v2.0-apiupdate/TestHarness/test-apiserver1.93.html
+- Read only: Version 1/2. Src=/APIServer2.5.2.js (reference for tool shape)
+- Reference: Version 1/1. Task Lists/History/add-get-event-recommendation-tool.txt
+
+## TEST PLAN
+1. Load 1.93 in browser
+2. Get Token → Get Ranches → Pick planting → Get Irrigation Details
+3. Select a row in the bottom grid that has an event ID
+4. Click "Get Event Rec" button
+5. Verify S4 shows staged tool with correct eventId
+6. Click Execute → verify response loads into grid
+   (will fail until server has the tool — that's expected)
+
+## DEPENDS ON
+- Server must have get_event_recommendation registered before Execute works online
+- Offline: we could add a mock JSON response for offline testing
+
+## NOTES
+- This is harness-side only. Server changes tracked in the Research file.
+- Tool count in harness goes from 15 to 16
+- Pattern matches exactly how the other tool buttons work in 1.93

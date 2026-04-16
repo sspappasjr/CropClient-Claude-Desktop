@@ -1,0 +1,50 @@
+<!--
+  web.config3.4 for iisnode
+  Versioned copy for APIServer3.4.js deploy
+  Target: APIServer3.4.js in the api-server folder on the production server
+  URL: https://api.cropclient.com/*
+  Deploy this file to the same folder as APIServer3.4.js on the server.
+  Requires iisnode module installed on IIS.
+-->
+<configuration>
+  <system.webServer>
+
+    <iisnode
+      nodeProcessCommandLine="&quot;%programfiles%\nodejs\node.exe&quot;"
+      loggingEnabled="true"
+      logDirectory="iisnode"
+      watchedFiles="*.js;web.config"
+      promiseRejectionHandlingMode="unhandledrejections"
+    />
+
+    <handlers>
+      <add name="iisnode" path="APIServer3.4.js" verb="*" modules="iisnode" />
+    </handlers>
+
+    <rewrite>
+      <rules>
+        <rule name="HTTPSRedirect" stopProcessing="true">
+          <match url="(.*)" />
+          <conditions>
+            <add input="{HTTPS}" pattern="off" ignoreCase="true" />
+          </conditions>
+          <action type="Redirect" url="https://{HTTP_HOST}/{R:1}" redirectType="Permanent" />
+        </rule>
+
+        <rule name="NodeInspector" patternSyntax="ECMAScript" stopProcessing="true">
+          <match url="^APIServer3.4.js\/debug[\/]?" />
+        </rule>
+
+        <rule name="DynamicContent">
+          <conditions>
+            <add input="{REQUEST_FILENAME}" matchType="IsFile" negate="true" />
+          </conditions>
+          <action type="Rewrite" url="APIServer3.4.js" />
+        </rule>
+      </rules>
+    </rewrite>
+
+    <httpErrors existingResponse="PassThrough" />
+
+  </system.webServer>
+</configuration>

@@ -1,0 +1,59 @@
+# TASK: Research get_event_recommendation Tool
+# Status: RESEARCH — not ready to code yet
+# Date: 2026-03-30
+                                  lease read full doc i have made change 3.29.2026.. coach. this will great new server. !!!
+                                     note:  plan must include a file with proposed from and to code that will be applied 
+                                                                to the new apiserver      maybe we call it apiserver3.0 thoughts ?
+
+## WHAT
+We need to add a new MCP tool: get_event_recommendation
+It fetches a single irrigation event's full recommendation by event ID.                           DONE .. apiserver3.4 > to server wip
+
+## WHY
+fetchEventRecommendation on the server uses bare makeRequest with hardcoded
+API_BASE_URL. Needs to be a registered MCP tool like every other call.
+
+## RESEARCH NEEDED
+1. Get the actual CropManage API script for single event recommendation
+   - What is the exact endpoint URL?
+   - What HTTP method?
+   - What headers required?
+   - What parameters in the request body (if any)?
+   - What does the response JSON look like?
+   - Source: CropManage API guide or Postman collection export
+
+2. Verify the current bare code matches the API spec
+   - Current code uses: GET /v2/irrigation-events/{eventId}.json
+   - Current code sends: Authorization Bearer token
+   - Does this match what CropManage API docs say?
+
+3. Confirm the response format
+   - What fields come back? (RecommendationSummary, hours, inches, etc.)
+   - Is this the same format loadIntoDisplayRecords expects?
+
+## WHERE TO FIND IT
+1st we have a metadata list in our API code and / or server...
+     must find it and make sure it is correct 
+          coach 
+     below comments  wont help already known and done. 
+        our metadata says how we use it in a tool
+
+- CropManage API documentation
+- Postman collection (if Coach has the export)
+- Previous session where the 5 API tokens were mapped from Postman
+
+## MUST ALSO ADD TO yes for sure coach 
+- Our existing metadata list that documents all API tools
+- Same format as the other tools in the list
+- New tool gets added alongside the existing entries
+
+## ONCE RESEARCH IS DONE
+- Verify metadata matches CropManage API spec
+- Add to our metadata list
+- Write the tool with correct metadata
+   plan must include same code before and after change preposed
+     coach 
+- Apply to APIServer2.5.2.js   we already have a 2.5.2 (unused) 
+     might get confused with this new server. maybe we go with 3.0 it will be major
+               coach 
+- Test offline → test localhost → test online

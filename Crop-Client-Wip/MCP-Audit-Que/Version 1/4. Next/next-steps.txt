@@ -1,0 +1,19 @@
+Version 1 — Next Steps
+=======================
+Date: 2026-03-28
+
+COMPLETED:
+- irrigation-component-1.0.js extracted clean from v1.6-1.2s truth source
+- 4 CRUD tools + 2 JSON tools + callTool dispatcher + mcpTools registry
+- Pure functions (no DOM) — MCP ready
+
+NEXT:
+1. Wire irrigation-component-1.0.js into Que-1.0 harness (replace inline block)
+2. Test all 4 CRUD offline: create_next, reset_table, read_meter, update_record
+3. Test JSON persistence: save_display, retrieve_display
+4. Once offline is solid — wire to mcp-engine for server path
+5. If server changes needed — bump APIServer to 2.5.2 (READ ONLY rule on 2.5.1)
+6. Demo target: Michael Cahn CropManage class — March 27 2026 (PASSED)
+
+LINEAGE:
+v1.6-1.2s (high water mark) → Que-1.0 harness → irrigation-component-1.0.js

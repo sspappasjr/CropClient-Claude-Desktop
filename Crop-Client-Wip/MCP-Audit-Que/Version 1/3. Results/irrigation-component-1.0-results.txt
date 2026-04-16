@@ -1,0 +1,28 @@
+irrigation-component-1.0.js — Build Results
+=============================================
+Date: 3.28.2026
+Builder: Mac (Claude Code Opus)
+
+Source: Crop-Client-MCP-Audit-Que-1.0.html
+  — App built from CropClient-MCP-API-Tools-Audit-Q-v1.6-1.2s.html (high water mark)
+  — @@@@ IRRIGATION_COMPONENT v1.1 id:irrigation-mcp @@@@
+  — Lines 840-1301 of harness
+
+What was built:
+  Standalone JS file extracted from v1.1 truth source
+  Clean copy — no modifications, no additions
+
+Contents:
+  - 2 utility functions (parseEventDate, formatDate)
+  - 4 CRUD pure functions (testCreateNext, resetTable, testReadMeter, updateRecord)
+  - 2 JSON tools (saveDisplay, retrieveDisplay)
+  - mcpTools registry with inputSchema for all 6 tools
+  - callTool dispatcher
+
+Notes:
+  - Pure functions have NO DOM dependencies — params in, result out
+  - Handlers in mcpTools DO reference DOM (selectedRecord, displayRecords, renderTable, etc.)
+  - Handlers are the bridge between pure logic and the dashboard UI
+  - This is the v1.6 high water mark code — proven working offline
+
+Placed in: Version 1/2. Src=/irrigation-component-1.0.js

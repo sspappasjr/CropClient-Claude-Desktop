@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "Bash(find C:/AICode/CropClient-Claude-Desktop/Crop-Client-Wip/MCP-Audit-Que/ -type f -name *.txt -o -name *.md)"
+    ]
+  }
+}

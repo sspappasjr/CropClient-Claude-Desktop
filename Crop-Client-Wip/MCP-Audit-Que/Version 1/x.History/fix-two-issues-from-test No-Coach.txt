@@ -1,0 +1,15 @@
+# TASK: Two Fixes Found in Test
+# Version 1 — Crop-Client-MCP-Audit-Que-1.2.html
+# Date: 2026-03-29
+
+## FIX 1: Bare fetch → mcpEngineSend
+Every client-side fetch() to api.dev.cropmanage.ucanr.edu must be mcpEngineSend.
+No bare fetch anywhere. Integrated pair only.
+
+## FIX 2: Fail → direct fallback REMOVED
+If MCP fails, it fails. No sliding into direct mode.
+No URL change. No mode change. Fail loudly.
+
+## STATUS: READY TO TEST
+All edits applied to 1.2.html on disk.
+Refresh browser and test.

@@ -1,0 +1,30 @@
+  // ========================================
+  // VARIABLES - Script Metadata (for dropdown)
+  // ========================================
+  const scriptMetadata = {
+      token: {
+          description: "Get CropManage authentication token",
+          url: "POST https://api.dev.cropmanage.ucanr.edu/Token"
+      },
+      ranches: {
+          description: "Fetch all ranches (requires token first). Adds 'All Ranches' option.",
+          url: "GET https://api.dev.cropmanage.ucanr.edu/v2/ranches.json"
+      },
+      plantings: {
+          description: "Get plantings for selected ranch. Adds 'All Plantings' option.",
+          url: "GET https://api.dev.cropmanage.ucanr.edu/v2/ranches/{ranchGuid}/plantings.json"
+      },
+      irrigation_details: {
+          description: "Get irrigation events for selected planting (auto-fetches all recommendations)",
+          url: "GET https://api.dev.cropmanage.ucanr.edu/v2/plantings/{plantingId}/irrigation-events/details.json"
+      },
+      post_irrigation: {
+          description: "Batch process all status=-1 records (POST new, UPDATE existing)",
+          url: "POST/PUT https://api.dev.cropmanage.ucanr.edu/v3/"
+      },
+      update_record: {
+          description: "Update existing irrigation record in CropManage (requires cropManageId)",
+          url: "PUT https://api.dev.cropmanage.ucanr.edu/v3/irrigation-events/{cropManageId}.json"
+      }
+  };
+  

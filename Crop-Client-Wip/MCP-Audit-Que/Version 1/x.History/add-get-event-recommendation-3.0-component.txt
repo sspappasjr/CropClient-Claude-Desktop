@@ -1,0 +1,56 @@
+# PLAN: api-component-3.0.js — Add get_event_recommendation Token
+# Status: DONE — 2026-04-03
+# Author: George (Claude)
+
+## WHAT CHANGED (api-component-2.0.js → api-component-3.0.js)
+
+### Change 1: Version header
+FROM: // Optional - Dashboard works offline without this
+TO:   // Version: 3.0 — get_event_recommendation added as named MCP token with IF offline/online
+
+### Change 2: scriptMetadata — new entry added
+  get_event_recommendation: {
+      description: "Fetch full recommendation for a single irrigation event by event ID...",
+      url: "GET https://api.dev.cropmanage.ucanr.edu/v2/irrigation-events/{eventId}.json"
+  }
+
+### Change 3: New function getEventRecommendation(eventId)
+- Named MCP token — same pattern as getRanches, getPlantingsByRanch
+- IF base (online/local): routes through mcpCall('get_event_recommendation', { eventId })
+- ELSE offline: direct fetch to CropManage API (CORS addon required)
+- Returns { success, event }
+
+### Change 4: fetchAllRecommendations() — bare fetch replaced
+FROM: bare fetch loop directly to CropManage API
+TO:   calls getEventRecommendation(event.Id) per event — gets IF online/offline for free
+
+## HTML UPDATED
+- Crop-Client-MCP-Audit-Que-1.2-with3src.html
+- src= changed from api-component-2.0.js → api-component-3.0.js
+
+## TEST SEQUENCE
+1. Offline (CORS addon ON) — load 1.2 html, set dropdown Offline
+   → Token → Ranches → click Ranch → Refresh Selected Irrigations
+   → Verify recommendations populate via direct fetch fallback
+2. Local — node APIServer3.0.js, set dropdown Local
+   → Same flow — verify mcpCall('get_event_recommendation') fires per event
+   → Check console: "Recommendation loaded for event XXXXXXX"
+3. Online — set dropdown Online, verify same as Local against api.cropclient.com
+
+## NEXT
+- APIServer3.0.js needs get_event_recommendation tool registered (server-side)
+- Then online/local path will be fully wired end-to-end
+
+## POST-STAMP FIX — v3.0.1 (DONE after offline test passed)
+## Problem found by Coach:
+   Create Next produces Rec Hrs from our formula (1.7)
+   After POST, CropManage computes the real UC science value (3.6)
+   Grid still shows 1.7 until user manually refreshes — WRONG
+##
+## Fix: immediately after postIrrigationToCropManage() succeeds and we have eventId:
+   call getEventRecommendation(eventId)
+   stamp real CropManage values back into selectedRecord:
+     hours, mgrHours, appliedHours, recommendedInches
+   then renderTable() — grid shows 3.6 instantly. No refresh needed.
+## Same logic applies any time we POST a new record.
+## This is the token earning its keep on every single POST.

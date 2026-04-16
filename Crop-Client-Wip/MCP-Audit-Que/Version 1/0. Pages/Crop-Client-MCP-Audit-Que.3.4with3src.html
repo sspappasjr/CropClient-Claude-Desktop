@@ -1,0 +1,1546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CropClient MCP API Tools Audit v1.6</title>
+    <style>
+        :root {
+            --left-width: 60%;
+            --right-width: 40%;
+            --top-height: 50%;
+            --bottom-height: 50%;
+            --header-padding: 8px 20px;
+            --header-h1: 1.6em;
+            --section-h3: 1.1em;
+            --base-font: 0.95em;
+            --small-font: 0.85em;
+            --grid-gap: 15px;
+            --section-padding: 20px;
+        }
+        
+        tr.selected {
+            background-color: #e3f2fd !important;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            padding: 10px;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border-bottom: 2px solid #e0e0e0;
+            overflow: hidden;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+        }
+        header {
+            background: linear-gradient(135deg, #2e7d32 0%, #4caf50 100%);
+            color: white;
+            padding: var(--header-padding);
+            text-align: center;
+            flex-shrink: 0;
+        }
+        header h1 {
+            font-size: var(--header-h1);
+            margin-bottom: 3px;
+        }
+        header p {
+            font-size: var(--base-font);
+            opacity: 0.9;
+        }
+        .main-content {
+            padding: 10px;
+            flex: 1;
+            display: grid;
+            grid-template-rows: var(--top-height) var(--bottom-height);
+            gap: 10px;
+            overflow: hidden;
+        }
+        .grid-container {
+            display: grid;
+            grid-template-columns: var(--left-width) var(--right-width);
+            gap: var(--grid-gap);
+            padding: 10px;
+            height: 100%;
+            overflow: hidden;
+        }
+        .grid-section {
+            background: #fafafa;
+            padding: var(--section-padding);
+            border-radius: 8px;
+            border: 2px solid #e0e0e0;
+            overflow: auto;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+        .grid-section h3, .grid-section h2 {
+            color: #2e7d32;
+            margin-bottom: 8px;
+            font-size: var(--section-h3);
+            flex-shrink: 0;
+        }
+        .data-grid {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            overflow: auto;
+            flex: 1;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th {
+            background: #2e7d32;
+            color: white;
+            padding: 10px 8px;
+            text-align: left;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            font-size: var(--small-font);
+            white-space: nowrap;
+        }
+        td {
+            padding: 8px;
+            border-bottom: 1px solid #eee;
+            font-size: var(--small-font);
+        }
+        tr:hover {
+            background: #f5f5f5;
+            cursor: pointer;
+        }
+        tr.selected {
+            background: #C8E6C9;
+        }
+        .details-section {
+            background: white;
+            padding: 8px 10px;
+            border-radius: 8px;
+            border: 2px solid #e0e0e0;
+            overflow-y: auto;
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+        .details-section h3 {
+            color: #2e7d32;
+            margin-bottom: 3px;
+            font-size: var(--section-h3);
+        }
+
+        /* Form content area - scrollable */
+        .details-section > div:first-child {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0 4px 0 0;
+        }
+
+        /* CRUD Footer Component - Always visible at bottom */
+        .crud-footer {
+            flex-shrink: 0;
+            padding-top: 4px;
+            border-top: 1px solid #e0e0e0;
+            background: white;
+            margin-top: 2px;
+        }
+
+        .field-group {
+            margin-bottom: 2px;
+            display: flex;
+            flex-direction: column; /* Labels on TOP */
+            gap: 2px;
+        }
+        .field-group label {
+            font-weight: 600;
+            color: #555;
+            font-size: var(--small-font);
+        }
+        .field-group input {
+            padding: 4px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: var(--base-font);
+        }
+        .field-group input:focus {
+            outline: none;
+            border-color: #4caf50;
+        }
+        
+        /* CRUD Button Styles */
+        .crud-buttons {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+        }
+        .crud-btn {
+            flex: 1;
+            min-width: 70px;
+            padding: 10px 6px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: var(--small-font);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .crud-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        .crud-btn:active {
+            transform: translateY(0);
+        }
+        .crud-btn.create {
+            background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
+            color: white;
+        }
+        .crud-btn.reset {
+            background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+            color: white;
+        }
+        .crud-btn.meter {
+            background: linear-gradient(135deg, #9c27b0 0%, #7b1fa2 100%);
+            color: white;
+        }
+        .crud-btn.update {
+            background: linear-gradient(135deg, #4caf50 0%, #388e3c 100%);
+            color: white;
+        }
+        
+        .record-count {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2e7d32;
+        }
+        .info-icon {
+            cursor: help;
+            color: #666;
+        }
+
+        .send-button {
+            background: linear-gradient(135deg, #2e7d32 0%, #4caf50 100%);
+            color: white;
+            padding: 8px 16px;
+            font-size: var(--small-font);
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: transform 0.2s;
+            white-space: nowrap;
+        }
+        .send-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(46, 125, 50, 0.3);
+        }
+
+        /* Tools table */
+        .tools-grid {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            overflow: auto;
+            max-height: none;
+            flex: 1;
+            margin-bottom: 8px;
+        }
+
+        /* Big recommendation box */
+        .rec-box {
+            background: linear-gradient(135deg, #4CAF50 0%, #2E7D32 100%);
+            color: white;
+            padding: 3px 3px;
+            border-radius: 6px;
+            text-align: center;
+            margin: 2px auto 2px auto;
+            box-shadow: 0 2px 6px rgba(76, 175, 80, 0.3);
+            width: 45%;
+        }
+        .rec-box .rec-label {
+            font-size: 0.65em;
+            opacity: 0.9;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 1px;
+        }
+        .rec-box .rec-value {
+            font-size: 18px;
+            font-weight: bold;
+            line-height: 1;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.2);
+        }
+
+        /* Chat log */
+        .chat-log {
+            background: #f5f5f5;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            padding: 8px;
+            flex: 1;
+            min-height: 80px;
+            overflow-y: auto;
+            margin-bottom: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 1.1em;
+        }
+
+        /* ========================================
+           DESKTOP SCALING (1367px+) - AGGRESSIVE S4 field sizing
+           ======================================== */
+        @media screen and (min-width: 1367px) {
+            .field-group {
+                margin-bottom: 10px;
+                gap: 6px; /* Smaller gap for stacked labels */
+            }
+            .field-group input {
+                padding: 12px;
+                font-size: 1.3em;
+                max-width: 150px; /* Narrower to prevent button overflow */
+            }
+            .field-group label {
+                font-size: 1.1em;
+            }
+            .field-grid-row {
+                gap: 12px !important;
+                margin-bottom: 6px !important;
+                justify-items: center; /* Center the constrained inputs */
+            }
+            .rec-box {
+                width: 60%;
+                padding: 12px 8px;
+                margin: 10px auto 12px;
+            }
+            .rec-box .rec-label {
+                font-size: 0.85em;
+                margin-bottom: 5px;
+            }
+            .rec-box .rec-value {
+                font-size: 42px;
+            }
+            .details-section h3 {
+                margin-bottom: 12px;
+                font-size: 1.2em;
+            }
+            .crud-footer {
+                padding-top: 8px;
+                margin-top: 6px;
+            }
+        }
+
+        /* ========================================
+           LAPTOP RESPONSIVE (1024px - 1366px)
+           ======================================== */
+        @media screen and (max-width: 1366px) {
+            :root {
+                --left-width: 58%;
+                --right-width: 42%;
+                --header-padding: 6px 15px;
+                --header-h1: 1.4em;
+                --section-h3: 1em;
+                --base-font: 0.9em;
+                --small-font: 0.8em;
+                --grid-gap: 10px;
+                --section-padding: 15px;
+            }
+            
+            body {
+                padding: 8px;
+            }
+            
+            .main-content {
+                padding: 8px;
+                gap: 8px;
+            }
+            
+            .grid-container {
+                padding: 8px;
+            }
+            
+            th {
+                padding: 8px 6px;
+            }
+            
+            td {
+                padding: 6px;
+            }
+            
+            .tools-grid {
+                max-height: 165px;
+            }
+            
+            .rec-box {
+                padding: 10px 6px;
+            }
+            .rec-box .rec-value {
+                font-size: 32px;
+            }
+            
+            .crud-btn {
+                padding: 8px 4px;
+                min-width: 60px;
+            }
+        }
+
+        /* ========================================
+           TABLET/iPAD RESPONSIVE (768px - 1024px)
+           ======================================== */
+        @media screen and (max-width: 1024px) {
+            :root {
+                --left-width: 55%;
+                --right-width: 45%;
+                --top-height: 45%;
+                --bottom-height: 55%;
+                --header-padding: 5px 12px;
+                --header-h1: 1.2em;
+                --section-h3: 0.95em;
+                --base-font: 0.85em;
+                --small-font: 0.75em;
+                --grid-gap: 8px;
+                --section-padding: 12px;
+            }
+            
+            body {
+                padding: 5px;
+            }
+            
+            .main-content {
+                padding: 5px;
+                gap: 5px;
+            }
+            
+            .grid-container {
+                padding: 5px;
+                gap: 8px;
+            }
+            
+            header p {
+                display: none; /* Hide subtitle on tablet */
+            }
+            
+            th {
+                padding: 6px 4px;
+                font-size: 0.7em;
+            }
+            
+            td {
+                padding: 5px 4px;
+                font-size: 0.75em;
+            }
+            
+            .tools-grid {
+                max-height: 150px;
+            }
+            
+            .rec-box {
+                width: 60%;
+                padding: 8px 5px;
+            }
+            .rec-box .rec-label {
+                font-size: 0.65em;
+            }
+            .rec-box .rec-value {
+                font-size: 28px;
+            }
+            
+            .chat-log {
+                font-size: 0.95em;
+                min-height: 60px;
+            }
+            
+            .crud-btn {
+                padding: 8px 3px;
+                min-width: 55px;
+                font-size: 0.7em;
+            }
+            
+            .field-group input {
+                padding: 5px;
+            }
+        }
+
+        /* ========================================
+           SMALL TABLET/PORTRAIT (under 768px)
+           ======================================== */
+        @media screen and (max-width: 768px) {
+            :root {
+                --top-height: 40%;
+                --bottom-height: 60%;
+            }
+            
+            .grid-container {
+                grid-template-columns: 1fr;
+                grid-template-rows: 1fr 1fr;
+                overflow-y: auto;
+            }
+            
+            .rec-box {
+                width: 40%;
+            }
+            .rec-box .rec-value {
+                font-size: 24px;
+            }
+            
+            .crud-btn {
+                min-width: 50px;
+                padding: 6px 2px;
+            }
+        }
+
+        /* === S1 FIX: buttons pinned at bottom, content scrolls === */
+        #Section-S1 {
+            overflow: hidden !important;
+            display: flex;
+            flex-direction: column;
+        }
+        #Section-S1 .s1-scroll {
+            flex: 1;
+            overflow-y: auto;
+            min-height: 0;
+        }
+        #Section-S1 .s1-footer {
+            flex-shrink: 0;
+        }
+
+
+        </style>
+</head>
+<body>
+    <script src="2. Src=/mcp-engine-4.0.js"></script>
+    <div class="container">
+        <header>
+            <h1>🌾 CropClient MCP Water Tools</h1>
+            <p>Natural Language Field Water Reporting</p>
+        </header>
+
+        <div class="main-content">
+            <div class="grid-container">
+                <div id="Section-S1" class="grid-section">
+                    <div class="s1-scroll">
+                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; flex-wrap: nowrap;">
+                        <h2 style="margin: 0; white-space: nowrap;">🔐 Crop Manage API Audit</h2>
+                        <div style="display: flex; align-items: center; gap: 6px; margin-left: auto; flex-wrap: nowrap;">
+                            <label style="font-weight: 600; color: #333; font-size: var(--small-font); white-space: nowrap;">Login</label>
+                            <input 
+                                type="text" 
+                                id="credentialsInput" 
+                                style="width: 150px; min-width: 150px; max-width: 150px; padding: 5px; font-size: var(--small-font); border: 2px solid #ddd; border-radius: 6px;"
+                                placeholder="username/password"
+                                readonly
+                                value="stevep@sspnet.com"
+                            >
+                            <input
+                                type="text"
+                                id="urlDisplay"
+                                style="width: 145px; min-width: 145px; max-width: 145px; padding: 5px; font-size: var(--small-font); border: 2px solid #ddd; border-radius: 6px; background: #f0f7f0; color: #2e7d32; font-weight: 600;"
+                                readonly
+                                value="http://api.cropclient.com"
+                                title="Active MCP Server URL"
+                            >
+                            <select id="envSelect" title="Connection Mode" style="width: 78px; min-width: 78px; padding: 5px; font-size: var(--small-font); border: 2px solid #ddd; border-radius: 6px; background: #fff;">
+                                <option value="local" selected>Local</option>
+                                <option value="online">Online</option>
+                                <option value="offline">Offline</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Hidden token kept for app logic -->
+                    <div style="display:none;">
+                        <input 
+                            type="text" 
+                            id="tokenDisplay" 
+                            style="padding: 5px; font-size: var(--small-font); border: 2px solid #ddd; border-radius: 6px; background: #f5f5f5;"
+                            readonly
+                            placeholder="Token will appear here..."
+                        >
+                    </div>
+                    <hr style="border: none; border-top: 2px solid #e0e0e0; margin: 4px 0;">
+                    
+                    <!-- Script Section -->
+                    <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 3px;">
+                        <select 
+                            id="scriptDropdown" 
+                            style="width: 200px; padding: 5px; font-size: var(--small-font); border: 2px solid #ddd; border-radius: 6px;"
+                            onchange="selectScript()"
+                        >
+                            <option value="">Choose an Agent</option>
+                            <optgroup label="CropManage API">
+                                <option value="token">🔐 Get Token</option>
+                                <option value="ranches">🏠 Get Ranches</option>
+                                <option value="plantings">🌱 Get Plantings</option>
+                                <option value="irrigation_details">💧 Get Irrigation Details</option>
+                                <option value="post_irrigation">📤 Post Irrigation</option>
+                                <option value="update_record">🔄 Update Record</option>
+                            </optgroup>
+                        </select>
+                        <textarea 
+                            id="scriptUrl" 
+                            rows="1"
+                            style="flex: 1; padding: 5px; font-size: var(--small-font); border: 2px solid #ddd; border-radius: 6px; background: #f5f5f5; resize: vertical; font-family: monospace;"
+                            placeholder="API endpoint URL will appear here..."
+                            readonly
+                        ></textarea>
+                        <button class="send-button" onclick="runScript()">Send</button>
+                    </div>
+                    
+                    <!-- Script Description -->
+                    <div id="scriptDescription" style="padding: 8px; background: #f5f5f5; border-radius: 4px; margin-bottom: 3px; font-size: var(--small-font); color: #666; min-height: 40px;">
+                        <div style="color: #999; font-style: italic;">Select a script to see description...</div>
+                    </div>
+                    
+                    <!-- Three Grids Side-by-Side -->
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 2fr; gap: 8px; margin-bottom: 10px; height: 100px; min-height: 100px; max-height: 100px; flex-shrink: 0;">
+                        <!-- Ranches Grid -->
+                        <div style="border: 1px solid #ddd; border-radius: 6px; overflow: hidden; display: flex; flex-direction: column;">
+                            <div id="ranchesGrid" style="flex: 1; overflow: auto; padding: 4px;">
+                                <div style="color: #999; text-align: center; padding: 20px; font-size: var(--small-font);">No data</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Plantings Grid -->
+                        <div style="border: 1px solid #ddd; border-radius: 6px; overflow: hidden; display: flex; flex-direction: column;">
+                            <div id="plantingsGrid" style="flex: 1; overflow: auto; padding: 4px;">
+                                <div style="color: #999; text-align: center; padding: 20px; font-size: var(--small-font);">No data</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Recommendations Grid -->
+                        <div style="border: 1px solid #ddd; border-radius: 6px; overflow: hidden; display: flex; flex-direction: column;">
+                            <div id="recommendationsGrid" style="flex: 1; overflow: auto; padding: 4px;">
+                                <div style="color: #999; text-align: center; padding: 20px; font-size: var(--small-font);">No data</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Fourth Grid: Irrigation Details -->
+                    <div style="border: 1px solid #ddd; border-radius: 6px; overflow: hidden; display: flex; flex-direction: column; height: 140px; min-height: 140px; max-height: 140px; flex-shrink: 0; margin-bottom: 8px;">
+                        <div style="background: #f5f5f5; padding: 4px 8px; font-weight: 600; font-size: var(--small-font); border-bottom: 1px solid #ddd; flex-shrink: 0;">
+                            Irrigation Details
+                        </div>
+                        <div id="irrigationDetailsGrid" style="flex: 1; overflow-y: scroll; overflow-x: auto;">
+                            <table style="width: 100%; font-size: var(--small-font); border-collapse: collapse;">
+                                <thead>
+                                    <tr style="background: #f5f5f5; position: sticky; top: 0; z-index: 1;">
+                                        <th style="padding: 4px;">Ranch</th>
+                                        <th style="padding: 4px;">Planting</th>
+                                        <th style="padding: 4px;">Date</th>
+                                        <th style="padding: 4px;">RecHrs</th>
+                                        <th style="padding: 4px;">Interval</th>
+                                        <th style="padding: 4px;">MgrHrs</th>
+                                        <th style="padding: 4px;">Applied</th>
+                                        <th style="padding: 4px;">RanchID</th>
+                                        <th style="padding: 4px;">PlantingID</th>
+                                        <th style="padding: 4px;">ID</th>
+                                        <th style="padding: 4px;">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="irrigationDetailsBody">
+                                    <tr><td colspan="11" style="text-align: center; color: #999; padding: 20px;">No data</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <!-- Hidden elements for MCP script compatibility -->
+                    <input type="hidden" id="promptInput" value="">
+                    <div id="toolDescription" style="display: none;"></div>
+                    <table style="display: none;"><tbody id="toolsTableBody"></tbody></table>
+                    
+                    </div>
+                    <!-- Section Footer Buttons -->
+                    <div class="s1-footer" style="padding: 8px; margin-top: 8px; border-top: 2px solid #e0e0e0; display: flex; gap: 6px;">
+                        <button onclick="saveDirect()" style="flex: 1; padding: 6px 8px; font-size: var(--small-font); background: #673AB7; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600;">💾 Save</button>
+                        <button onclick="refreshSelectedIrrigations()" style="flex: 1; padding: 6px 8px; font-size: var(--small-font); background: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600;">Refresh Selected Irrigations</button>
+                        <button onclick="updateRecordToCropManage()" style="flex: 1; padding: 6px 8px; font-size: var(--small-font); background: #2196F3; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600;">Update Record</button>
+                        <button onclick="showPostModal()" style="flex: 1; padding: 6px 8px; font-size: var(--small-font); background: #FF9800; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600;">Post to CropManage</button>
+                        <button onclick="restoreDirect()" style="flex: 1; padding: 6px 8px; font-size: var(--small-font); background: #009688; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600;">📂 Restore</button>
+                    </div>
+                </div>
+
+                <div class="details-section">
+                    <h3>💬 Chat Log</h3>
+                    
+                    <!-- Chat log area -->
+                    <div id="chatLog" class="chat-log">
+                        <div style="color: #666;">System ready. Send a command to begin...</div>
+                    </div>
+                    
+                    <!-- Prompt and Send on one line -->
+                    <div style="display: flex; gap: 6px; align-items: center;">
+                        <input 
+                            type="text" 
+                            id="chatPromptInput" 
+                            placeholder="Type command here..."
+                            style="flex: 1; padding: 6px; border: 2px solid #ddd; border-radius: 6px; font-size: var(--small-font);"
+                            onkeypress="if(event.key === 'Enter') sendChatPrompt()"
+                        >
+                        <button onclick="sendChatPrompt()" class="send-button">🚀 Send</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid-container">
+                <div class="grid-section">
+                    <div class="record-count" style="display: flex; justify-content: space-between; align-items: center;">
+                        <h3 style="margin: 0;">📊 <strong>Irrigation Records</strong> (<span id="recordCount">0</span>)</h3>
+                        <h3 style="margin: 0; cursor: pointer;" onclick="toggleWaitQueue()">
+                            <span id="waitQueueToggle" style="color: #666;"><strong>Records Changed</strong></span> (<span id="waitQueueCount">0</span>)
+                        </h3>
+                    </div>
+                    <div class="data-grid">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Ranch</th>
+                                    <th>Planting</th>
+                                    <th>Date</th>
+                                    <th>RecHrs</th>
+                                    <th>Interval</th>
+                                    <th>MgrHrs</th>
+                                    <th>Applied</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="grid-section">
+                    <div class="details-section" style="display: flex; flex-direction: column; overflow: hidden;">
+                        <h3>💧 Selected Field Details</h3>
+                    
+                    <!-- Top row: Date and Interval side by side -->
+                    <div class="field-grid-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-bottom: 2px;">
+                        <div class="field-group">
+                            <label>Date:</label>
+                            <input type="text" id="formDate" style="text-align: center;">
+                        </div>
+                        <div class="field-group">
+                            <label>Interval:</label>
+                            <input type="text" id="formInterval" style="text-align: center;">
+                        </div>
+                    </div>
+                    
+                    <!-- CENTER: BIG GREEN RECOMMENDED HOURS BOX -->
+                    <div class="rec-box">
+                        <div class="rec-label">Recommended Hours</div>
+                        <div id="formRecommendationBig" class="rec-value">-</div>
+                        <input type="hidden" id="formRecommendation">
+                    </div>
+                    
+                    <!-- Bottom row: Manager Hours and Water Applied side by side -->
+                    <div class="field-grid-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-bottom: 2px;">
+                        <div class="field-group">
+                            <label>MgrHrs:</label>
+                            <input type="number" id="formManagerHours" step="0.1" style="text-align: center;">
+                        </div>
+                        <div class="field-group">
+                            <label>Applied:</label>
+                            <input type="number" id="formWaterApplied" step="0.1" style="text-align: center;">
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- CRUD BUTTONS FOOTER (Always visible) -->
+                <div class="crud-footer">
+                    <div class="crud-buttons">
+                        <button class="crud-btn create" onclick="callTool('create_next_irrigation')">
+                            ➕ Create
+                        </button>
+                        <button class="crud-btn reset" onclick="callTool('reset_table')">
+                            🔄 Reset
+                        </button>
+                        <button class="crud-btn meter" onclick="callTool('read_meter')">
+                            📊 Apply
+                        </button>
+                        <button class="crud-btn update" onclick="callTool('update_record')">
+                            💾 Update
+                        </button>
+                    </div>
+                </div>
+                <!-- END CRUD FOOTER -->
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+
+<script>
+// direct MCP save/restore only
+function getDirectMcpBase() {
+    const mode = (document.getElementById('envSelect')?.value || '').toLowerCase();
+    return mode === 'local' ? 'http://localhost:3101' : 'https://api.cropclient.com';
+}
+
+async function saveDirect() {
+    const base = getDirectMcpBase();
+    try {
+        await fetch(base + '/tools/data_operation', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'write', table: 'steve', data: displayRecords })
+        });
+        showResult('✅ Saved to steve');
+    } catch (e) {
+        showResult('❌ Save failed: ' + e.message);
+    }
+}
+
+async function restoreDirect() {
+    const base = getDirectMcpBase();
+    try {
+        const res = await fetch(base + '/tools/data_operation', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'read', table: 'steve' })
+        });
+        const json = await res.json();
+        const rows = Array.isArray(json.data) ? json.data : [];
+
+        // front door: restore source JSON, then run normal app load
+        irrigationData = JSON.parse(JSON.stringify(rows));
+        selectedRecord = null;
+        read();
+
+        showResult('✅ Restored from steve');
+    } catch (e) {
+        showResult('❌ Restore failed: ' + e.message);
+    }
+}
+</script>
+
+
+<!-- @@@@ IRRIGATION_COMPONENT v1.2 id:irrigation-mcp @@@@ -->
+<script src="2. Src=/irrigation-component-3.0.js"></script>
+<!-- @@@@ IRRIGATION_COMPONENT v1.2 id:irrigation-mcp @@@@ -->
+
+<!-- @@@@ MCP-CRUD MINI v1.1 — mcp-engine-4.0 + mcpStaging @@@@ -->
+<script>
+// MCP-CRUD MINI — POST /tools/:name via mcpStaging (Water Tools local pattern)
+
+async function mcpCrud(toolName) {
+    const mode = document.getElementById('envSelect')?.value || 'local';
+    if (mode === 'offline') {
+        showResult('Offline — MCP server calls disabled.');
+        return;
+    }
+    if (!window.mcpServerUrl || typeof mcpStaging !== 'function') {
+        showResult('MCP not ready — start APIServer on 3101, choose Local, reload.');
+        return;
+    }
+    if (typeof MCP_ENGINE !== 'undefined' && Object.keys(MCP_ENGINE.tools || {}).length === 0) {
+        showResult('MCP tools not loaded — wait for logon or reload.');
+        return;
+    }
+
+    let params = {};
+    if (selectedRecord) {
+        params.ranch = selectedRecord.ranch;
+        params.planting = selectedRecord.planting;
+        params.recordId = selectedRecord.id;
+        params.eventId = selectedRecord.eventId;
+        params.scheduledDate = selectedRecord.scheduledDate;
+        params.interval = selectedRecord.interval;
+        params.mgrHours = document.getElementById('formManagerHours')?.value || selectedRecord.mgrHours;
+        params.appliedHours = document.getElementById('formWaterApplied')?.value || selectedRecord.appliedHours;
+    }
+    if (apiToken) params.token = apiToken;
+
+    const result = await mcpStaging(toolName, params);
+
+    // Show result
+    if (result.success === false) {
+        showResult(result.error || 'CRUD call failed');
+    } else {
+        showResult(result.statusMessage || result.message || JSON.stringify(result));
+    }
+
+    // Refresh grid and reselect
+    if (typeof renderTable === 'function') renderTable();
+    if (selectedRecord && typeof selectRecord === 'function') selectRecord(selectedRecord.id);
+}
+</script>
+<!-- @@@@ MCP-CRUD MINI v1.0 @@@@ -->
+
+<!-- @@@@ DASHBOARD_COMPONENT id:dashboard-crud @@@@ -->
+<script>
+// Purpose: Portable irrigation dashboard with MCP CRUD tools
+// Works with JSON default data (offline) or API-sourced data
+// Self-contained - no external dependencies
+
+// ========================================
+// VARIABLES - Grid Storage (Default Data)
+// ========================================
+        let originalData = [
+            { id: 1, ranch: "1", planting: "1A", hours: 1.3, mgrHours: 1.2, appliedHours: 1.15, interval: "1.5 days", scheduledDate: "10/14/24", irrigationMethod: "Drip", recommendedInches: "0.5", lastUpdatedDate: "10/13/24 14:30", updatedBy: "System", isNew: false, isOriginal: true, isUpdated: false },
+            { id: 2, ranch: "1", planting: "1A", hours: 1.2, mgrHours: 1.1, appliedHours: 1.05, interval: "1.5 days", scheduledDate: "10/16/24", irrigationMethod: "Drip", recommendedInches: "0.5", lastUpdatedDate: "10/15/24 09:15", updatedBy: "System", isNew: false, isOriginal: true, isUpdated: false },
+            { id: 3, ranch: "1", planting: "1A", hours: 1.4, mgrHours: 1.3, appliedHours: 0, interval: "1.5 days", scheduledDate: "10/18/24", irrigationMethod: "Drip", recommendedInches: "0.5", lastUpdatedDate: "10/17/24 11:20", updatedBy: "System", isNew: false, isOriginal: true, isUpdated: false },
+            { id: 4, ranch: "1", planting: "1B", hours: 1.6, mgrHours: 1.4, appliedHours: 0, interval: "1.5 days", scheduledDate: "10/20/24", irrigationMethod: "Drip", recommendedInches: "0.6", lastUpdatedDate: "10/19/24 08:45", updatedBy: "System", isNew: false, isOriginal: true, isUpdated: false },
+            { id: 5, ranch: "1", planting: "1B", hours: 2.1, mgrHours: 2, appliedHours: 1.95, interval: "2 days", scheduledDate: "10/12/24", irrigationMethod: "Sprinkler", recommendedInches: "0.8", lastUpdatedDate: "10/11/24 16:00", updatedBy: "System", isNew: false, isOriginal: true, isUpdated: false },
+            { id: 6, ranch: "1", planting: "1B", hours: 2.2, mgrHours: 2.1, appliedHours: 0, interval: "2 days", scheduledDate: "10/14/24", irrigationMethod: "Sprinkler", recommendedInches: "0.8", lastUpdatedDate: "10/13/24 10:30", updatedBy: "System", isNew: false, isOriginal: true, isUpdated: false },
+            { id: 7, ranch: "2", planting: "2A", hours: 1.8, mgrHours: 1.7, appliedHours: 1.65, interval: "1 days", scheduledDate: "10/15/24", irrigationMethod: "Drip", recommendedInches: "0.6", lastUpdatedDate: "10/14/24 13:20", updatedBy: "System", isNew: false, isOriginal: true, isUpdated: false },
+            { id: 8, ranch: "2", planting: "2A", hours: 1.9, mgrHours: 1.8, appliedHours: 1.75, interval: "1 days", scheduledDate: "10/16/24", irrigationMethod: "Drip", recommendedInches: "0.6", lastUpdatedDate: "10/15/24 14:45", updatedBy: "System", isNew: false, isOriginal: true, isUpdated: false },
+            { id: 9, ranch: "2", planting: "2A", hours: 2, mgrHours: 1.9, appliedHours: 0, interval: "1 days", scheduledDate: "10/17/24", irrigationMethod: "Drip", recommendedInches: "0.6", lastUpdatedDate: "10/16/24 09:00", updatedBy: "System", isNew: false, isOriginal: true, isUpdated: false },
+            { id: 10, ranch: "2", planting: "2B", hours: 1.5, mgrHours: 1.4, appliedHours: 1.35, interval: "2 days", scheduledDate: "10/13/24", irrigationMethod: "Sprinkler", recommendedInches: "0.7", lastUpdatedDate: "10/12/24 15:10", updatedBy: "System", isNew: false, isOriginal: true, isUpdated: false },
+            { id: 11, ranch: "2", planting: "2B", hours: 1.6, mgrHours: 1.5, appliedHours: 0, interval: "2 days", scheduledDate: "10/15/24", irrigationMethod: "Sprinkler", recommendedInches: "0.7", lastUpdatedDate: "10/14/24 12:30", updatedBy: "System", isNew: false, isOriginal: true, isUpdated: false },
+            { id: 12, ranch: "2", planting: "2B", hours: 1.7, mgrHours: 1.6, appliedHours: 0, interval: "2 days", scheduledDate: "10/17/24", irrigationMethod: "Sprinkler", recommendedInches: "0.7", lastUpdatedDate: "10/16/24 11:15", updatedBy: "System", isNew: false, isOriginal: true, isUpdated: false }
+        ];
+
+// ========================================
+// VARIABLES - Working Grid Data
+// ========================================
+        let irrigationData = JSON.parse(JSON.stringify(originalData));
+        let displayRecords = [];
+        let selectedRecord = null;
+
+// ========================================
+// FUNCTIONS - Utilities
+// ========================================
+
+        function parseEventDate(dateStr) {
+            const parts = dateStr.split('/');
+            const month = parseInt(parts[0]) - 1;
+            const day = parseInt(parts[1]);
+            const year = parseInt('20' + parts[2]);
+            return new Date(year, month, day);
+        }
+
+        function formatDate(date) {
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            const year = String(date.getFullYear()).slice(-2);
+            return `${month}/${day}/${year}`;
+        }
+
+        /* ========================================
+        // TOOL SELECTION FROM GRID - MOVED TO COMPONENT
+        // This section has been extracted to CropClient-Agent-Grid.txt component
+        // ========================================
+
+        const toolDescriptions = {
+            reset: "🔄 RESET TABLE: Refreshes the irrigation data table back to original state. All created records will be removed.",
+            create: "➕ CREATE NEXT: Calculates and creates the next irrigation event for the selected ranch/planting based on interval.",
+            meter: "📊 READ METER: Prepares the form to enter actual meter reading for the most recent irrigation event.",
+            update: "💾 UPDATE RECORD: Saves the Manager Hours and Water Applied values to the selected record."
+        };
+
+        const toolPrompts = {
+            reset: "Reset table to show all irrigation records",
+            create: "Create next irrigation for the selected field",
+            meter: "Read meter for the selected planting",
+            update: "Update water applied for selected record"
+        };
+
+        function selectToolFromGrid(toolId) {
+            // Highlight the selected row
+            document.querySelectorAll('#toolsTableBody tr').forEach(row => {
+                row.style.background = '';
+            });
+            event.currentTarget.style.background = '#C8E6C9';
+            
+            // Show description
+            document.getElementById('toolDescription').textContent = toolDescriptions[toolId];
+            
+            // Fill prompt input
+            document.getElementById('promptInput').value = toolPrompts[toolId];
+        }
+        ======================================== */
+
+// ========================================
+// FUNCTIONS - Prompt Processing & Chat
+// ========================================
+
+
+        /* BEGIN MCP MINI MODULE: host + token handshake (v1.2)
+           Purpose:
+             - Let the Dashboard send the currently selected CropManage API token to the MCP server
+             - MCP stores the token (server-side) so subsequent tools can run without passing token each time
+             - Provide a simple way to set MCP host (localhost vs hosted domain) using the prompt box
+
+           How to use (type into Prompt box, then click Send):
+             - "mcp host http://localhost:3101"           (set MCP host)
+             - "mcp host http://api.cropclient.com"               (set hosted MCP base)
+             - "mcp token"                               (send current apiToken to MCP + validate with get_ranches)
+             - "mcp refresh"                             (send token then run irrigation detail for current selection)
+
+           Notes:
+             - Does NOT change onload behavior
+             - Does NOT replace existing local API calls
+             - Safe to remove after audit validation
+        */
+        // CC_STATE declared in api-component-3.0.js — owned there
+
+        function syncUrlDisplay() {
+            const el = document.getElementById('urlDisplay');
+            if (!el) return;
+            const base = getMcpBase();
+            el.value = base || '(offline)';
+            el.style.color = base ? '#2e7d32' : '#999';
+        }
+
+        function setEnvMode(mode) {
+            const m = (mode || '').toLowerCase();
+            if (m === 'local' || m === 'online' || m === 'offline') {
+                CC_STATE.mode = m;
+            }
+            // Keep UI synced (no alerts, just facts)
+            const sel = document.getElementById('envSelect');
+            if (sel && sel.value !== CC_STATE.mode) sel.value = CC_STATE.mode;
+            syncUrlDisplay();
+}
+
+        // getMcpBase() moved to api-component-3.0.js — reads mcpServerUrl from mcp-engine
+        // function getMcpBase() {
+        //     if (CC_STATE.mode === 'offline') return null;
+        //     const base = (CC_STATE.overrideBase && CC_STATE.overrideBase.trim())
+        //         ? CC_STATE.overrideBase.trim()
+        //         : (CC_STATE.mode === 'online' ? CC_STATE.onlineBase : CC_STATE.localBase);
+        //     return base.replace(/\/+$/, '');
+        // }
+
+        // Kept for backward compatibility with the existing "mcp host <url>" command.
+        // This does not block or alert; it just updates state.
+        function setMcpBase(value) {
+            const v = (value || '').trim().replace(/\/+$/, '');
+            if (!v) return null;
+            CC_STATE.overrideBase = v;
+
+            // If override looks like localhost, align mode to local; otherwise online.
+            if (v.includes('localhost') || v.includes('127.0.0.1')) setEnvMode('local');
+            else setEnvMode('online');
+
+            syncUrlDisplay();
+            return v;
+        }
+
+        // Bind the dropdown — HTML 'selected' attribute sets the default.
+        document.addEventListener('DOMContentLoaded', () => {
+            const sel = document.getElementById('envSelect');
+            if (sel) {
+                setEnvMode(sel.value);
+                sel.addEventListener('change', async (e) => {
+                    CC_STATE.overrideBase = '';
+                    const mode = e.target.value;
+                    setEnvMode(mode);
+                    if (mode === 'offline') {
+                        if (typeof mcpEngineHarnessOffline === 'function') mcpEngineHarnessOffline();
+                    } else {
+                        const url = mode === 'local' ? 'http://localhost:3101' : 'https://api.cropclient.com';
+                        await mcpEngineLogon(url);
+                    }
+                    CC_STATE.mode = mode;
+                    CC_STATE.serverUrl = window.mcpServerUrl;
+                    syncUrlDisplay();
+                });
+            } else {
+                setEnvMode('local');
+            }
+            syncUrlDisplay();
+        });
+
+        // mcpCall moved to api-component-3.0.js — owned there, available to all src files
+        // async function mcpCall(toolName, args = {}) { ... }
+
+        async function mcpSendTokenAndValidate(mode = 'ranches') {
+            // apiToken already exists in the app (from onload / Get Token)
+            if (!apiToken || !String(apiToken).trim()) {
+                showResult('❌ No apiToken in the app yet. Run Get Token first.');
+                return;
+            }
+
+            const base = getMcpBase();
+            logToChat(`MCP base: ${base}`, 'M');
+
+            // 1) Store token on MCP server (requires MCP tool: set_token)
+            try {
+                await mcpCall('set_token', { token: apiToken });
+                logToChat('✅ MCP stored token (set_token)', 'M');
+            } catch (e) {
+                logToChat(`❌ MCP set_token failed: ${e.message}`, 'M');
+                showResult('❌ MCP set_token missing or failed. Add set_token tool to APIServer1.2.js.');
+                return;
+            }
+
+            // 2) Validate execution path
+            try {
+                if (mode === 'refresh') {
+                    // Use existing selections if available; fall back to ranches
+                    if (selectedPlantingId && selectedPlantingId !== 'ALL') {
+                        const resp = await mcpCall('get_irrigation_details', { plantingId: selectedPlantingId });
+                        logToChat(`✅ MCP irrigation details ok (plantingId=${selectedPlantingId})`, 'M');
+                        showResult(`✅ MCP validated token. get_irrigation_details returned ${(resp.data && resp.data.length) || 0} records`);
+                    } else {
+                        const ranches = await mcpCall('get_ranches', {});
+                        logToChat('✅ MCP get_ranches ok', 'M');
+                        showResult(`✅ MCP validated token. get_ranches returned ${(ranches.data && ranches.data.length) || 0} ranches`);
+                    }
+                } else {
+                    const ranches = await mcpCall('get_ranches', {});
+                    logToChat('✅ MCP get_ranches ok', 'M');
+                    showResult(`✅ MCP validated token. get_ranches returned ${(ranches.data && ranches.data.length) || 0} ranches`);
+                }
+            } catch (e) {
+                logToChat(`❌ MCP validation call failed: ${e.message}`, 'M');
+                showResult(`❌ MCP validation failed: ${e.message}`);
+            }
+        }
+        /* END MCP MINI MODULE */
+
+        function sendPrompt() {
+            const promptInput = document.getElementById('promptInput');
+            const prompt = promptInput.value.trim().toLowerCase();
+
+
+            // MCP MINI MODULE commands (do not affect existing commands)
+            // Examples:
+            //  - mcp host http://localhost:3101
+            //  - mcp token
+            //  - mcp refresh
+            if (prompt.startsWith('mcp host ')) {
+                const host = promptInput.value.trim().substring(9).trim(); // keep original case for URL
+                const saved = setMcpBase(host);
+                if (saved) {
+                    logToChat(`ℹ️ MCP host override: ${saved} (mode: ${CC_STATE.mode})`, 'M');
+                    showResult(`ℹ️ MCP host override set: ${saved} (mode: ${CC_STATE.mode})`);
+                } else {
+                    logToChat(`ℹ️ MCP host override ignored (blank). Mode remains: ${CC_STATE.mode}`, 'M');
+                    showResult(`ℹ️ MCP host override ignored (blank). Mode: ${CC_STATE.mode}`);
+                }
+                return;
+            }
+            if (prompt === 'mcp token' || prompt === 'mcp set token' || prompt === 'mcp send token') {
+                mcpSendTokenAndValidate('ranches');
+                return;
+            }
+            if (prompt === 'mcp refresh') {
+                mcpSendTokenAndValidate('refresh');
+                return;
+            }
+            
+            if (!prompt) {
+                showResult('❌ Please enter a prompt or select from dropdown');
+                return;
+            }
+            
+            // Log to chat with P code
+            logToChat(promptInput.value.trim(), 'P');
+            
+            // Route based on prompt keywords - ALL call MCP tools
+            if (prompt.includes('reset') || prompt.includes('refresh') || prompt.includes('show all')) {
+                callTool('reset_table');
+            }
+            else if (prompt.includes('create') && prompt.includes('next')) {
+                callTool('create_next_irrigation');
+            }
+            else if ((prompt.includes('read') && prompt.includes('meter')) || prompt.includes('apply')) {
+                callTool('read_meter');
+            }
+            else if (prompt.includes('update')) {
+                callTool('update_record');
+            }
+            else if (prompt.includes('get') && prompt.includes('token')) {
+                getToken();
+            }
+            else if (prompt.includes('get') && prompt.includes('ranches')) {
+                getRanches();
+            }
+            else if (prompt.includes('get') && prompt.includes('plantings')) {
+                if (selectedRanchGuid) {
+                    getPlantingsByRanch(selectedRanchGuid);
+                } else {
+                    showResult('❌ Select a ranch first');
+                }
+            }
+            else if (prompt.includes('refresh') && prompt.includes('irrigation')) {
+                refreshSelectedIrrigations();
+            }
+            else if (prompt.includes('post') && prompt.includes('irrigation')) {
+                postRecordToCropManage();
+            }
+            else if (prompt.includes('update') && prompt.includes('cropmanage')) {
+                updateRecordToCropManage();
+            }
+            else {
+                showResult('❌ Unknown command. Try: reset, create next, read meter, update, get token, get ranches, get plantings, refresh irrigation, post irrigation');
+            }
+        }
+
+        function setPromptAndSend(prompt) {
+            document.getElementById('promptInput').value = prompt;
+            sendPrompt();
+        }
+
+        function sendChatPrompt() {
+            const chatInput = document.getElementById('chatPromptInput');
+            const prompt = chatInput.value.trim();
+            
+            if (!prompt) return;
+            
+            // Copy to main prompt input and send
+            document.getElementById('promptInput').value = prompt;
+            chatInput.value = '';
+            sendPrompt();
+        }
+
+        function logToChat(message, type = 'P') {
+            const chatLog = document.getElementById('chatLog');
+            const timestamp = new Date().toLocaleTimeString();
+            
+            const entry = document.createElement('div');
+            entry.style.marginBottom = '8px';
+            entry.style.padding = '8px';
+            entry.style.background = 'white';
+            entry.style.borderRadius = '4px';
+            entry.style.borderLeft = '3px solid ' + (type === 'P' ? '#4caf50' : '#2196F3');
+            entry.style.cursor = 'pointer';
+            
+            const label = type === 'P' ? 'Prompt:' : 'Message:';
+            
+            // Create header with label on left, time on right
+            const header = document.createElement('div');
+            header.style.display = 'flex';
+            header.style.justifyContent = 'space-between';
+            header.style.marginBottom = '4px';
+            header.innerHTML = 
+                '<strong style="color: ' + (type === 'P' ? '#2e7d32' : '#1976D2') + ';">' + label + '</strong>' +
+                '<span style="color: #666; font-size: 0.85em;">' + timestamp + '</span>';
+            
+            // Create content area
+            const content = document.createElement('div');
+            content.style.color = '#333';
+            content.style.fontSize = '0.9em';
+            
+            if (type === 'P') {
+                // For prompts, show the text inline
+                content.textContent = message;
+                
+                // Click to put back in prompt field
+                entry.onclick = function() {
+                    document.getElementById('chatPromptInput').value = message;
+                    document.getElementById('chatPromptInput').focus();
+                };
+            } else {
+                // For messages, show truncated with click to expand
+                const preview = message.length > 60 ? message.substring(0, 60) + '...' : message;
+                content.textContent = preview;
+                
+                // Click to show full message in popup
+                entry.onclick = function() {
+                    const popup = document.createElement('div');
+                    popup.style.position = 'fixed';
+                    popup.style.top = '50%';
+                    popup.style.left = '50%';
+                    popup.style.transform = 'translate(-50%, -50%)';
+                    popup.style.background = 'white';
+                    popup.style.border = '3px solid #2196F3';
+                    popup.style.borderRadius = '8px';
+                    popup.style.padding = '20px';
+                    popup.style.maxWidth = '500px';
+                    popup.style.maxHeight = '400px';
+                    popup.style.overflow = 'visible';
+                    popup.style.zIndex = '10000';
+                    popup.style.boxShadow = '0 10px 40px rgba(0,0,0,0.3)';
+                    
+                    popup.innerHTML = 
+                        '<div style="display: flex; justify-content: space-between; margin-bottom: 15px; border-bottom: 2px solid #2196F3; padding-bottom: 10px; align-items: center;">' +
+                        '<strong style="color: #1976D2; font-size: 1.1em;">Message</strong>' +
+                        '<button onclick="this.parentElement.parentElement.remove()" style="padding: 4px 12px; background: #f44336; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600;">✕ Close</button>' +
+                        '</div>' +
+                        '<div style="color: #666; margin-bottom: 10px;">' + timestamp + '</div>' +
+                        '<div style="text-align: left; white-space: pre-line; line-height: 1.6; color: #333; max-height: 300px; overflow-y: auto;">' + message + '</div>';
+                    
+                    document.body.appendChild(popup);
+                };
+            }
+            
+            entry.appendChild(header);
+            entry.appendChild(content);
+            chatLog.appendChild(entry);
+            chatLog.scrollTop = chatLog.scrollHeight; // Auto-scroll to bottom
+        }
+
+        function showResult(message) {
+            logToChat(message, 'M');
+        }
+
+// ========================================
+// FUNCTIONS - CRUD Operations (Reset, Create, Read, Update)
+// ========================================
+
+        function read() {
+            displayRecords = JSON.parse(JSON.stringify(irrigationData));
+            
+            // Set data source flag for Reset CRUD
+            dataSource = 'json';
+            
+            // Sort by ranch → planting → date
+            displayRecords.sort((a, b) => {
+                if (a.ranch < b.ranch) return -1;
+                if (a.ranch > b.ranch) return 1;
+                if (a.planting < b.planting) return -1;
+                if (a.planting > b.planting) return 1;
+                const dateA = parseEventDate(a.scheduledDate);
+                const dateB = parseEventDate(b.scheduledDate);
+                return dateA - dateB;
+            });
+            
+            renderTable();
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+            
+            // Sort by ranch, planting, then date
+            displayRecords.sort((a, b) => {
+                if (a.ranch < b.ranch) return -1;
+                if (a.ranch > b.ranch) return 1;
+                if (a.planting < b.planting) return -1;
+                if (a.planting > b.planting) return 1;
+                const dateA = parseEventDate(a.scheduledDate);
+                const dateB = parseEventDate(b.scheduledDate);
+                return dateA - dateB;
+            });
+            
+            // Filter records based on Wait Queue toggle
+            const recordsToShow = waitQueueFilter
+                ? displayRecords.filter(r => r.status === -1)
+                : displayRecords;
+            
+            recordsToShow.forEach(record => {
+                const row = tbody.insertRow();
+                row.dataset.recordId = record.id;
+                row.onclick = () => selectRecord(record.id);
+                
+                if (record.isNew) {
+                    row.style.background = '#E3F2FD';
+                }
+                
+                row.insertCell(0).textContent = record.ranch;
+                row.insertCell(1).textContent = record.planting;
+                row.insertCell(2).textContent = record.scheduledDate;
+                row.insertCell(3).textContent = record.hours;
+                row.insertCell(4).textContent = record.interval;
+                row.insertCell(5).textContent = record.mgrHours;
+                row.insertCell(6).textContent = record.appliedHours;
+            });
+            
+            // Update counts
+            document.getElementById('recordCount').textContent = recordsToShow.length;
+            
+            const waitQueueCount = displayRecords.filter(r => r.status === -1).length;
+            document.getElementById('waitQueueCount').textContent = waitQueueCount;
+            
+            // Update toggle color based on filter state
+            const waitQueueToggle = document.getElementById('waitQueueToggle');
+            if (waitQueueFilter) {
+                waitQueueToggle.style.color = '#2196F3';  // Blue when filtering
+                waitQueueToggle.style.fontWeight = '600';
+            } else {
+                waitQueueToggle.style.color = '#666';     // Gray when showing all
+                waitQueueToggle.style.fontWeight = 'normal';
+            }
+            
+            // Select first visible record if none selected
+            if (recordsToShow.length > 0 && !selectedRecord) {
+                selectRecord(recordsToShow[0].id);
+            }
+        }
+
+        function toggleWaitQueue() {
+            // Toggle filter state
+            waitQueueFilter = !waitQueueFilter;
+            
+            // Clear selection to avoid multiple selected rows
+            selectedRecord = null;
+            
+            // Re-render table with new filter
+            renderTable();
+            
+            // Log to chat
+            if (waitQueueFilter) {
+                logToChat('🔍 Filtered to Records Changed (status=-1)', 'M');
+            } else {
+                logToChat('📊 Showing all records', 'M');
+            }
+        }
+
+        function selectRecord(recordId) {
+            selectedRecord = displayRecords.find(r => r.id === recordId);
+            
+            if (!selectedRecord) return;
+            
+            // Highlight row
+            document.querySelectorAll('#tableBody tr').forEach(row => {
+                if (parseInt(row.dataset.recordId) === recordId) {
+                    row.classList.add('selected');
+                    row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                } else {
+                    row.classList.remove('selected');
+                }
+            });
+            
+            // Populate form
+            document.getElementById('formDate').value = selectedRecord.scheduledDate;
+            document.getElementById('formInterval').value = selectedRecord.interval;
+            document.getElementById('formRecommendation').value = selectedRecord.hours;
+            const bigDisplay = document.getElementById('formRecommendationBig');
+            if (bigDisplay) {
+                bigDisplay.textContent = selectedRecord.hours || '-';
+            }
+            document.getElementById('formManagerHours').value = selectedRecord.mgrHours;
+            document.getElementById('formWaterApplied').value = selectedRecord.appliedHours;
+        }
+
+        // ========================================
+        // CRUD OPERATIONS - Now call pure IRRIGATION_COMPONENT functions
+        // Old DOM-mixed versions removed - logic moved to mcpTools handlers
+        // ========================================
+
+        // ========================================
+        // INITIALIZATION
+        // ========================================
+
+        // Local/online with MCP base: Node get_token + ranches + all plantings. Offline = no MCP base → api-component CORS only (unchanged).
+        async function auditQueLoadTokenRanchesPlantings() {
+            if (typeof getTokenAndRanches !== 'function') return;
+            try {
+                const tr = await getTokenAndRanches();
+                if (!tr || !tr.success) {
+                    console.warn('[Audit Que] onload getTokenAndRanches:', tr && tr.error);
+                    return;
+                }
+                if (typeof loadAllPlantings === 'function') await loadAllPlantings();
+            } catch (err) {
+                console.warn('[Audit Que] onload token/ranches/plantings:', err);
+            }
+        }
+
+        window.onload = async function() {
+            const sel = document.getElementById('envSelect');
+            const mode = (sel && sel.value) || 'local';
+            setEnvMode(mode);
+
+            if (mode === 'offline') {
+                if (typeof mcpEngineHarnessOffline === 'function') mcpEngineHarnessOffline();
+                CC_STATE.mode = mode;
+                CC_STATE.serverUrl = window.mcpServerUrl;
+                read();
+                return;
+            }
+
+            const serverUrl = mode === 'local' ? 'http://localhost:3101' : 'https://api.cropclient.com';
+
+            // --- Local = same startup as Water Tools only: engine logon → data_operation steve — NO api-component fetch on load ---
+            if (mode === 'local') {
+                try {
+                    const logon = await mcpEngineLogon(serverUrl);
+                    if (!logon.success) throw new Error(logon.error || 'mcpEngineLogon failed');
+                    const dataResult = await mcpEngineSend('data_operation', {
+                        action: 'read',
+                        table: 'steve'
+                    });
+                    if (dataResult.success && Array.isArray(dataResult.data)) {
+                        irrigationData = JSON.parse(JSON.stringify(dataResult.data));
+                        displayRecords = JSON.parse(JSON.stringify(irrigationData));
+                        selectedRecord = null;
+                        read();
+                        CC_STATE.mode = mode;
+                        CC_STATE.serverUrl = window.mcpServerUrl;
+                        await auditQueLoadTokenRanchesPlantings();
+                        return;
+                    }
+                } catch (err) {
+                    console.warn('[Audit Que] Local MCP path failed, fallback:', err);
+                }
+                try {
+                    const response = await fetch(serverUrl + '/data/steve.json');
+                    if (response.ok) {
+                        const jsonData = await response.json();
+                        irrigationData = jsonData;
+                        displayRecords = JSON.parse(JSON.stringify(irrigationData));
+                    }
+                } catch (e) { /* ignore */ }
+                read();
+                CC_STATE.mode = mode;
+                CC_STATE.serverUrl = window.mcpServerUrl;
+                try {
+                    const lo = await mcpEngineLogon(serverUrl);
+                    if (lo.success) await auditQueLoadTokenRanchesPlantings();
+                } catch (_) {}
+                return;
+            }
+
+            // --- Online: logon + steve + then api-component can run Get Token flows ---
+            const logon = await mcpEngineLogon(serverUrl);
+            if (!logon.success) console.warn('[Audit Que] mcpEngineLogon:', logon.error);
+            CC_STATE.mode = mode;
+            CC_STATE.serverUrl = window.mcpServerUrl;
+            const dataRes = await mcpStaging('data_operation', { action: 'read', table: 'steve' });
+            if (dataRes && dataRes.success && Array.isArray(dataRes.data) && dataRes.data.length > 0) {
+                irrigationData = JSON.parse(JSON.stringify(dataRes.data));
+                selectedRecord = null;
+                read();
+            } else {
+                const retrieveResult = await callTool('retrieve_display', { fileName: 'steve' });
+                if (!retrieveResult || retrieveResult.success !== true) read();
+            }
+            await auditQueLoadTokenRanchesPlantings();
+        };
+
+</script>
+<!-- @@@@ DASHBOARD_COMPONENT id:dashboard-crud @@@@ -->
+
+
+<!-- @@@@ APISERVICE_COMPONENT id:api-sync @@@@ -->
+<script src="2. Src=/api-component-3.4.1.js"></script>
+<!-- @@@@ APISERVICE_COMPONENT id:api-sync @@@@ -->
+
+    
+    
+    <!-- POST Modal -->
+    <div id="postModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; justify-content: center; align-items: center;">
+        <div style="background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); max-width: 400px; width: 90%;">
+            <h3 style="margin: 0 0 20px 0; color: #2e7d32;">Post to CropManage</h3>
+            <p style="margin-bottom: 20px; color: #666;">Choose which records to post:</p>
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+                <button onclick="postSelected()" style="padding: 12px; background: #FF9800; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 1em;">
+                    Post Selected Record Only
+                </button>
+                <button onclick="postAllQueued()" style="padding: 12px; background: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 1em;">
+                    Post All Queued Records (<span id="modalQueueCount">0</span>)
+                </button>
+                <button onclick="closePostModal()" style="padding: 12px; background: #999; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 1em;">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

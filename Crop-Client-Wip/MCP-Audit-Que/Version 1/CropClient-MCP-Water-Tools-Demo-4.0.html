@@ -1,0 +1,1169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CropClient Water Tools - Email Teaser</title>
+    <style>
+        :root {
+            --left-width: 60%;
+            --right-width: 40%;
+            --top-height: 50%;
+            --bottom-height: 50%;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            padding: 10px;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border-bottom: 2px solid #e0e0e0;
+            overflow: hidden;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+        }
+        header {
+            background: linear-gradient(135deg, #2e7d32 0%, #4caf50 100%);
+            color: white;
+            padding: 8px 20px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+        header h1 {
+            font-size: 1.6em;
+            margin-bottom: 3px;
+        }
+        header p {
+            font-size: 0.95em;
+            opacity: 0.9;
+        }
+        .pain-point-box {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            padding: 20px;
+            margin: 20px 30px;
+            border-radius: 8px;
+            color: #856404;
+        }
+        .pain-point-box h3 {
+            margin-bottom: 10px;
+            color: #856404;
+        }
+        .pain-point-box .current-pain {
+            background: #ffebee;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 10px 0;
+        }
+        .pain-point-box .solution {
+            background: #e8f5e9;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 10px 0;
+        }
+        .main-content {
+            padding: 10px;
+            flex: 1;
+            display: grid;
+            grid-template-rows: var(--top-height) var(--bottom-height);
+            gap: 10px;
+            overflow: hidden;
+        }
+        .prompt-section {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 8px;
+            border: 2px solid #e0e0e0;
+            margin-bottom: 15px;
+            flex-shrink: 0;
+        }
+        .prompt-section h2 {
+            color: #2e7d32;
+            margin-bottom: 12px;
+            font-size: 1.2em;
+        }
+        .prompt-selector {
+            margin-bottom: 15px;
+        }
+        .prompt-selector label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #333;
+            font-size: 1.1em;
+        }
+        .prompt-selector select {
+            width: 100%;
+            padding: 12px;
+            font-size: 1em;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            background: white;
+            cursor: pointer;
+        }
+        .prompt-description {
+            margin-top: 8px;
+            padding: 10px;
+            background: #f5f5f5;
+            border-radius: 4px;
+            color: #666;
+            font-style: italic;
+            font-size: 0.95em;
+            display: none;
+        }
+        .prompt-description.show {
+            display: block;
+        }
+        .prompt-display {
+            background: white;
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            border-left: 4px solid #4caf50;
+            display: none;
+        }
+        .prompt-display.show {
+            display: block;
+        }
+        .prompt-display .prompt-name {
+            font-size: 1em;
+            font-weight: bold;
+            color: #2e7d32;
+            margin-bottom: 5px;
+        }
+        .prompt-display .desc {
+            color: #666;
+            font-style: italic;
+            font-size: 0.9em;
+            margin-bottom: 0;
+            padding: 8px;
+            background: #f9f9f9;
+            border-radius: 4px;
+        }
+        .prompt-display .prompt-text {
+            background: #f0f0f0;
+            padding: 12px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            color: #333;
+            border: 1px solid #ddd;
+        }
+        .prompt-input-area {
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .prompt-input-area label {
+            font-weight: 600;
+            color: #333;
+            white-space: nowrap;
+            min-width: fit-content;
+        }
+        .prompt-input {
+            width: 100%;
+            padding: 12px;
+            font-size: 1em;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .send-button {
+            background: linear-gradient(135deg, #2e7d32 0%, #4caf50 100%);
+            color: white;
+            padding: 12px 25px;
+            font-size: 1em;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: transform 0.2s;
+            white-space: nowrap;
+        }
+        .send-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(46, 125, 50, 0.3);
+        }
+        .send-button:active {
+            transform: translateY(0);
+        }
+        .grid-container {
+            display: grid;
+            grid-template-columns: var(--left-width) var(--right-width);
+            gap: 15px;
+            padding: 10px;
+            height: 100%;
+            overflow: hidden;
+        }
+        .grid-section {
+            background: #fafafa;
+            padding: 20px;
+            border-radius: 8px;
+            border: 2px solid #e0e0e0;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        .grid-section h3 {
+            color: #2e7d32;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+            flex-shrink: 0;
+        }
+        .data-grid {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            overflow: auto;
+            flex: 1;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th {
+            background: #2e7d32;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+        }
+        td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #eee;
+        }
+        tr:hover {
+            background: #f5f5f5;
+            cursor: pointer;
+        }
+        tr.selected {
+            background: #C8E6C9;
+        }
+        .result-message {
+            background: #e8f5e9;
+            border: 2px solid #4caf50;
+            color: #2e7d32;
+            padding: 20px;
+            border-radius: 6px;
+            margin-top: 20px;
+            white-space: pre-line;
+            font-family: 'Courier New', monospace;
+        }
+        .details-section {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            border: 2px solid #e0e0e0;
+            overflow-y: auto;
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+        .details-section h3 {
+            color: #2e7d32;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+        .field-group {
+            margin-bottom: 8px;
+        }
+        .field-group label {
+            display: block;
+            font-weight: 600;
+            color: #555;
+            margin-bottom: 5px;
+        }
+        .field-group input {
+            width: 100%;
+            padding: 6px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 0.95em;
+        }
+        .field-group input:focus {
+            outline: none;
+            border-color: #4caf50;
+        }
+        
+        /* NEW: CRUD Button Styles */
+        .crud-buttons {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+            flex-wrap: wrap;
+        }
+        .crud-btn {
+            flex: 1;
+            min-width: 110px;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.85em;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .crud-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        .crud-btn:active {
+            transform: translateY(0);
+        }
+        .crud-btn.create {
+            background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
+            color: white;
+        }
+        .crud-btn.reset {
+            background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+            color: white;
+        }
+        .crud-btn.meter {
+            background: linear-gradient(135deg, #9c27b0 0%, #7b1fa2 100%);
+            color: white;
+        }
+        .crud-btn.update {
+            background: linear-gradient(135deg, #4caf50 0%, #388e3c 100%);
+            color: white;
+        }
+        
+        .record-count {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: #2e7d32;
+        }
+        .info-icon {
+            cursor: help;
+            color: #666;
+        }
+    </style>
+    <!-- @@@@ CSS_VARIABLES id:theme @@@@ -->
+</head>
+<body>
+    <!-- Load engine before inline app so onload can call mcpEngineLogon / mcpEngineSend -->
+    <script src="2. Src=/mcp-engine-4.0.js"></script>
+    <script src="2. Src=/irrigation-component-4.0.js"></script>
+    <!-- @@@@ HTML_TEMPLATE id:water-tools @@@@ -->
+    <div class="container">
+        <header>
+            <h1>🌾 CropClient MCP Water Tools</h1>
+            <p>Natural Language Field Water Reporting</p>
+            <div style="margin-top: 10px;">
+                <button type="button" id="mcpReadyBtn" onclick="runMcpReadyCheck()"
+                    style="padding: 8px 16px; font-size: 0.9em; font-weight: 600; cursor: pointer;
+                    background: rgba(255,255,255,0.95); color: #1b5e20; border: 2px solid rgba(255,255,255,0.6);
+                    border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.15);">
+                    ✅ MCP ready (17 tools)
+                </button>
+                <span style="font-size: 0.8em; opacity: 0.9; margin-left: 10px;">Logon + registry check — use when APIServer is up</span>
+            </div>
+        </header>
+
+
+
+        <div class="main-content">
+            <div class="grid-container">
+                <div class="grid-section">
+                    <h2 style="color: #2e7d32; margin-bottom: 8px; font-size: 1.1em;">📝 Select a Water Tool:</h2>
+                    
+                    <!-- Water Tools Grid -->
+                    <div style="background: white; border: 1px solid #ddd; border-radius: 6px; overflow: auto; max-height: 180px; margin-bottom: 10px;">
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <thead>
+                                <tr style="background: #2e7d32; color: white; position: sticky; top: 0;">
+                                    <th style="padding: 8px; text-align: left; font-size: 0.9em;">Tool</th>
+                                    <th style="padding: 8px; text-align: left; font-size: 0.9em;">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="toolsTableBody">
+                                <tr onclick="selectToolFromGrid('reset')" style="cursor: pointer; border-bottom: 1px solid #eee;">
+                                    <td style="padding: 8px; font-size: 0.85em;">🔄 Reset Table</td>
+                                    <td style="padding: 8px; font-size: 0.85em;">Refresh irrigation data</td>
+                                </tr>
+                                <tr onclick="selectToolFromGrid('create')" style="cursor: pointer; border-bottom: 1px solid #eee;">
+                                    <td style="padding: 8px; font-size: 0.85em;">➕ Create Next</td>
+                                    <td style="padding: 8px; font-size: 0.85em;">Calculate next irrigation</td>
+                                </tr>
+                                <tr onclick="selectToolFromGrid('meter')" style="cursor: pointer; border-bottom: 1px solid #eee;">
+                                    <td style="padding: 8px; font-size: 0.85em;">📊 Read Meter</td>
+                                    <td style="padding: 8px; font-size: 0.85em;">Prepare meter entry</td>
+                                </tr>
+                                <tr onclick="selectToolFromGrid('update')" style="cursor: pointer; border-bottom: 1px solid #eee;">
+                                    <td style="padding: 8px; font-size: 0.85em;">💾 Update Record</td>
+                                    <td style="padding: 8px; font-size: 0.85em;">Save water applied</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Description area -->
+                    <div id="toolDescription" style="padding: 10px; background: #f5f5f5; border-radius: 4px; color: #666; font-style: italic; font-size: 0.85em; margin-bottom: 10px; min-height: 40px;">
+                        Click a tool above to see full description...
+                    </div>
+
+                    <!-- Prompt input -->
+                    <div style="margin-bottom: 10px; display: flex; align-items: center; gap: 10px;">
+                        <label for="promptInput" style="font-weight: 600; color: #333; white-space: nowrap; min-width: fit-content; font-size: 0.95em;">Prompt:</label>
+                        <input 
+                            type="text" 
+                            id="promptInput" 
+                            style="width: 100%; padding: 8px; font-size: 0.95em; border: 2px solid #ddd; border-radius: 6px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;"
+                            placeholder="Select a tool or type your command..."
+                        >
+                        <button class="send-button" onclick="sendPrompt()" style="padding: 8px 20px; font-size: 0.95em;">🚀 Send</button>
+                    </div>
+                </div>
+
+                <div class="details-section">
+                    <h3 style="color: #2e7d32; margin-bottom: 8px; font-size: 1.1em;">💬 Command Log</h3>
+                    
+                    <!-- Chat log area -->
+                    <div id="chatLog" style="
+                        background: #f5f5f5;
+                        border: 2px solid #e0e0e0;
+                        border-radius: 6px;
+                        padding: 8px;
+                        flex: 1;
+                        min-height: 100px;
+                        overflow-y: auto;
+                        margin-bottom: 8px;
+                        font-family: 'Courier New', monospace;
+                        font-size: 1.2em;
+                    ">
+                        <div style="color: #666;">System ready. Send a command to begin...</div>
+                    </div>
+                    
+                    <!-- Prompt and Send on one line -->
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        <input 
+                            type="text" 
+                            id="chatPromptInput" 
+                            placeholder="Type command here..."
+                            style="flex: 1; padding: 8px; border: 2px solid #ddd; border-radius: 6px; font-size: 0.9em;"
+                            onkeypress="if(event.key === 'Enter') sendChatPrompt()"
+                        >
+                        <button 
+                            onclick="sendChatPrompt()" 
+                            style="padding: 8px 16px; background: linear-gradient(135deg, #2e7d32 0%, #4caf50 100%); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; white-space: nowrap; font-size: 0.9em;">
+                            🚀 Send
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid-container">
+                <div class="grid-section">
+                    <div class="record-count">
+                        <h3>📊 Irrigation Records (<span id="recordCount">0</span>) <span class="info-icon" title="Click any row to select">ℹ️</span></h3>
+                    </div>
+                    <div class="data-grid">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Ranch</th>
+                                    <th>Planting</th>
+                                    <th>Date</th>
+                                    <th>RecHours</th>
+                                    <th>Interval</th>
+                                    <th>Mgr Hrs</th>
+                                    <th>Aplied Hrs</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="details-section" style="display: flex; flex-direction: column; height: 100%; overflow: hidden;">
+                    <h3 style="color: #2e7d32; margin-bottom: 8px; font-size: 1.1em;">💧 Selected Field Details</h3>
+                    
+                    <!-- Top row: Date and Interval side by side with CENTERED values -->
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 8px;">
+                        <div class="field-group">
+                            <label style="font-size: 1.05em;">Date:</label>
+                            <input type="text" id="formDate" readonly style="width: 100%; padding: 6px; font-size: 1.1em; text-align: center; background: #f5f5f5;">
+                        </div>
+                        <div class="field-group">
+                            <label style="font-size: 1.05em;">Interval:</label>
+                            <input type="text" id="formInterval" readonly style="width: 100%; padding: 6px; font-size: 1.1em; text-align: center; background: #f5f5f5;">
+                        </div>
+                    </div>
+                    
+                    <!-- CENTER: BIG GREEN RECOMMENDED HOURS BOX -->
+                    <div style="
+                        background: linear-gradient(135deg, #4CAF50 0%, #2E7D32 100%);
+                        color: white;
+                        padding: 15px 10px;
+                        border-radius: 10px;
+                        text-align: center;
+                        margin: 5px auto 10px auto;
+                        box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+                        width: 50%;
+                    ">
+                        <div style="
+                            font-size: 0.85em;
+                            opacity: 0.9;
+                            text-transform: uppercase;
+                            letter-spacing: 1px;
+                            margin-bottom: 8px;
+                        ">Recommended Hours</div>
+                        <div id="formRecommendationBig" style="
+                            font-size: 42px;
+                            font-weight: bold;
+                            line-height: 1;
+                            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+                        ">-</div>
+                        <input type="hidden" id="formRecommendation">
+                    </div>
+                    
+                    <!-- Bottom row: Manager Hours and Water Applied side by side -->
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 8px;">
+                        <div class="field-group">
+                            <label style="font-size: 1.05em; color: #333;">Manager Hours:</label>
+                            <input type="number" id="formManagerHours" step="0.1" style="width: 100%; padding: 8px; font-size: 1.2em; text-align: center; border: 2px solid #ddd; border-radius: 4px;">
+                        </div>
+                        <div class="field-group">
+                            <label style="font-size: 1.05em; color: #333;">Water Applied:</label>
+                            <input type="number" id="formWaterApplied" step="0.1" style="width: 100%; padding: 8px; font-size: 1.2em; text-align: center; border: 2px solid #ddd; border-radius: 4px;">
+                        </div>
+                    </div>
+
+                    <!-- CRUD Buttons - Proper height for easy clicking -->
+                    <div class="crud-buttons" style="display: flex; gap: 4px; margin-top: auto;">
+                        <button class="crud-btn create" onclick="setPromptAndSend('Create next irrigation for the selected field')" style="padding: 12px 8px; font-size: 0.95em; flex: 1; min-height: 42px; font-weight: 600;">
+                            ➕ Create
+                        </button>
+                        <button class="crud-btn reset" onclick="setPromptAndSend('Reset table to show all irrigation records')" style="padding: 12px 8px; font-size: 0.95em; flex: 1; min-height: 42px; font-weight: 600;">
+                            🔄 Reset
+                        </button>
+                        <button class="crud-btn meter" onclick="setPromptAndSend('Read meter for the selected planting')" style="padding: 12px 8px; font-size: 0.95em; flex: 1; min-height: 42px; font-weight: 600;">
+                            📊 Meter
+                        </button>
+                        <button class="crud-btn update" onclick="setPromptAndSend('Update water applied for selected record')" style="padding: 12px 8px; font-size: 0.95em; flex: 1; min-height: 42px; font-weight: 600;">
+                            💾 Update
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+    <!-- @@@@ HTML_TEMPLATE id:water-tools (end) @@@@ -->
+
+    <script>
+        <!-- @@@@ CRUD_FUNCTIONS id:crud-ops @@@@ -->
+        // ========================================
+        // DATA STORAGE
+        // ========================================
+
+        const originalData = [
+            { id: 1, ranch: "1", planting: "1A", hours: 1.3, mgrHours: 1.2, appliedHours: 1.15, interval: "1.5 days", scheduledDate: "10/14/24", irrigationMethod: "Drip", recommendedInches: "0.5", lastUpdatedDate: "10/13/24 14:30", updatedBy: "System", isNew: false, isOriginal: true, isUpdated: false },
+            { id: 2, ranch: "1", planting: "1A", hours: 1.2, mgrHours: 1.1, appliedHours: 1.05, interval: "1.5 days", scheduledDate: "10/16/24", irrigationMethod: "Drip", recommendedInches: "0.5", lastUpdatedDate: "10/15/24 09:15", updatedBy: "System", isNew: false, isOriginal: true, isUpdated: false },
+            { id: 3, ranch: "1", planting: "1A", hours: 1.4, mgrHours: 1.3, appliedHours: 0, interval: "1.5 days", scheduledDate: "10/18/24", irrigationMethod: "Drip", recommendedInches: "0.5", lastUpdatedDate: "10/17/24 11:20", updatedBy: "System", isNew: false, isOriginal: true, isUpdated: false },
+            { id: 4, ranch: "1", planting: "1B", hours: 1.6, mgrHours: 1.4, appliedHours: 0, interval: "1.5 days", scheduledDate: "10/20/24", irrigationMethod: "Drip", recommendedInches: "0.6", lastUpdatedDate: "10/19/24 08:45", updatedBy: "System", isNew: false, isOriginal: true, isUpdated: false },
+            { id: 5, ranch: "1", planting: "1B", hours: 2.1, mgrHours: 2, appliedHours: 1.95, interval: "2 days", scheduledDate: "10/12/24", irrigationMethod: "Sprinkler", recommendedInches: "0.8", lastUpdatedDate: "10/11/24 16:00", updatedBy: "System", isNew: false, isOriginal: true, isUpdated: false },
+            { id: 6, ranch: "1", planting: "1B", hours: 2.2, mgrHours: 2.1, appliedHours: 0, interval: "2 days", scheduledDate: "10/14/24", irrigationMethod: "Sprinkler", recommendedInches: "0.8", lastUpdatedDate: "10/13/24 10:30", updatedBy: "System", isNew: false, isOriginal: true, isUpdated: false },
+            { id: 7, ranch: "2", planting: "2A", hours: 1.8, mgrHours: 1.7, appliedHours: 1.65, interval: "1 days", scheduledDate: "10/15/24", irrigationMethod: "Drip", recommendedInches: "0.6", lastUpdatedDate: "10/14/24 13:20", updatedBy: "System", isNew: false, isOriginal: true, isUpdated: false },
+            { id: 8, ranch: "2", planting: "2A", hours: 1.9, mgrHours: 1.8, appliedHours: 1.75, interval: "1 days", scheduledDate: "10/16/24", irrigationMethod: "Drip", recommendedInches: "0.6", lastUpdatedDate: "10/15/24 14:45", updatedBy: "System", isNew: false, isOriginal: true, isUpdated: false },
+            { id: 9, ranch: "2", planting: "2A", hours: 2, mgrHours: 1.9, appliedHours: 0, interval: "1 days", scheduledDate: "10/17/24", irrigationMethod: "Drip", recommendedInches: "0.6", lastUpdatedDate: "10/16/24 09:00", updatedBy: "System", isNew: false, isOriginal: true, isUpdated: false },
+            { id: 10, ranch: "2", planting: "2B", hours: 1.5, mgrHours: 1.4, appliedHours: 1.35, interval: "2 days", scheduledDate: "10/13/24", irrigationMethod: "Sprinkler", recommendedInches: "0.7", lastUpdatedDate: "10/12/24 15:10", updatedBy: "System", isNew: false, isOriginal: true, isUpdated: false },
+            { id: 11, ranch: "2", planting: "2B", hours: 1.6, mgrHours: 1.5, appliedHours: 0, interval: "2 days", scheduledDate: "10/15/24", irrigationMethod: "Sprinkler", recommendedInches: "0.7", lastUpdatedDate: "10/14/24 12:30", updatedBy: "System", isNew: false, isOriginal: true, isUpdated: false },
+            { id: 12, ranch: "2", planting: "2B", hours: 1.7, mgrHours: 1.6, appliedHours: 0, interval: "2 days", scheduledDate: "10/17/24", irrigationMethod: "Sprinkler", recommendedInches: "0.7", lastUpdatedDate: "10/16/24 11:15", updatedBy: "System", isNew: false, isOriginal: true, isUpdated: false }
+        ];
+
+        let irrigationData = JSON.parse(JSON.stringify(originalData));
+        let displayRecords = [];
+        let selectedRecord = null;
+
+        // ========================================
+        // UTILITY FUNCTIONS
+        // ========================================
+
+        function parseEventDate(dateStr) {
+            const parts = dateStr.split('/');
+            const month = parseInt(parts[0]) - 1;
+            const day = parseInt(parts[1]);
+            const year = parseInt('20' + parts[2]);
+            return new Date(year, month, day);
+        }
+
+        function formatDate(date) {
+            const month = date.getMonth() + 1;
+            const day = date.getDate();
+            const year = String(date.getFullYear()).slice(-2);
+            return `${month}/${day}/${year}`;
+        }
+
+        function showResult(message) {
+            logToChat(message, 'M');
+        }
+
+        // ========================================
+        // MCP — one-click readiness (mcp-engine-4.0, no api-component)
+        // ========================================
+        async function runMcpReadyCheck() {
+            const btn = document.getElementById('mcpReadyBtn');
+            const serverUrl = 'http://localhost:3101';
+            if (btn) {
+                btn.disabled = true;
+                btn.textContent = '… Checking…';
+            }
+            try {
+                if (typeof mcpStagingVerifyRegistry !== 'function') {
+                    showResult('❌ mcp-engine-4.0 not loaded (mcpStagingVerifyRegistry missing).');
+                    return;
+                }
+                const needLogon = !MCP_ENGINE.serverUrl ||
+                    Object.keys(MCP_ENGINE.tools || {}).length === 0;
+                if (needLogon) {
+                    const logon = await mcpEngineLogon(serverUrl);
+                    if (!logon.success) {
+                        showResult(`❌ MCP logon failed\n\n${logon.error || 'unknown'}\n\nIs APIServer3.4 running on ${serverUrl}?`);
+                        return;
+                    }
+                }
+                const v = mcpStagingVerifyRegistry();
+                const lines = [
+                    v.success
+                        ? '✅ All 17 standard tools are in the registry.'
+                        : '⚠️ Registry does not match the standard 17-tool list.',
+                    `Loaded: ${v.count} tool(s): expected ${v.standardCount}.`,
+                    v.missing.length ? `Missing: ${v.missing.join(', ')}` : '',
+                    v.extra.length ? `Extra (not in standard list): ${v.extra.join(', ')}` : '',
+                    `Transport: ${MCP_ENGINE.transport}`
+                ].filter(Boolean);
+                showResult(lines.join('\n\n'));
+                console.log('[MCP] mcpStagingVerifyRegistry', v);
+            } catch (e) {
+                showResult(`❌ MCP ready check error\n\n${e.message}`);
+                console.error(e);
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.textContent = '✅ MCP ready (17 tools)';
+                }
+            }
+        }
+
+        // ========================================
+        // NEW: PROMPT BUTTON HELPER
+        // ========================================
+        
+        function setPromptAndSend(promptText) {
+            document.getElementById('promptInput').value = promptText;
+            sendPrompt();
+        }
+
+        // ========================================
+        // TOOL SELECTION
+        // ========================================
+
+        function selectToolFromGrid(toolName) {
+            const descriptions = {
+                'reset': 'Refresh the Irrigation Table to Original - Reloads all 12 irrigation records and resets any filters\n\nGet back to a clean slate instantly!',
+                'create': 'Create next irrigation for the selected field and calculate water budget - Automatically calculates the next irrigation date based on interval\n\nField workers get instant water budget calculations!',
+                'meter': 'Read water meter for the selected planting and prepare for water applied entry - Selects the most recent record and clears the water applied field for new entry\n\nCapture real usage data on-site where the work happens!',
+                'update': 'After Read Meter has selected the correct irrigation it is READY to enter the water meter hours. Update will store the water applied entry - Saves manager hours and water applied values\n\nChanges saved to working memory!'
+            };
+            
+            const prompts = {
+                'reset': 'Reset table to show all irrigation records',
+                'create': 'Create next irrigation for the selected field and calculate water budget',
+                'meter': 'Read water meter for the selected planting and prepare for water applied entry',
+                'update': 'Update water applied for selected record'
+            };
+            
+            // Highlight selected row
+            const rows = document.querySelectorAll('#toolsTableBody tr');
+            rows.forEach(row => {
+                row.style.background = '';
+            });
+            event.target.closest('tr').style.background = '#C8E6C9';
+            
+            // Show description
+            const descDiv = document.getElementById('toolDescription');
+            descDiv.style.whiteSpace = 'pre-line'; // Respect \n line breaks
+            descDiv.textContent = descriptions[toolName] || '';
+            
+            // Set prompt text
+            document.getElementById('promptInput').value = prompts[toolName] || '';
+        }
+
+        // ========================================
+        // SEND PROMPT (MAIN ROUTER)
+        // ========================================
+
+        function sendPrompt() {
+            const promptInput = document.getElementById('promptInput');
+            const prompt = promptInput.value.trim().toLowerCase();
+            
+            if (!prompt) {
+                showResult('❌ Please enter a prompt or select from dropdown');
+                return;
+            }
+            
+            // Log to chat with P code
+            logToChat(promptInput.value.trim(), 'P');
+            
+            // Route based on prompt keywords
+            if (prompt.includes('reset') || prompt.includes('refresh') || prompt.includes('show all')) {
+                resetTable();
+            }
+            else if (prompt.includes('create') && prompt.includes('next')) {
+                testCreateNext();
+            }
+            else if (prompt.includes('read') && prompt.includes('meter')) {
+                testReadMeter();
+            }
+            else if (prompt.includes('update')) {
+                updateRecord();
+            }
+            else {
+                showResult('❌ Unknown command. Try: reset, create next, read meter, or update');
+            }
+        }
+        
+        function sendChatPrompt() {
+            const chatInput = document.getElementById('chatPromptInput');
+            const prompt = chatInput.value.trim();
+            
+            if (!prompt) return;
+            
+            // Copy to main prompt input and send
+            document.getElementById('promptInput').value = prompt;
+            chatInput.value = '';
+            sendPrompt();
+        }
+        
+        function logToChat(message, type = 'P') {
+            const chatLog = document.getElementById('chatLog');
+            const timestamp = new Date().toLocaleTimeString();
+            
+            const entry = document.createElement('div');
+            entry.style.marginBottom = '8px';
+            entry.style.padding = '8px';
+            entry.style.background = 'white';
+            entry.style.borderRadius = '4px';
+            entry.style.borderLeft = '3px solid ' + (type === 'P' ? '#4caf50' : '#2196F3');
+            entry.style.cursor = 'pointer';
+            
+            const label = type === 'P' ? 'Prompt:' : 'Message:';
+            
+            // Create header with label on left, time on right
+            const header = document.createElement('div');
+            header.style.display = 'flex';
+            header.style.justifyContent = 'space-between';
+            header.style.marginBottom = '4px';
+            header.innerHTML = 
+                '<strong style="color: ' + (type === 'P' ? '#2e7d32' : '#1976D2') + ';">' + label + '</strong>' +
+                '<span style="color: #666; font-size: 0.85em;">' + timestamp + '</span>';
+            
+            // Create content area
+            const content = document.createElement('div');
+            content.style.color = '#333';
+            content.style.fontSize = '0.9em';
+            
+            if (type === 'P') {
+                // For prompts, show the text inline
+                content.textContent = message;
+                
+                // Click to put back in prompt field
+                entry.onclick = function() {
+                    document.getElementById('chatPromptInput').value = message;
+                    document.getElementById('chatPromptInput').focus();
+                };
+            } else {
+                // For messages, show truncated with click to expand
+                const preview = message.length > 60 ? message.substring(0, 60) + '...' : message;
+                content.textContent = preview;
+                
+                // Click to show full message in popup
+                entry.onclick = function() {
+                    const popup = document.createElement('div');
+                    popup.style.position = 'fixed';
+                    popup.style.top = '50%';
+                    popup.style.left = '50%';
+                    popup.style.transform = 'translate(-50%, -50%)';
+                    popup.style.background = 'white';
+                    popup.style.border = '3px solid #2196F3';
+                    popup.style.borderRadius = '8px';
+                    popup.style.padding = '20px';
+                    popup.style.maxWidth = '500px';
+                    popup.style.maxHeight = '400px';
+                    popup.style.overflow = 'visible';
+                    popup.style.zIndex = '10000';
+                    popup.style.boxShadow = '0 10px 40px rgba(0,0,0,0.3)';
+                    
+                    popup.innerHTML = 
+                        '<div style="display: flex; justify-content: space-between; margin-bottom: 15px; border-bottom: 2px solid #2196F3; padding-bottom: 10px; align-items: center;">' +
+                        '<strong style="color: #1976D2; font-size: 1.1em;">Message</strong>' +
+                        '<button onclick="this.parentElement.parentElement.remove()" style="padding: 4px 12px; background: #f44336; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600;">✕ Close</button>' +
+                        '</div>' +
+                        '<div style="color: #666; margin-bottom: 10px;">' + timestamp + '</div>' +
+                        '<div style="text-align: left; white-space: pre-line; line-height: 1.6; color: #333; max-height: 300px; overflow-y: auto;">' + message + '</div>';
+                    
+                    document.body.appendChild(popup);
+                };
+            }
+            
+            entry.appendChild(header);
+            entry.appendChild(content);
+            chatLog.appendChild(entry);
+            chatLog.scrollTop = chatLog.scrollHeight; // Auto-scroll to bottom
+        }
+
+        // ========================================
+        // NEW: RESET TABLE FUNCTION
+        // ========================================
+
+        function resetTable() {
+            // Reset to original data
+            irrigationData = JSON.parse(JSON.stringify(originalData));
+            displayRecords = JSON.parse(JSON.stringify(irrigationData));
+            selectedRecord = null;
+            
+            renderTable();
+            
+            showResult(`✅ Table Reset Complete
+
+Loaded: ${displayRecords.length} original irrigation records
+All data refreshed to initial state
+Ready for new operations`);
+        }
+
+        // ========================================
+        // READ (LOAD TABLE)
+        // ========================================
+
+        function read() {
+            displayRecords = JSON.parse(JSON.stringify(irrigationData));
+            renderTable();
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+            
+            displayRecords.forEach(record => {
+                const row = tbody.insertRow();
+                row.dataset.recordId = record.id;
+                row.onclick = () => selectRecord(record.id);
+                
+                row.insertCell(0).textContent = record.ranch;
+                row.insertCell(1).textContent = record.planting;
+                row.insertCell(2).textContent = record.scheduledDate;
+                row.insertCell(3).textContent = record.hours;
+                row.insertCell(4).textContent = record.interval;
+                row.insertCell(5).textContent = record.mgrHours;
+                row.insertCell(6).textContent = record.appliedHours;
+            });
+            
+            // Update record count
+            document.getElementById('recordCount').textContent = displayRecords.length;
+            
+            // Auto-select first record
+            if (displayRecords.length > 0 && !selectedRecord) {
+                selectRecord(displayRecords[0].id);
+            }
+        }
+
+        function selectRecord(recordId) {
+            selectedRecord = displayRecords.find(r => r.id === recordId);
+            
+            if (!selectedRecord) return;
+            
+            // Highlight row
+            document.querySelectorAll('#tableBody tr').forEach(row => {
+                if (parseInt(row.dataset.recordId) === recordId) {
+                    row.classList.add('selected');
+                    // Scroll selected row into view
+                    row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                } else {
+                    row.classList.remove('selected');
+                }
+            });
+            
+            // Populate form
+            document.getElementById('formDate').value = selectedRecord.scheduledDate;
+            document.getElementById('formInterval').value = selectedRecord.interval + ' days';
+            document.getElementById('formRecommendation').value = selectedRecord.hours;
+            // Update the big green display
+            const bigDisplay = document.getElementById('formRecommendationBig');
+            if (bigDisplay) {
+                bigDisplay.textContent = selectedRecord.hours || '-';
+            }
+            document.getElementById('formManagerHours').value = selectedRecord.mgrHours;
+            document.getElementById('formWaterApplied').value = selectedRecord.appliedHours;
+        }
+
+        // ========================================
+        // CREATE NEXT IRRIGATION (CORE TOOL #1)
+        // ========================================
+
+        function testCreateNext() {
+            if (!selectedRecord) {
+                showResult('ERROR: No record selected. Click a row first.');
+                return;
+            }
+            
+            // Find all records for this ranch/planting
+            const sameFieldRecords = displayRecords.filter(r => 
+                r.ranch === selectedRecord.ranch && 
+                r.planting === selectedRecord.planting
+            );
+            
+            // Sort by date to get most recent
+            sameFieldRecords.sort((a, b) => {
+                const dateA = parseEventDate(a.scheduledDate);
+                const dateB = parseEventDate(b.scheduledDate);
+                return dateA - dateB;
+            });
+            
+            const lastRecord = sameFieldRecords[sameFieldRecords.length - 1];
+            
+            // Calculate next date
+            const currentDate = parseEventDate(lastRecord.scheduledDate);
+            const nextDate = new Date(currentDate);
+            const intervalDays = parseFloat(lastRecord.interval) || 1;
+            const roundedInterval = Math.round(intervalDays);
+            
+            nextDate.setDate(nextDate.getDate() + roundedInterval);
+            const nextDateStr = formatDate(nextDate);
+            
+            // Calculate new hours
+            const tinyAdjust = (Math.random() * 0.2 + 0.1);
+            const newRecHours = Math.max(0.1, parseFloat((lastRecord.hours + tinyAdjust).toFixed(1)));
+            const newMgrHours = parseFloat((lastRecord.mgrHours + 0.1).toFixed(1));
+            
+            // Create new record with next integer ID
+            const maxId = Math.max(...displayRecords.map(r => r.id));
+            
+            const newRecord = {
+                id: maxId + 1,
+                ranch: lastRecord.ranch,
+                planting: lastRecord.planting,
+                hours: newRecHours,
+                mgrHours: newMgrHours,
+                appliedHours: 0,
+                interval: lastRecord.interval,
+                scheduledDate: nextDateStr,
+                irrigationMethod: lastRecord.irrigationMethod,
+                recommendedInches: lastRecord.recommendedInches,
+                lastUpdatedDate: new Date().toLocaleString(),
+                updatedBy: "CropClient System",
+                isNew: true,
+                isOriginal: false,
+                isUpdated: false
+            };
+            
+            displayRecords.push(newRecord);
+            
+            // Save the new record ID before sorting
+            const newRecordId = newRecord.id;
+            
+            // Sort by ranch → planting → date (ascending)
+            displayRecords.sort((a, b) => {
+                if (a.ranch < b.ranch) return -1;
+                if (a.ranch > b.ranch) return 1;
+                if (a.planting < b.planting) return -1;
+                if (a.planting > b.planting) return 1;
+                const dateA = parseEventDate(a.scheduledDate);
+                const dateB = parseEventDate(b.scheduledDate);
+                return dateA - dateB;
+            });
+            
+            renderTable();
+            selectRecord(newRecordId);
+            
+            showResult(`✅ MCP TOOL #1: Created Next Irrigation
+            
+Ranch: ${newRecord.ranch}
+Planting: ${newRecord.planting}
+Previous Date: ${lastRecord.scheduledDate}
+Interval: ${roundedInterval} days
+Next Date: ${nextDateStr}
+Water Budget: ${newRecHours} hours
+Manager Hours: ${newMgrHours}
+
+Field workers get instant water budget calculations!`);
+        }
+
+        // ========================================
+        // READ METER (CORE TOOL #2)
+        // ========================================
+
+        function testReadMeter() {
+            if (!selectedRecord) {
+                showResult('ERROR: No record selected. Click a row first.');
+                return;
+            }
+            
+            // Use selected record's ranch and planting
+            const targetRanch = selectedRecord.ranch;
+            const targetPlanting = selectedRecord.planting;
+            
+            // Find all records for this ranch/planting
+            const matchingRecords = displayRecords.filter(r => 
+                r.ranch === targetRanch && 
+                r.planting === targetPlanting
+            );
+            
+            if (matchingRecords.length === 0) {
+                showResult(`❌ No records found for ${targetRanch} ${targetPlanting}`);
+                return;
+            }
+            
+            // Sort by date to get most recent (last)
+            matchingRecords.sort((a, b) => {
+                const dateA = parseEventDate(a.scheduledDate);
+                const dateB = parseEventDate(b.scheduledDate);
+                return dateA - dateB;
+            });
+            
+            const lastRecord = matchingRecords[matchingRecords.length - 1];
+            
+            // Select this record in the grid
+            selectRecord(lastRecord.id);
+            
+            // Clear Water Applied field for meter reading entry
+            document.getElementById('formWaterApplied').value = '';
+            document.getElementById('formWaterApplied').focus();
+            
+            showResult(`✅ MCP TOOL #2: Ready for Meter Reading
+
+Ranch: ${lastRecord.ranch}
+Planting: ${lastRecord.planting}
+Date: ${lastRecord.scheduledDate}
+Current Water Applied: ${lastRecord.appliedHours}
+
+→ Enter actual meter reading in Water Applied field
+
+Capture real usage data on-site where the work happens!`);
+        }
+
+        // ========================================
+        // UPDATE RECORD (SAVE CHANGES)
+        // ========================================
+
+        function updateRecord() {
+            if (!selectedRecord) {
+                showResult('ERROR: No record selected. Click a row first.');
+                return;
+            }
+            
+            // Get values from form
+            const newManagerHours = parseFloat(document.getElementById('formManagerHours').value);
+            const newWaterApplied = parseFloat(document.getElementById('formWaterApplied').value);
+            
+            // Validate inputs
+            if (isNaN(newManagerHours) || isNaN(newWaterApplied)) {
+                showResult('ERROR: Please enter valid numbers for Manager Hours and Water Applied.');
+                return;
+            }
+            
+            // Find the record in displayRecords and update it
+            const recordToUpdate = displayRecords.find(r => r.id === selectedRecord.id);
+            
+            if (recordToUpdate) {
+                recordToUpdate.mgrHours = newManagerHours;
+                recordToUpdate.appliedHours = newWaterApplied;
+                recordToUpdate.lastUpdatedDate = new Date().toLocaleString();
+                recordToUpdate.updatedBy = "Field Worker";
+                recordToUpdate.isUpdated = true;
+               
+                
+                // Re-render table and re-select
+                renderTable();
+                selectRecord(selectedRecord.id);
+                
+                showResult(`✅ Record Updated Successfully
+
+Ranch: ${recordToUpdate.ranch}
+Planting: ${recordToUpdate.planting}
+Date: ${recordToUpdate.scheduledDate}
+Manager Hours: ${newManagerHours}
+Water Applied: ${newWaterApplied}
+
+Changes saved to working memory!`);
+            }
+        }
+
+        // ========================================
+        // INITIALIZATION — mcp-engine-4.0 bare path (APIServer3.4 HTTP bridge)
+        // @@@@ INITIALIZATION id:onload @@@@
+
+        window.onload = async function() {
+            const serverUrl = 'http://localhost:3101';
+            try {
+                const logon = await mcpEngineLogon(serverUrl);
+                if (!logon.success) {
+                    throw new Error(logon.error || 'mcpEngineLogon failed');
+                }
+                const dataResult = await mcpEngineSend('data_operation', {
+                    action: 'read',
+                    table: 'steve'
+                });
+                if (dataResult.success && Array.isArray(dataResult.data)) {
+                    irrigationData = dataResult.data;
+                    displayRecords = JSON.parse(JSON.stringify(irrigationData));
+                    read();
+                    showResult(
+                        `✅ Water Tools + MCP Engine 4.0 (${logon.transport || MCP_ENGINE.transport})\n\n` +
+                        `${irrigationData.length} records from data_operation read (steve).\nSelect a record and try the prompts.`
+                    );
+                    return;
+                }
+                throw new Error(dataResult.error || 'data_operation did not return data array');
+            } catch (err) {
+                console.warn('[Water Tools] MCP path failed, using direct JSON fallback:', err);
+            }
+
+            try {
+                let jsonData;
+                try {
+                    const response = await fetch(serverUrl + '/data/steve.json');
+                    if (response.ok) jsonData = await response.json();
+                } catch (e) {
+                    const response = await fetch('https://api.cropclient.com/data/steve.json');
+                    if (response.ok) jsonData = await response.json();
+                }
+                if (jsonData) {
+                    irrigationData = jsonData;
+                    displayRecords = JSON.parse(JSON.stringify(irrigationData));
+                }
+                read();
+                showResult(
+                    `✅ CropClient Water Tools Loaded (fallback fetch)\n\n${irrigationData.length} irrigation records ready.\nSelect a record and try the prompts.`
+                );
+            } catch (error) {
+                console.error('Error:', error);
+                read();
+                showResult(`⚠️ Demo data loaded\n\n12 sample records ready.`);
+            }
+        };
+    </script>
+</body>
+</html>

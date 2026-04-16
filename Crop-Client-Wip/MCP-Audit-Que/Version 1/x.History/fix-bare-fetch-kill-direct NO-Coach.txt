@@ -1,0 +1,34 @@
+# TASK: Fix bare fetch and kill direct fallback
+# Version 1 — Crop-Client-MCP-Audit-Que-1.2.html
+# Date: 2026-03-29
+
+## PROBLEM
+1. Client-side bare fetch() calls to api.dev.cropmanage.ucanr.edu = CORS death from file://
+2. When MCP fails or returns 0, code falls through to "direct" mode = same CORS death
+
+## FIX
+1. Every fetch to CropManage → mcpEngineSend (integrated pair)
+2. Every "direct fallback" → removed. Fail = fail. No URL change. No mode change.
+
+## CHECKLIST
+[x] getToken — bare fetch → mcpEngineSend('get_token', {username, password})
+[x] getRanches — bare fetch → mcpEngineSend('get_ranches', {})
+[x] getRanches — offline fallback → REMOVED
+[x] getPlantingsByRanch — bare fetch → mcpEngineSend('get_plantings', {ranchGuid})
+[x] getPlantingsByRanch — offline fallback → REMOVED
+[x] loadAllPlantings — offline branch → REMOVED (skips)
+[x] getIrrigationEventsByPlanting — bare fetch → mcpEngineSend('get_irrigation_details', {plantingId})
+[x] getIrrigationEventsByPlanting — direct fallback → REMOVED
+[x] fetchAllRecommendations — bare fetch loop → mcpEngineSend per planting group
+[x] getIndividualEvent — bare fetch → lookup displayRecords locally
+[x] postIrrigationToCropManage — bare fetch POST → mcpEngineSend('post_new_irrigation', {...})
+[x] updateRecordToCropManage — bare fetch PUT → mcpEngineSend('update_irrigation', {...})
+[x] Scenario 1 (ALL/ALL) — bare fetch loops → mcpEngineSend loops
+[x] Scenario 2 (Ranch/ALL) — bare fetch loops → mcpEngineSend loops
+[x] extractData — added resp.displayRecords as first check
+[x] MCP path loads displayRecords directly into renderTable (no format mismatch)
+
+## TEST
+[ ] Refresh page — onload chain: token ✅ ranches ✅ plantings ✅
+[ ] Pick single planting → Refresh Selected Irrigations → bottom grid populates
+[ ] Offline dropdown → app loads with 12 JSON records, no errors

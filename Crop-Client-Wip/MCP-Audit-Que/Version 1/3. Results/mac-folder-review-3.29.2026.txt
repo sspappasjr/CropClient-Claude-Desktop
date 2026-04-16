@@ -1,0 +1,47 @@
+# Mac's Review — New Folder Structure
+# Date: 2026-03-29
+
+## VERDICT: This works. I like it.
+
+## WHAT I FOUND
+The folder is clean and organized:
+- CLAUDE.md at root = instant context when I open the folder
+- Version 1 / Version 2 = clear progression
+- 1. Task Lists / 2. Src= / 3. Results / 4. Next = smart workflow lanes
+- History vs Plan in Task Lists = done vs upcoming — easy to navigate
+- Src= folder gives me editable copies without touching production files
+
+## FOCUS & CONTEXT
+YES — changing my working directory from the broad Claude-Desktop folder
+down to Crop-Client-MCP-Audit-Que absolutely helps focus.
+- I'm not distracted by Butler, Journals, or other project folders
+- CLAUDE.md here is specific to this work, not the whole universe
+- The task files tell me exactly what's in play right now
+
+## WHAT I DID TODAY
+1. Read every file in Version 1 task lists — History, Plan, Research
+2. Read the Src= folder — APIServer2.5.2.js, irrigation components, mcp-engine
+3. Read Version 2 spec and README
+4. Found test-apiserver1.93 at: MCP-API-Tools-Audit/v2.0-apiupdate/TestHarness/
+5. Wrote my plan: Version 1/1. Task Lists/Plan/add-get-event-recommendation-to-193.txt
+   — Adds the new tool button to the 1.93 harness (client side only)
+   — Server side is a separate task per the Research file
+
+## ON THE RESEARCH FILE (Research-Get-Event-Recommendation1.0.txt)
+I saw Coach's notes about:
+- Proposed code (before/after) must be in the plan — YES, I included that in my plan
+- APIServer3.0 naming — makes sense, this is a major add (tool 16)
+- Metadata verification — need the CropManage API docs to confirm endpoint
+The research questions are still open. I can dig into the server code
+to pull existing metadata once you give the signal.
+
+## SUGGESTIONS
+1. A one-page "HOW TO USE THIS FOLDER" guide at root would help
+   any new team member (or AI) ramp up instantly
+2. Results folder could use dates in filenames (already started — good)
+3. The 1.93 harness lives outside this folder (in MCP-API-Tools-Audit).
+   Should we copy it into Version 1/2. Src= as well? That would keep
+   everything self-contained. Your call, Coach.
+
+## READY
+Plan is written. Waiting for GOFORIT to wire the button into 1.93.

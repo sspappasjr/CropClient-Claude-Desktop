@@ -1,0 +1,41 @@
+# PLAN: mcp-engine DEFAULT_MODE = local + CC_STATE wiring
+# Date: 2026-04-06
+# Author: George (Claude 4.6)
+# Status: APPROVED — waiting for GOFORIT on code
+
+## TASKS
+
+1. mcp-engine-3.0.js — add DEFAULT_MODE = 'local' at top
+
+2. mcp-engine-3.0.js — replace mcpEngineURL const map:
+   ADD  offline: null        (explicit — no server, no hiding)
+   KILL production           (dead code — never in dropdown)
+
+   const mcpServers = {
+       local:   'http://localhost:3101',
+       online:  'https://api.cropclient.com',
+       offline: null
+   };
+
+3. mcp-engine-3.0.js — onload:
+   engine sets its own variables from const map first:
+       mcpMode      = DEFAULT_MODE
+       mcpServerUrl = mcpServers[DEFAULT_MODE]
+   then sets CC_STATE from those mcp variables:
+       CC_STATE.mode      = mcpMode
+       CC_STATE.serverUrl = mcpServerUrl
+
+4. mcp-engine-3.0.js — listener (dropdown change):
+   same as onload — engine reads const map → sets own variables → sets CC_STATE
+
+5. APIServer3.0.js — remove 'gold token' comment line from header
+
+6. CLAUDE.md — updated (done this session)
+
+## OWNERSHIP RULE
+mcp-engine owns: DEFAULT_MODE, mcpServers, mcpMode, mcpServerUrl
+mcp-engine sets: CC_STATE.mode, CC_STATE.serverUrl
+API reads:       CC_STATE only — never calls engine directly
+
+## WHEN MOVED TO x.History
+Rename to: DONE-mcp-engine-default-local-set-cc-state-4.6.2026.txt

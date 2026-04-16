@@ -1,0 +1,180 @@
+# PLAN: Add get_event_recommendation Tool — APIServer3.0
+# Status: READY FOR TEAM REVIEW
+# Date: 2026-03-30
+# Demo: Tuesday 2pm with Tetsudo (CropManage API author)
+# Reviewers: Coach, Mac, Lilly, George
+
+## SUMMARY
+Register fetchEventRecommendation as a proper MCP tool (get_event_recommendation)
+instead of a bare makeRequest function. APIServer bumps to 3.0 — major change.
+
+## FILES AFFECTED
+
+| File | Location | Action |
+|------|----------|--------|
+| APIServer3.0.js | New file in 2. Src= | CREATE from APIServer2.5.js + changes below |
+| api-component.js | crop-client-services/api-server/ | ADD tool #8 to metadata (future deploy) |
+| test-apiserver1.93.html | Crop-Client-Wip/Test-ApiServer/ | ADD button (Mac's task) |
+
+## SOURCE OF TRUTH — EXISTING METADATA
+File: C:\AICode\crop-client-services\api-server\api-component.js
+Current tools registered (7):
+  1. get_token
+  2. get_ranches
+  3. get_plantings
+  4. get_irrigation_details
+  5. post_irrigation
+  6. update_irrigation
+  7. batch_post_queue
+
+## CROPMANAGE API SCRIPT (verified working — used by existing bare code)
+- Endpoint: GET https://api.dev.cropmanage.ucanr.edu/v2/irrigation-events/{eventId}.json
+- Method: GET
+- Headers: Authorization: Bearer {token}
+- Params: eventId (integer, CropManage event ID)
+- Response: Full event JSON with RecommendationSummary, hours, inches, interval
+
+=========================================================================
+## CHANGE 1 OF 2: Replace fetchEventRecommendation function
+=========================================================================
+
+### FROM (current bare code in APIServer2.5.js and api-component2.0.js):
+
+```javascript
+// Fetch full recommendation for a single event by ID
+async function fetchEventRecommendation(eventId) {
+    const options = {
+        hostname: API_BASE_URL,
+        path: `/${API_VERSION}/irrigation-events/${eventId}.json`,
+        method: 'GET',
+        headers: { 'Authorization': `Bearer ${apiToken}` }
+    };
+    try {
+        const response = await makeRequest(options);
+        if (response.statusCode === 200) return response.data;
+    } catch (error) {
+        console.error(`Error fetching event ${eventId}:`, error.message);
+    }
+    return null;
+}
+```
+
+### TO (calls through MCP tool registry):
+
+```javascript
+// Fetch full recommendation for a single event by ID
+// Calls through MCP tool registry — no bare makeRequest
+async function fetchEventRecommendation(eventId) {
+    if (!apiToken || !eventId) return null;
+    const tool = server.tools.get('get_event_recommendation');
+    if (!tool) return null;
+    const result = await tool.handler({ eventId: String(eventId) });
+    return result.success ? result.event : null;
+}
+```
+
+### WHY
+- FROM: bare makeRequest with hardcoded API_BASE_URL — same pattern as client bare fetch
+- TO: calls through registered MCP tool — consistent with how every other call should work
+- The CropManage API script (hostname, path, method, headers) moves INTO the tool handler
+- fetchEventRecommendation becomes a thin wrapper that calls the tool
+
+=========================================================================
+## CHANGE 2 OF 2: Add get_event_recommendation to apiServiceTools
+=========================================================================
+
+### FROM (current — tool does not exist):
+batch_post_queue is the last tool in the array. No get_event_recommendation.
+
+### TO (add after batch_post_queue, before closing ]):
+
+```javascript
+    {
+        name: "get_event_recommendation",
+        description: "Fetch full recommendation for a single irrigation event by event ID. Returns enriched event data with RecommendationSummary.",
+        inputSchema: {
+            type: "object",
+            properties: {
+                eventId: {
+                    type: "string",
+                    description: "CropManage irrigation event ID"
+                }
+            },
+            required: ["eventId"]
+        },
+        handler: async (args) => {
+            if (!apiToken) return { success: false, message: 'No token available' };
+            if (!args.eventId) return { success: false, message: 'eventId required' };
+            const options = {
+                hostname: API_BASE_URL,
+                path: `/${API_VERSION}/irrigation-events/${args.eventId}.json`,
+                method: 'GET',
+                headers: { 'Authorization': `Bearer ${apiToken}` }
+            };
+            try {
+                const response = await makeRequest(options);
+                if (response.statusCode === 200) {
+                    return { success: true, event: response.data };
+                }
+                return { success: false, message: `Event fetch failed: ${response.statusCode}` };
+            } catch (error) {
+                return { success: false, message: error.message };
+            }
+        }
+    }
+```
+
+### WHY
+- CropManage API script (hostname, path, method, headers) lives inside the tool handler
+- Same metadata format as all other tools: name, description, inputSchema, handler
+- makeRequest stays in ONE place — inside the registered tool
+- Tool is callable by name through server.tools.get() — MCP pattern
+- Exposed at /tools/get_event_recommendation endpoint automatically
+
+=========================================================================
+## WHAT DOES NOT CHANGE
+=========================================================================
+- loadIntoDisplayRecords — still calls fetchEventRecommendation() same as before
+- get_irrigation_details — still calls loadIntoDisplayRecords() same as before
+- All other tools — unchanged
+- makeRequest function — unchanged (it's the transport layer)
+- JSON file services — unchanged
+
+## CALL CHAIN AFTER FIX
+```
+Client: mcpEngineSend('get_irrigation_details', {plantingId})
+  → Server: get_irrigation_details tool handler
+    → loadIntoDisplayRecords(plantingId)
+      → getIrrigationDetails(plantingId) — gets base events
+      → FOR EACH event:
+          fetchEventRecommendation(event.Id)
+            → server.tools.get('get_event_recommendation')  ← NEW
+              → handler: makeRequest to CropManage
+              → returns { success: true, event: data }
+            → returns event data
+      → transformToDisplayRecords(enrichedEvents)
+    → returns { displayRecords, count }
+  → returns to client
+Client: displayRecords → renderTable()
+```
+
+## VERSION BUMP
+- APIServer2.5.js → APIServer3.0.js
+- Header comment: v3.0
+- serverInfo version: '3.0'
+- console.log: v3.0
+- ping endpoint: v3.0
+- Tool count: 16 (9 API + 7 JSON)
+
+## TEST PLAN
+1. Offline — load client, dropdown Offline, 12 JSON records, no errors
+2. Local — node APIServer3.0.js, dropdown Local, get token → ranches → planting → refresh
+3. Verify console shows get_event_recommendation tool calls per event
+4. Bottom grid populates with enriched displayRecords
+5. Online — deploy to api.cropclient.com when local passes
+
+## DEMO PREP (Tuesday 2pm — Tetsudo)
+- Show the MCP tool registry with all 16 tools including get_event_recommendation
+- Show the call chain: client → server → CropManage → server → client
+- Show displayRecords populating the grid with live data
+- Show the integrated pair: mcpEngineSend ↔ makeRequest
