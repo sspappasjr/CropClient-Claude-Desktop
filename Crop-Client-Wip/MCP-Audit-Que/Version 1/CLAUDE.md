@@ -1,74 +1,68 @@
-# MCP-Audit-Que Version 1 and Water Tools
-# Updated: 2026-04-13
+# MCP-Audit-Que Version 1 — CLAUDE.md
+# Updated: 2026-04-14
 
-## ✅ Completed:
-- Audit Que and Water Tools both updated to mcp-engine-4.0.js
-- api-component-3.4.1.js live with IF/ELSE MCP vs direct API pattern
-- APIServer3.4.1.js running on port 3101
-- Local mode works: onload, token, ranch, planting, get-irrigations, post, update
-- Water Tools onload: steve.json populates grid
-- CRUD works in both apps
+## STATUS: v4.0 Complete MCP Server — RELEASED
+
+All files versioned as matched set. Committed and pushed to GitHub main.
 
 ---
 
-## 📁 Active src= Files (Version 1 / 2. Src=)
-- mcp-engine-4.0.js          — generic MCP transport, mcpStaging(), mcpEngineSend()
-- irrigation-component-3.0.js —create 4.0 version  local in-browser CRUD dispatcher (irrigationHarnessDispatch use mcp engine names)
-- api-component-3.4.1.js     — CropManage API tools (MCP or direct per mode)
-- APIServer3.4.1.js           — Node server on port 3101
+## Active src= Files (Version 1 / 2. Src=)
 
-## 📄 Active HTML Files (Version 1)
-- Crop-Client-MCP-Audit-Que.3.4with3src.html  — Audit Que app
-- CropClient-MCP-Water-Tools-Demo-V1-3src.html — Water Tools app
+| File | Role |
+|------|------|
+| `mcp-engine-4.0.js` | MCP transport — mcpEngineCallTool, mcpEngineRegisterTool, mcpStaging |
+| `irrigation-component-4.0.js` | 7 local CRUD tools — registers into mcp-engine on load |
+| `api-component-4.0.js` | CropManage API tools (token, ranches, plantings, post, update) |
+| `APIServer4.0.js` | Node server — port 3101, 22 tools (API:10, JSON:7, Irrigation:5) |
+| `json-component-4.0.js` | Source reference only — NOT required by server (backup/docs) |
 
----
+## Active HTML Files (Version 1)
 
-## 🔧 CURRENT PLAN — 5 Tasks (see PLAN-Water-Tools-3src-Modular.md for detail)
-
-1. Water Tools — Save button (writes to JSON + sets lastSavedSnapshot)
-2. Water Tools — Restore button (reads from JSON → displayRecords → renderTable)
-3. Water Tools — Reset button (restores from lastSavedSnapshot in-memory, no file read)
-4. Audit Que   — All Ranches / All Plantings click: token not handled, needs same path as Refresh button
-5. Audit Que   — All click in ranch/planting grid only fires on change, not loading all records unconditionally
+| File | Purpose |
+|------|---------|
+| `Crop-Client-MCP-Audit-Que-4.0.html` | Audit Que app |
+| `CropClient-MCP-Water-Tools-Demo-4.0.html` | Water Tools demo |
 
 ---
 
-## ⏭️ NEXT PLAN — irrigation-component proper install (do NOT mix with current plan)
+## Architecture
 
-Separate planning session required before any work begins.
+- **mcp-engine** is the single entry point — `mcpEngineCallTool(toolName, params)`
+- **Routing**: server tools → mcpStaging (network); irrigation CRUD → local handler
+- **Registration**: irrigation-component registers its 7 tools into mcp-engine on load
+- **APIServer** also has all 22 tools registered server-side for online mode
+- **The chain**: CRUD modifies JSON grid → marks status:-1 → AI reviews → post pushes to API
 
-### What was discovered:
-- irrigation-component-3.0.js is loaded via src= in both apps but its CRUD
-  functions are not being called — both apps have their own duplicate local CRUD.
-- irrigationHarnessDispatch() = component's local in-browser tool router (no network)
-  Different from mcpStaging() which routes to APIServer (network).
-- Name "irrigationHarnessDispatch" is confusing — sounds like test scaffolding.
-  Rename decision needed before wiring work begins.
-- Two dispatchers, two worlds (two-world rule):
-    mcpStaging()                → mcp-engine → APIServer (server tools, network)
-    irrigationHarnessDispatch() → irrigation-component → in-memory CRUD (browser)
-- irrigation-component will be updated to 3.4 to match mcp-engine versioning pattern
-  so the two are clearly paired and meant for each other.
+## Tool Counts
 
-### Plan items for NEXT session:
-1. Decide rename for irrigationHarnessDispatch
-2. Update irrigation-component to v3.4
-3. Map every duplicate local function vs component equivalent in both apps
-4. Wire CRUD buttons → component dispatcher
-5. Comment out (never delete) local duplicates with explanation
-6. Add lastSavedSnapshot pattern into component save handler
-7. Verify no double-rendering or conflicts
-
-### Rule: never delete working code — comment out dups with explanation of why.
+- API tools: 10
+- JSON tools: 7
+- Irrigation tools: 5
+- **Total: 22**
 
 ---
 
-## 📋 Session Notes — 2026-04-13
-- Read all 4 active src= files and both HTML apps in full
-- Confirmed Audit Que: All Ranches/Plantings click only fires on change (not unconditional load)
-- Confirmed Audit Que: token not passed through to get_irrigation_details on All click
-- Confirmed Refresh button works correctly — All click needs same token path
-- Confirmed Water Tools: no Save/Restore buttons exist yet
-- Confirmed Water Tools: Reset goes back to hardcoded originalData (wrong — needs snapshot)
-- Decision: irrigation-component wiring is a separate NEXT plan
-- No code changed this session — planning only
+## Load Order (HTML src=)
+
+1. `mcp-engine-4.0.js` — must load first
+2. `irrigation-component-4.0.js` — registers into mcp-engine
+3. `api-component-4.0.js` — CropManage API tools
+
+---
+
+## Rules
+
+- All 4.0 files are a matched set — version together
+- One change at a time — no code without Steve approval
+- irrigation CRUD is JSON-only (in-browser grid, not server)
+- json-component-4.0.js is source backup — do NOT add require() to server
+
+---
+
+## History
+
+Old versions archived in `2. Src=/History/`:
+- APIServer3.3.js, 3.4.1.js, 3.4.2.js
+- api-component-3.4.js, 3.4.1.js, 3.4.2.js
+- irrigation-component-3.0.js

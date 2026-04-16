@@ -78,10 +78,11 @@ function mcpEngineHarnessOffline() {
 }
 
 // ========================================
-// MCP_STAGING — canonical 17 tools (APIServer3.4: apiServiceTools + jsonFileTools)
-// Keep in sync with 2. Src=/APIServer3.4.js registry order / names.
+// MCP_STAGING — canonical 22 tools (APIServer4.0: apiServiceTools + jsonFileTools + irrigationTools)
+// Keep in sync with 2. Src=/APIServer4.0.js registry order / names.
 // ========================================
 const MCP_STAGING_STANDARD_TOOL_NAMES = [
+    // API tools (10)
     'get_token',
     'set_token',
     'get_ranches',
@@ -92,13 +93,20 @@ const MCP_STAGING_STANDARD_TOOL_NAMES = [
     'update_irrigation',
     'batch_post_queue',
     'get_event_recommendation',
+    // JSON tools (7)
     'json_write',
     'json_read',
     'json_update',
     'json_delete',
     'json_list',
     'json_exists',
-    'data_operation'
+    'data_operation',
+    // Irrigation tools (5)
+    'filter_irrigation',
+    'create_next_irrigation',
+    'reset_table',
+    'read_meter',
+    'update_record'
 ];
 
 /**
