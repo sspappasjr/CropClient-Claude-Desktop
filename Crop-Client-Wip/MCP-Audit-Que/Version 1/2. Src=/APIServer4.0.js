@@ -3,9 +3,9 @@
  * Source: 2. Src=/APIServer4.0.js | Deploy: crop-client-services/api-server/
  * Run: from Version 1 folder: node "2. Src=/APIServer4.0.js" | Port: 3101
  *
- * Keep tool behavior aligned with browser: 2. Src=/api-component-3.4.1.js (same URLs/payloads where shared).
+ * Keep tool behavior aligned with browser: 2. Src=/api-component-4.0.js (same URLs/payloads where shared).
  *
- * 3.4.2 CHANGE — get_irrigation_details: added SCENARIO 1 and SCENARIO 2
+ * 4.0 — get_irrigation_details: added SCENARIO 1 and SCENARIO 2
  *   SCENARIO 1: ranchId:'ALL'              → all ranches, all plantings via mcpCall('get_plantings')
  *   SCENARIO 2: plantingId:'ALL'+ranchGuid → specific ranch, all plantings via mcpCall('get_plantings')
  *   Both use if(base) mcpCall pattern. Server token (apiToken) handles auth — no browser direct fetch needed.
@@ -42,7 +42,7 @@ class MCPServer {
                             protocolVersion: '2024-11-05',
                             serverInfo: {
                                 name: 'cropclient-api-mcp-server',
-                                version: '3.4.2'
+                                version: '4.0'
                             },
                             capabilities: {
                                 tools: {}
@@ -120,7 +120,7 @@ class MCPServer {
             }
         });
 
-        process.stderr.write('APIServer3.4.2 started - stdio mode\n');
+        process.stderr.write('APIServer4.0 started - stdio mode\n');
     }
 }
 
@@ -129,13 +129,13 @@ const server = new MCPServer();
 
 // ========================================
 // @@@@ API_COMPONENT INJECTION POINT @@@@
-// Parity: 2. Src=/api-component-3.4.1.js (browser) — duplicate/adapt shared CropManage call shapes here.
+// Parity: 2. Src=/api-component-4.0.js (browser) — duplicate/adapt shared CropManage call shapes here.
 // ========================================
 
 const https = require('https');
 
 // getMcpBase — returns the server's own base URL (always live on the server)
-// Parity with 2. Src=/api-component-3.4.1.js getMcpBase() — server is never "offline"
+// Parity with 2. Src=/api-component-4.0.js getMcpBase() — server is never "offline"
 function getMcpBase() {
     return `http://localhost:${process.env.PORT || 3101}`;
 }
@@ -802,6 +802,7 @@ const apiServiceTools = [
 
 // ========================================
 // @@@@ MCP TOOLS: JSON FILE SERVICES v1.2 @@@@
+// Source reference: 2. Src=/json-component-4.0.js
 // ========================================
 
 const jsonFileTools = [
@@ -902,9 +903,206 @@ const jsonFileTools = [
   }
 ];
 
+// ========================================
+// @@@@ MCP TOOLS: IRRIGATION v4.0 @@@@
+// Source: 2. Src=/irrigation-component-4.0.js
+// Pure functions — JSON read/write via handleDataOperation
+// Tools: filter_irrigation, create_next_irrigation, reset_table, read_meter, update_record
+// ========================================
+
+// ---- Utility functions ----
+
+function parseEventDate(dateStr) {
+    if (!dateStr) return new Date(0);
+    const parts = String(dateStr).split('/');
+    if (parts.length === 3) {
+        const [m, d, y] = parts;
+        return new Date(parseInt(y), parseInt(m) - 1, parseInt(d));
+    }
+    const d = new Date(dateStr);
+    return isNaN(d) ? new Date(0) : d;
+}
+
+function formatDate(date) {
+    const m = date.getMonth() + 1;
+    const d = date.getDate();
+    const y = date.getFullYear();
+    return `${m}/${d}/${y}`;
+}
+
+// ---- Pure CRUD functions ----
+
+function irrigFilterDisplay(ranch, planting, records) {
+    let filtered = records;
+    if (ranch   && ranch.trim())   filtered = filtered.filter(r => r.ranch    === ranch);
+    if (planting && planting.trim()) filtered = filtered.filter(r => r.planting === planting);
+    return { returnCode: 0, statusMessage: `Filtered: ${filtered.length} records`, data: filtered };
+}
+
+function irrigCreateNext(ranch, planting, records) {
+    const same = records.filter(r => r.ranch === ranch && r.planting === planting);
+    if (!same.length) return { returnCode: -2, statusMessage: `No records for ${ranch} / ${planting}` };
+    same.sort((a, b) => parseEventDate(a.scheduledDate) - parseEventDate(b.scheduledDate));
+    const last         = same[same.length - 1];
+    const nextDate     = new Date(parseEventDate(last.scheduledDate));
+    const interval     = Math.round(parseFloat(last.interval) || 1);
+    nextDate.setDate(nextDate.getDate() + interval);
+    const tinyAdjust   = Math.random() * 0.2 + 0.1;
+    const newRecord    = {
+        id:               Math.max(...records.map(r => r.id)) + 1,
+        ranch:            last.ranch,       planting:        last.planting,
+        hours:            Math.max(0.1, parseFloat((last.hours + tinyAdjust).toFixed(1))),
+        mgrHours:         parseFloat((last.mgrHours + 0.1).toFixed(1)),
+        appliedHours:     0,                interval:        last.interval,
+        scheduledDate:    formatDate(nextDate),
+        irrigationMethod: last.irrigationMethod,
+        recommendedInches:last.recommendedInches,
+        lastUpdatedDate:  new Date().toLocaleString(),
+        updatedBy:        'CropClient System',
+        isNew: true, isOriginal: false, isUpdated: false,
+        ranchId: last.ranchId, plantingId: last.plantingId, status: -1
+    };
+    records.forEach(r => { r.isNew = false; });
+    records.push(newRecord);
+    return { returnCode: 0, statusMessage: `✅ Created Next Irrigation — ${formatDate(nextDate)}`, data: newRecord };
+}
+
+function irrigReadMeter(ranch, planting, records) {
+    const matching = records.filter(r => r.ranch === ranch && r.planting === planting);
+    if (!matching.length) return { returnCode: -2, statusMessage: `No records for ${ranch} / ${planting}` };
+    matching.sort((a, b) => parseEventDate(a.scheduledDate) - parseEventDate(b.scheduledDate));
+    const last = matching[matching.length - 1];
+    return { returnCode: 0, statusMessage: `✅ Ready for Meter Reading — ${last.scheduledDate}`, data: last };
+}
+
+function irrigUpdateRecord(recordId, patch, records) {
+    const rec = records.find(r => r.id === recordId);
+    if (!rec) return { returnCode: -3, statusMessage: `Record ${recordId} not found` };
+    rec.scheduledDate   = patch.scheduledDate;
+    rec.interval        = patch.interval;
+    rec.mgrHours        = parseFloat(patch.mgrHours);
+    rec.appliedHours    = parseFloat(patch.appliedHours);
+    rec.lastUpdatedDate = new Date().toLocaleString();
+    rec.updatedBy       = 'Field Worker';
+    rec.isUpdated       = true;
+    rec.status          = -1;
+    return { returnCode: 0, statusMessage: `✅ Record ${recordId} updated`, data: rec };
+}
+
+// ---- Tool definitions ----
+
+const irrigationTools = [
+    {
+        name: 'filter_irrigation',
+        description: 'Filter irrigation records by ranch and/or planting. Returns matching records.',
+        inputSchema: {
+            type: 'object',
+            properties: {
+                ranch:    { type: 'string', description: 'Ranch name (optional)' },
+                planting: { type: 'string', description: 'Planting name (optional)' },
+                table:    { type: 'string', description: 'JSON table name (default: irrigation)' }
+            },
+            required: []
+        },
+        handler: async (args) => {
+            const tbl    = args.table || 'irrigation';
+            const stored = await handleDataOperation('read', tbl, null);
+            if (!stored.success) return stored;
+            const result = irrigFilterDisplay(args.ranch || '', args.planting || '', stored.data || []);
+            return { success: true, ...result };
+        }
+    },
+    {
+        name: 'create_next_irrigation',
+        description: 'Creates the next scheduled irrigation event based on the last record interval.',
+        inputSchema: {
+            type: 'object',
+            properties: {
+                ranch:    { type: 'string', description: 'Ranch name' },
+                planting: { type: 'string', description: 'Planting name' },
+                table:    { type: 'string', description: 'JSON table name (default: irrigation)' }
+            },
+            required: ['ranch', 'planting']
+        },
+        handler: async (args) => {
+            const tbl     = args.table || 'irrigation';
+            const stored  = await handleDataOperation('read', tbl, null);
+            if (!stored.success) return stored;
+            const records = stored.data || [];
+            const result  = irrigCreateNext(args.ranch, args.planting, records);
+            if (result.returnCode === 0) await handleDataOperation('write', tbl, records);
+            return { success: result.returnCode === 0, ...result };
+        }
+    },
+    {
+        name: 'reset_table',
+        description: 'Resets irrigation table to the saved snapshot (irrigation_snapshot.json).',
+        inputSchema: {
+            type: 'object',
+            properties: {
+                table: { type: 'string', description: 'JSON table name (default: irrigation)' }
+            },
+            required: []
+        },
+        handler: async (args) => {
+            const tbl      = args.table || 'irrigation';
+            const snapshot = await handleDataOperation('read', tbl + '_snapshot', null);
+            if (!snapshot.success) return { success: false, error: 'No snapshot found — save one first' };
+            await handleDataOperation('write', tbl, snapshot.data);
+            return { success: true, statusMessage: `✅ Reset — ${snapshot.data.length} records restored`, data: { count: snapshot.data.length } };
+        }
+    },
+    {
+        name: 'read_meter',
+        description: 'Returns the last irrigation record for the selected ranch/planting for meter entry.',
+        inputSchema: {
+            type: 'object',
+            properties: {
+                ranch:    { type: 'string', description: 'Ranch name' },
+                planting: { type: 'string', description: 'Planting name' },
+                table:    { type: 'string', description: 'JSON table name (default: irrigation)' }
+            },
+            required: ['ranch', 'planting']
+        },
+        handler: async (args) => {
+            const tbl    = args.table || 'irrigation';
+            const stored = await handleDataOperation('read', tbl, null);
+            if (!stored.success) return stored;
+            const result = irrigReadMeter(args.ranch, args.planting, stored.data || []);
+            return { success: result.returnCode === 0, ...result };
+        }
+    },
+    {
+        name: 'update_record',
+        description: 'Updates an irrigation record by ID with new date, interval, manager hours, and water applied.',
+        inputSchema: {
+            type: 'object',
+            properties: {
+                id:            { type: 'number',  description: 'Record ID' },
+                scheduledDate: { type: 'string',  description: 'Scheduled date (M/D/YYYY)' },
+                interval:      { type: 'string',  description: 'Interval in days' },
+                mgrHours:      { type: 'number',  description: 'Manager hours' },
+                appliedHours:  { type: 'number',  description: 'Water applied hours' },
+                table:         { type: 'string',  description: 'JSON table name (default: irrigation)' }
+            },
+            required: ['id', 'scheduledDate', 'interval', 'mgrHours', 'appliedHours']
+        },
+        handler: async (args) => {
+            const tbl     = args.table || 'irrigation';
+            const stored  = await handleDataOperation('read', tbl, null);
+            if (!stored.success) return stored;
+            const records = stored.data || [];
+            const result  = irrigUpdateRecord(args.id, args, records);
+            if (result.returnCode === 0) await handleDataOperation('write', tbl, records);
+            return { success: result.returnCode === 0, ...result };
+        }
+    }
+];
+
 // Register all tools
 apiServiceTools.forEach(tool => server.registerTool(tool));
 jsonFileTools.forEach(tool => server.registerTool(tool));
+irrigationTools.forEach(tool => server.registerTool(tool));
 
 // ========================================
 // HTTP BRIDGE (Express + CORS)
@@ -1037,16 +1235,16 @@ async function handleDataOperation(action, table, data) {
 app.get('/ping', (req, res) => {
     res.json({
         status: 'alive',
-        server: 'CropClient APIServer3.4.2',
+        server: 'CropClient APIServer4.0',
         mode: 'standalone',
         timestamp: new Date().toISOString(),
-        tools: apiServiceTools.length + jsonFileTools.length
+        tools: apiServiceTools.length + jsonFileTools.length + irrigationTools.length
     });
 });
 
-// List tools — include inputSchema so clients (mcp-engine-4.0, AI) can validate all 17
+// List tools — include inputSchema so clients (mcp-engine-4.0, AI) can validate all tools
 app.get('/tools', (req, res) => {
-    const toolList = [...apiServiceTools, ...jsonFileTools].map(t => ({
+    const toolList = [...apiServiceTools, ...jsonFileTools, ...irrigationTools].map(t => ({
         name: t.name,
         description: t.description,
         inputSchema: t.inputSchema
@@ -1059,7 +1257,7 @@ app.post('/tools/:toolName', async (req, res) => {
     const { toolName } = req.params;
     const args = req.body;
     try {
-        const tool = [...apiServiceTools, ...jsonFileTools].find(t => t.name === toolName);
+        const tool = [...apiServiceTools, ...jsonFileTools, ...irrigationTools].find(t => t.name === toolName);
         if (!tool) return res.status(404).json({ success: false, error: `Tool not found: ${toolName}` });
         const result = await tool.handler(args);
         res.json(result);
@@ -1070,8 +1268,9 @@ app.post('/tools/:toolName', async (req, res) => {
 
 // Start HTTP server
 app.listen(PORT, () => {
-    console.log(`APIServer3.4.2 running on port ${PORT}`);
-    console.log(`Tools available: ${apiServiceTools.length + jsonFileTools.length}`);
+    const totalTools = apiServiceTools.length + jsonFileTools.length + irrigationTools.length;
+    console.log(`CropClient APIServer4.0 — Complete MCP Server`);
+    console.log(`Port: ${PORT} | Tools: ${totalTools} (API: ${apiServiceTools.length}, JSON: ${jsonFileTools.length}, Irrigation: ${irrigationTools.length})`);
 });
 
 // Start stdio MCP server (standalone only)

@@ -5,7 +5,7 @@
   // Pair with: 2. Src=/APIServer4.0.js (same CropManage paths for shared tools)
 
   console.log('=======================================================');
-  console.log('  api-component-3.4.1.js — LOADED');
+  console.log('  api-component-4.0.js — LOADED');
   console.log('  Offline: direct fetch | Local/Online: mcpCall → server');
   console.log('=======================================================');
   
