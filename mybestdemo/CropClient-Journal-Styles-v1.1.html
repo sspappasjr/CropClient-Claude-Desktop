@@ -1,0 +1,1541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CropClient — Journal Style Concepts</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,800;1,400&family=Source+Sans+3:wght@300;400;500;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=JetBrains+Mono:wght@400;500&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Source Sans 3', sans-serif; background: #e8e4dc; min-height: 100vh; }
+
+/* ============================================
+   JOURNAL SWITCHER - top bar
+   ============================================ */
+.journal-switcher {
+    background: #2c2a26;
+    padding: 10px 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+.switcher-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.35);
+    margin-right: 8px;
+}
+.journal-btn {
+    padding: 7px 18px;
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 8px;
+    background: transparent;
+    color: rgba(255,255,255,0.5);
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.journal-btn:hover { color: #fff; border-color: rgba(255,255,255,0.25); }
+.journal-btn.active-green { background: #3d6b35; color: #fff; border-color: #3d6b35; }
+.journal-btn.active-blue { background: #2a6496; color: #fff; border-color: #2a6496; }
+.journal-btn.active-orange { background: #c47a1a; color: #fff; border-color: #c47a1a; }
+
+.journal-page { display: none; }
+.journal-page.active { display: block; }
+
+/* ============================================
+   SHARED TAB SYSTEM
+   ============================================ */
+.journal-shell {
+    max-width: 1200px;
+    margin: 0 auto;
+    min-height: calc(100vh - 50px);
+    display: flex;
+    flex-direction: column;
+}
+
+.tab-bar {
+    display: flex;
+    gap: 0;
+    padding: 0 24px;
+    position: relative;
+    z-index: 10;
+}
+.tab-btn {
+    padding: 12px 24px;
+    border: none;
+    background: transparent;
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    border-radius: 10px 10px 0 0;
+    transition: all 0.2s;
+    position: relative;
+    top: 1px;
+}
+
+.tab-content {
+    flex: 1;
+    border-radius: 0 12px 12px 12px;
+    padding: 36px 40px;
+    min-height: 600px;
+    position: relative;
+}
+
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+/* ============================================
+   GROWER'S ALMANAC — Green
+   ============================================ */
+.almanac-shell { background: transparent; padding: 20px 20px 40px; }
+.almanac-shell .tab-bar { padding-bottom: 0; }
+.almanac-shell .tab-btn {
+    color: #5a7a50;
+    background: #e8f0e4;
+    margin-right: 2px;
+}
+.almanac-shell .tab-btn:hover { background: #d4e6cc; }
+.almanac-shell .tab-btn.active {
+    background: #fcfaf5;
+    color: #2d5a1e;
+    box-shadow: 0 -2px 0 #3d6b35;
+}
+.almanac-content {
+    background: #fcfaf5;
+    border: 1px solid #c8d4b8;
+    box-shadow: 0 4px 24px rgba(44,38,30,0.06);
+}
+
+/* Almanac typography */
+.alm-page-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 32px;
+    font-weight: 700;
+    color: #2d5a1e;
+    margin-bottom: 6px;
+}
+.alm-page-subtitle {
+    font-family: 'Crimson Pro', serif;
+    font-size: 17px;
+    color: #7a8e6d;
+    font-style: italic;
+    margin-bottom: 28px;
+}
+.alm-divider {
+    width: 60px; height: 3px;
+    background: #3d6b35;
+    margin-bottom: 28px;
+}
+.alm-section-title {
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: #3d6b35;
+    margin-bottom: 14px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #d4e6cc;
+}
+.alm-card {
+    background: #ffffff;
+    border: 1px solid #d4e6cc;
+    border-radius: 10px;
+    padding: 20px 24px;
+    margin-bottom: 16px;
+}
+.alm-card-title {
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    color: #2d5a1e;
+    margin-bottom: 4px;
+}
+.alm-card-text {
+    font-family: 'Crimson Pro', serif;
+    font-size: 15px;
+    color: #5a6e50;
+    line-height: 1.7;
+}
+.alm-stat-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    margin-bottom: 24px;
+}
+.alm-stat {
+    background: #f0f6ec;
+    border-radius: 10px;
+    padding: 18px 16px;
+    text-align: center;
+}
+.alm-stat-value {
+    font-family: 'Playfair Display', serif;
+    font-size: 28px;
+    font-weight: 700;
+    color: #2d5a1e;
+}
+.alm-stat-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #7a8e6d;
+    margin-top: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.alm-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+    margin-bottom: 20px;
+}
+.alm-table th {
+    text-align: left;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #7a8e6d;
+    padding: 10px 12px;
+    border-bottom: 2px solid #d4e6cc;
+    background: #f7faf4;
+}
+.alm-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid #e8f0e4;
+    color: #3a4a32;
+}
+.alm-table tr:hover td { background: #f7faf4; }
+.alm-badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+}
+.alm-badge-green { background: #e0f0d8; color: #2d5a1e; }
+.alm-badge-amber { background: #faf0da; color: #8a6d1b; }
+
+/* Form elements — green */
+.alm-form-group { margin-bottom: 18px; }
+.alm-form-label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: #5a7a50;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.alm-form-input, .alm-form-textarea {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid #c8d4b8;
+    border-radius: 8px;
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 14px;
+    background: #fff;
+    color: #2c261e;
+    transition: border-color 0.2s;
+}
+.alm-form-input:focus, .alm-form-textarea:focus {
+    outline: none;
+    border-color: #3d6b35;
+    box-shadow: 0 0 0 3px rgba(61,107,53,0.1);
+}
+.alm-form-textarea { min-height: 80px; resize: vertical; }
+.alm-btn {
+    padding: 10px 22px;
+    border: none;
+    border-radius: 8px;
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+.alm-btn-primary { background: #3d6b35; color: #fff; }
+.alm-btn-primary:hover { background: #2d5a1e; }
+.alm-btn-secondary { background: #e8f0e4; color: #3d6b35; }
+
+/* ============================================
+   MYCLINICALS — Light Blue
+   ============================================ */
+.clinical-shell { background: transparent; padding: 20px 20px 40px; }
+.clinical-shell .tab-btn {
+    color: #4a7a9b;
+    background: #e4eef6;
+    margin-right: 2px;
+}
+.clinical-shell .tab-btn:hover { background: #d0e2f0; }
+.clinical-shell .tab-btn.active {
+    background: #fbfcfe;
+    color: #1a4a6e;
+    box-shadow: 0 -2px 0 #2a6496;
+}
+.clinical-content {
+    background: #fbfcfe;
+    border: 1px solid #b8cedf;
+    box-shadow: 0 4px 24px rgba(30,40,60,0.06);
+}
+
+/* Clinical typography */
+.cli-page-title {
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 28px;
+    font-weight: 700;
+    color: #1a4a6e;
+    margin-bottom: 4px;
+    letter-spacing: -0.3px;
+}
+.cli-page-subtitle {
+    font-size: 15px;
+    font-weight: 400;
+    color: #6a8da8;
+    margin-bottom: 24px;
+}
+.cli-divider {
+    width: 50px; height: 3px;
+    background: #2a6496;
+    margin-bottom: 24px;
+}
+.cli-section-title {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: #2a6496;
+    margin-bottom: 14px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #d4e2ee;
+}
+.cli-card {
+    background: #ffffff;
+    border: 1px solid #d4e2ee;
+    border-radius: 8px;
+    padding: 18px 22px;
+    margin-bottom: 14px;
+}
+.cli-card-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #1a4a6e;
+    margin-bottom: 4px;
+}
+.cli-card-text {
+    font-size: 14px;
+    color: #5a7a90;
+    line-height: 1.65;
+}
+.cli-stat-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 20px;
+}
+.cli-stat {
+    background: #eef4f9;
+    border-radius: 8px;
+    padding: 16px 14px;
+    text-align: center;
+}
+.cli-stat-value {
+    font-size: 24px;
+    font-weight: 700;
+    color: #1a4a6e;
+}
+.cli-stat-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: #6a8da8;
+    margin-top: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.cli-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    margin-bottom: 18px;
+}
+.cli-table th {
+    text-align: left;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #6a8da8;
+    padding: 9px 12px;
+    border-bottom: 2px solid #d4e2ee;
+    background: #f4f8fb;
+}
+.cli-table td {
+    padding: 9px 12px;
+    border-bottom: 1px solid #e8eff5;
+    color: #2a4a60;
+}
+
+/* Form elements — blue */
+.cli-form-group { margin-bottom: 16px; }
+.cli-form-label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: #4a7a9b;
+    margin-bottom: 5px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.cli-form-input, .cli-form-textarea {
+    width: 100%;
+    padding: 9px 14px;
+    border: 1px solid #b8cedf;
+    border-radius: 6px;
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 14px;
+    background: #fff;
+    color: #1a2a3a;
+}
+.cli-form-input:focus, .cli-form-textarea:focus {
+    outline: none;
+    border-color: #2a6496;
+    box-shadow: 0 0 0 3px rgba(42,100,150,0.1);
+}
+.cli-form-textarea { min-height: 70px; resize: vertical; }
+.cli-btn {
+    padding: 9px 20px;
+    border: none;
+    border-radius: 6px;
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+}
+.cli-btn-primary { background: #2a6496; color: #fff; }
+.cli-btn-primary:hover { background: #1a4a6e; }
+
+/* ============================================
+   MASTER PROMPTS — Light Orange
+   ============================================ */
+.prompts-shell { background: transparent; padding: 20px 20px 40px; }
+.prompts-shell .tab-btn {
+    color: #8a6d3a;
+    background: #faecd4;
+    margin-right: 2px;
+}
+.prompts-shell .tab-btn:hover { background: #f0dbb8; }
+.prompts-shell .tab-btn.active {
+    background: #fffcf6;
+    color: #6a4a1a;
+    box-shadow: 0 -2px 0 #c47a1a;
+}
+.prompts-content {
+    background: #fffcf6;
+    border: 1px solid #dcc8a0;
+    box-shadow: 0 4px 24px rgba(60,40,10,0.06);
+}
+
+/* Prompts typography */
+.prm-page-title {
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 28px;
+    font-weight: 700;
+    color: #6a4a1a;
+    margin-bottom: 4px;
+    letter-spacing: -0.3px;
+}
+.prm-page-subtitle {
+    font-size: 15px;
+    color: #a08a60;
+    margin-bottom: 24px;
+}
+.prm-divider {
+    width: 50px; height: 3px;
+    background: #c47a1a;
+    margin-bottom: 24px;
+}
+.prm-section-title {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: #c47a1a;
+    margin-bottom: 14px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #ecdcbe;
+}
+.prm-card {
+    background: #ffffff;
+    border: 1px solid #ecdcbe;
+    border-radius: 8px;
+    padding: 18px 22px;
+    margin-bottom: 14px;
+}
+.prm-card-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #6a4a1a;
+    margin-bottom: 4px;
+}
+.prm-card-text {
+    font-size: 14px;
+    color: #8a7a5a;
+    line-height: 1.65;
+}
+.prm-code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    background: #faf4e8;
+    border: 1px solid #ecdcbe;
+    border-radius: 6px;
+    padding: 14px 18px;
+    color: #6a4a1a;
+    overflow-x: auto;
+    line-height: 1.7;
+    margin-bottom: 16px;
+}
+
+/* Form elements — orange */
+.prm-form-group { margin-bottom: 16px; }
+.prm-form-label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: #8a6d3a;
+    margin-bottom: 5px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.prm-form-input, .prm-form-textarea {
+    width: 100%;
+    padding: 9px 14px;
+    border: 1px solid #dcc8a0;
+    border-radius: 6px;
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 14px;
+    background: #fff;
+    color: #2c261e;
+}
+.prm-form-input:focus, .prm-form-textarea:focus {
+    outline: none;
+    border-color: #c47a1a;
+    box-shadow: 0 0 0 3px rgba(196,122,26,0.1);
+}
+.prm-form-textarea { min-height: 70px; resize: vertical; font-family: 'JetBrains Mono', monospace; font-size: 13px; }
+.prm-btn {
+    padding: 9px 20px;
+    border: none;
+    border-radius: 6px;
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+}
+.prm-btn-primary { background: #c47a1a; color: #fff; }
+.prm-btn-primary:hover { background: #a06010; }
+.prm-btn-secondary { background: #faecd4; color: #6a4a1a; }
+
+/* ============================================
+   SHARED UTILITIES
+   ============================================ */
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.tab-panel.active { animation: fadeIn 0.3s ease; }
+
+@media (max-width: 800px) {
+    .two-col, .three-col, .alm-stat-grid, .cli-stat-grid { grid-template-columns: 1fr; }
+    .tab-content { padding: 24px 20px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ============================================
+     JOURNAL SWITCHER
+     ============================================ -->
+<div class="journal-switcher">
+    <span class="switcher-label">Journal</span>
+    <button class="journal-btn active-green" onclick="showJournal('almanac', this)">Grower's Almanac</button>
+    <button class="journal-btn" onclick="showJournal('clinical', this)">MyClinicals</button>
+    <button class="journal-btn" onclick="showJournal('prompts', this)">Master Prompts</button>
+</div>
+
+<!-- ============================================
+     1. GROWER'S ALMANAC
+     ============================================ -->
+<div class="journal-page active" id="journal-almanac">
+<div class="journal-shell almanac-shell">
+    <div class="tab-bar">
+        <button class="tab-btn active" onclick="showTab('almanac', 'cover', this)">Cover</button>
+        <button class="tab-btn" onclick="showTab('almanac', 'ranch', this)">My Ranch</button>
+        <button class="tab-btn" onclick="showTab('almanac', 'irrigation', this)">Irrigation</button>
+        <button class="tab-btn" onclick="showTab('almanac', 'science', this)">Crop Science</button>
+        <button class="tab-btn" onclick="showTab('almanac', 'reports', this)">Reports</button>
+        <button class="tab-btn" onclick="showTab('almanac', 'tools', this)">Tools</button>
+    </div>
+    <div class="tab-content almanac-content">
+
+        <!-- COVER -->
+        <div class="tab-panel active" id="almanac-cover">
+            <div style="text-align: center; padding: 32px 0 24px;">
+                <div style="font-size: 12px; font-weight: 600; letter-spacing: 3px; text-transform: uppercase; color: #7a8e6d; margin-bottom: 16px;">CropClient &bull; UC Davis CropManage</div>
+                <div class="alm-page-title" style="font-size: 48px; margin-bottom: 2px;">The Grower's</div>
+                <div style="font-family: 'Playfair Display', serif; font-size: 52px; font-weight: 800; font-style: italic; color: #3d6b35; margin-bottom: 16px;">Almanac</div>
+                <div class="alm-page-subtitle" style="max-width: 500px; margin: 0 auto 32px;">Your ranch. Your crops. Your science. Personalized, auto-generated, always current.</div>
+                <div class="alm-divider" style="margin: 0 auto 32px;"></div>
+            </div>
+            <div class="alm-stat-grid">
+                <div class="alm-stat">
+                    <div class="alm-stat-value">3</div>
+                    <div class="alm-stat-label">Ranches</div>
+                </div>
+                <div class="alm-stat">
+                    <div class="alm-stat-value">12</div>
+                    <div class="alm-stat-label">Plantings</div>
+                </div>
+                <div class="alm-stat">
+                    <div class="alm-stat-value">48</div>
+                    <div class="alm-stat-label">Irrigation Events</div>
+                </div>
+            </div>
+            <div class="two-col">
+                <div class="alm-card">
+                    <div class="alm-card-title">Spring 2026 Season</div>
+                    <div class="alm-card-text">Your irrigation data is current through March 23, 2026. All recommendations are based on the latest UC Davis CropManage science for your specific crops and soil conditions.</div>
+                </div>
+                <div class="alm-card">
+                    <div class="alm-card-title">AI-Powered Updates</div>
+                    <div class="alm-card-text">Every page in this almanac is auto-generated from your live data. Create or update an irrigation record and the recommendations refresh instantly.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- MY RANCH -->
+        <div class="tab-panel" id="almanac-ranch">
+            <div class="alm-page-title">My Ranch</div>
+            <div class="alm-page-subtitle">Ranch details, plantings, and growing conditions</div>
+            <div class="alm-divider"></div>
+            <div class="alm-section-title">Ranch Overview</div>
+            <table class="alm-table">
+                <thead><tr><th>Ranch</th><th>Location</th><th>Plantings</th><th>Acres</th><th>Status</th></tr></thead>
+                <tbody>
+                    <tr><td style="font-weight: 600;">Smith Ranch</td><td>Salinas Valley, CA</td><td>5</td><td>120</td><td><span class="alm-badge alm-badge-green">Active</span></td></tr>
+                    <tr><td style="font-weight: 600;">River Bottom</td><td>Watsonville, CA</td><td>4</td><td>85</td><td><span class="alm-badge alm-badge-green">Active</span></td></tr>
+                    <tr><td style="font-weight: 600;">North Field</td><td>Castroville, CA</td><td>3</td><td>60</td><td><span class="alm-badge alm-badge-amber">Seasonal</span></td></tr>
+                </tbody>
+            </table>
+            <div class="alm-section-title">Current Plantings</div>
+            <table class="alm-table">
+                <thead><tr><th>Planting</th><th>Ranch</th><th>Crop</th><th>Planted</th><th>Next Irrigation</th></tr></thead>
+                <tbody>
+                    <tr><td style="font-weight: 600;">Block A</td><td>Smith Ranch</td><td>Strawberry</td><td>Jan 15, 2026</td><td>Mar 24, 2026</td></tr>
+                    <tr><td style="font-weight: 600;">Block B</td><td>Smith Ranch</td><td>Lettuce</td><td>Feb 1, 2026</td><td>Mar 25, 2026</td></tr>
+                    <tr><td style="font-weight: 600;">South 40</td><td>River Bottom</td><td>Broccoli</td><td>Feb 10, 2026</td><td>Mar 23, 2026</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- IRRIGATION -->
+        <div class="tab-panel" id="almanac-irrigation">
+            <div class="alm-page-title">Irrigation Schedule</div>
+            <div class="alm-page-subtitle">Current events, recommendations, and water applied</div>
+            <div class="alm-divider"></div>
+            <div class="alm-stat-grid">
+                <div class="alm-stat">
+                    <div class="alm-stat-value">2.5</div>
+                    <div class="alm-stat-label">Rec Hours Today</div>
+                </div>
+                <div class="alm-stat">
+                    <div class="alm-stat-value">7</div>
+                    <div class="alm-stat-label">Day Interval</div>
+                </div>
+                <div class="alm-stat">
+                    <div class="alm-stat-value">3.0</div>
+                    <div class="alm-stat-label">Manager Hours</div>
+                </div>
+            </div>
+            <div class="alm-section-title">Upcoming Irrigations</div>
+            <table class="alm-table">
+                <thead><tr><th>Date</th><th>Planting</th><th>Rec Hrs</th><th>Mgr Hrs</th><th>Interval</th><th>Status</th></tr></thead>
+                <tbody>
+                    <tr><td>Mar 23</td><td>South 40 — Broccoli</td><td style="font-weight: 600; color: #2d5a1e;">2.5</td><td>3.0</td><td>7 days</td><td><span class="alm-badge alm-badge-green">Today</span></td></tr>
+                    <tr><td>Mar 24</td><td>Block A — Strawberry</td><td style="font-weight: 600; color: #2d5a1e;">1.8</td><td>2.0</td><td>5 days</td><td><span class="alm-badge alm-badge-amber">Tomorrow</span></td></tr>
+                    <tr><td>Mar 25</td><td>Block B — Lettuce</td><td style="font-weight: 600; color: #2d5a1e;">3.2</td><td>3.5</td><td>6 days</td><td><span class="alm-badge alm-badge-amber">Upcoming</span></td></tr>
+                </tbody>
+            </table>
+            <div class="alm-section-title">Log a new irrigation</div>
+            <div class="two-col">
+                <div class="alm-form-group">
+                    <label class="alm-form-label">Planting</label>
+                    <select class="alm-form-input"><option>Block A — Strawberry</option><option>Block B — Lettuce</option><option>South 40 — Broccoli</option></select>
+                </div>
+                <div class="alm-form-group">
+                    <label class="alm-form-label">Water Applied (hours)</label>
+                    <input class="alm-form-input" type="number" placeholder="Enter hours">
+                </div>
+            </div>
+            <button class="alm-btn alm-btn-primary">Record Irrigation</button>
+        </div>
+
+        <!-- CROP SCIENCE -->
+        <div class="tab-panel" id="almanac-science">
+            <div class="alm-page-title">Crop Science</div>
+            <div class="alm-page-subtitle">UC Davis CropManage research for your specific crops</div>
+            <div class="alm-divider"></div>
+            <div class="alm-card">
+                <div class="alm-card-title">Strawberry — Irrigation Guidelines</div>
+                <div class="alm-card-text">Strawberries in the Salinas Valley require consistent moisture during fruit development. UC Davis recommends drip irrigation with soil moisture monitoring. The recommended interval adjusts based on ET data, soil type, and growth stage. During peak production (March-May), intervals typically range from 3-7 days depending on weather conditions.</div>
+            </div>
+            <div class="alm-card">
+                <div class="alm-card-title">Lettuce — Water Management</div>
+                <div class="alm-card-text">Head lettuce is sensitive to both over- and under-irrigation. CropManage calculates water needs based on canopy coverage and reference ET. Early growth stages need lighter, more frequent irrigation. As the crop matures, intervals can extend but amounts increase. Monitor for tip burn — often a sign of calcium deficiency linked to inconsistent watering.</div>
+            </div>
+            <div class="alm-card">
+                <div class="alm-card-title">Broccoli — Seasonal Notes</div>
+                <div class="alm-card-text">Spring broccoli in the central coast benefits from moderate irrigation. CropManage recommendations account for the cooler coastal temperatures. Key period is head formation — consistent moisture is critical. Reduce irrigation as heads mature to prevent hollow stem.</div>
+            </div>
+        </div>
+
+        <!-- REPORTS -->
+        <div class="tab-panel" id="almanac-reports">
+            <div class="alm-page-title">Reports &amp; Budgets</div>
+            <div class="alm-page-subtitle">Water usage, compliance, and performance summaries</div>
+            <div class="alm-divider"></div>
+            <div class="alm-stat-grid">
+                <div class="alm-stat">
+                    <div class="alm-stat-value">84%</div>
+                    <div class="alm-stat-label">Water Efficiency</div>
+                </div>
+                <div class="alm-stat">
+                    <div class="alm-stat-value">142</div>
+                    <div class="alm-stat-label">Acre-Feet YTD</div>
+                </div>
+                <div class="alm-stat">
+                    <div class="alm-stat-value">$18.2k</div>
+                    <div class="alm-stat-label">Water Cost YTD</div>
+                </div>
+            </div>
+            <div class="alm-section-title">Generate Report</div>
+            <div class="two-col">
+                <div class="alm-form-group">
+                    <label class="alm-form-label">Report Type</label>
+                    <select class="alm-form-input">
+                        <option>Water Budget — Monthly</option>
+                        <option>Water Budget — Seasonal</option>
+                        <option>Compliance — Water District</option>
+                        <option>Performance — Ranch Summary</option>
+                        <option>Performance — Crop Comparison</option>
+                    </select>
+                </div>
+                <div class="alm-form-group">
+                    <label class="alm-form-label">Date Range</label>
+                    <select class="alm-form-input">
+                        <option>This Month</option>
+                        <option>This Season</option>
+                        <option>Year to Date</option>
+                        <option>Custom Range</option>
+                    </select>
+                </div>
+            </div>
+            <button class="alm-btn alm-btn-primary" style="margin-right: 8px;">Generate Report</button>
+            <button class="alm-btn alm-btn-secondary">Export PDF</button>
+        </div>
+
+        <!-- TOOLS -->
+        <div class="tab-panel" id="almanac-tools">
+            <div class="alm-page-title">Management Tools</div>
+            <div class="alm-page-subtitle">Irrigation tools powered by AI — ask a question or take an action</div>
+            <div class="alm-divider"></div>
+            <div class="alm-section-title">Quick Actions</div>
+            <div class="three-col">
+                <div class="alm-card" style="cursor: pointer; text-align: center;">
+                    <div style="font-size: 28px; margin-bottom: 8px;">&#128167;</div>
+                    <div class="alm-card-title">Create Irrigation</div>
+                    <div class="alm-card-text">Schedule the next irrigation event based on recommendations</div>
+                </div>
+                <div class="alm-card" style="cursor: pointer; text-align: center;">
+                    <div style="font-size: 28px; margin-bottom: 8px;">&#128207;</div>
+                    <div class="alm-card-title">Read Meter</div>
+                    <div class="alm-card-text">Record actual water applied from the field meter</div>
+                </div>
+                <div class="alm-card" style="cursor: pointer; text-align: center;">
+                    <div style="font-size: 28px; margin-bottom: 8px;">&#128200;</div>
+                    <div class="alm-card-title">Get Latest Rec</div>
+                    <div class="alm-card-text">Fetch fresh recommendation for the selected event</div>
+                </div>
+            </div>
+            <div class="alm-section-title" style="margin-top: 24px;">Ask the AI</div>
+            <div class="alm-form-group">
+                <label class="alm-form-label">Your question</label>
+                <textarea class="alm-form-textarea" placeholder="Try: 'What should I irrigate today?' or 'Show me water usage for Block A this month'"></textarea>
+            </div>
+            <button class="alm-btn alm-btn-primary">Ask</button>
+        </div>
+
+    </div>
+</div>
+</div>
+
+<!-- ============================================
+     2. MYCLINICALS
+     ============================================ -->
+<div class="journal-page" id="journal-clinical">
+<div class="journal-shell clinical-shell">
+    <div class="tab-bar">
+        <button class="tab-btn active" onclick="showTab('clinical', 'cover', this)">Cover</button>
+        <button class="tab-btn" onclick="showTab('clinical', 'patient', this)">Patient</button>
+        <button class="tab-btn" onclick="showTab('clinical', 'followups', this)">Follow-ups</button>
+        <button class="tab-btn" onclick="showTab('clinical', 'devices', this)">Devices</button>
+        <button class="tab-btn" onclick="showTab('clinical', 'adverse', this)">Adverse Events</button>
+        <button class="tab-btn" onclick="showTab('clinical', 'summary', this)">Summary</button>
+    </div>
+    <div class="tab-content clinical-content">
+
+        <!-- COVER -->
+        <div class="tab-panel active" id="clinical-cover">
+            <div style="text-align: center; padding: 32px 0 24px;">
+                <div style="font-size: 12px; font-weight: 600; letter-spacing: 3px; text-transform: uppercase; color: #6a8da8; margin-bottom: 16px;">Clinical Study Management</div>
+                <div class="cli-page-title" style="font-size: 36px;">MyClinicals</div>
+                <div class="cli-page-subtitle" style="max-width: 480px; margin: 8px auto 28px;">Digital case management for clinical studies. Patient records, follow-ups, device tracking, and adverse event reporting — all in one place.</div>
+                <div class="cli-divider" style="margin: 0 auto 28px;"></div>
+            </div>
+            <div class="cli-stat-grid">
+                <div class="cli-stat">
+                    <div class="cli-stat-value">24</div>
+                    <div class="cli-stat-label">Patients</div>
+                </div>
+                <div class="cli-stat">
+                    <div class="cli-stat-value">156</div>
+                    <div class="cli-stat-label">Follow-ups</div>
+                </div>
+                <div class="cli-stat">
+                    <div class="cli-stat-value">3</div>
+                    <div class="cli-stat-label">Adverse Events</div>
+                </div>
+                <div class="cli-stat">
+                    <div class="cli-stat-value">89%</div>
+                    <div class="cli-stat-label">Compliance</div>
+                </div>
+            </div>
+            <div class="two-col">
+                <div class="cli-card">
+                    <div class="cli-card-title">Study Protocol</div>
+                    <div class="cli-card-text">Each tab represents a section of the case report form. Patient demographics, scheduled follow-ups, device details, and adverse event tracking — structured for FDA compliance.</div>
+                </div>
+                <div class="cli-card">
+                    <div class="cli-card-title">AI-Assisted Review</div>
+                    <div class="cli-card-text">AI scans entries for completeness, flags missing follow-ups, checks device serial numbers, and generates summary reports automatically.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PATIENT -->
+        <div class="tab-panel" id="clinical-patient">
+            <div class="cli-page-title">Patient Information</div>
+            <div class="cli-page-subtitle">Demographics, enrollment, and baseline data</div>
+            <div class="cli-divider"></div>
+            <div class="cli-section-title">Demographics</div>
+            <div class="two-col">
+                <div class="cli-form-group">
+                    <label class="cli-form-label">Patient ID</label>
+                    <input class="cli-form-input" value="PT-2026-0142">
+                </div>
+                <div class="cli-form-group">
+                    <label class="cli-form-label">Enrollment Date</label>
+                    <input class="cli-form-input" type="date" value="2026-01-15">
+                </div>
+                <div class="cli-form-group">
+                    <label class="cli-form-label">Age</label>
+                    <input class="cli-form-input" type="number" value="58">
+                </div>
+                <div class="cli-form-group">
+                    <label class="cli-form-label">Gender</label>
+                    <select class="cli-form-input"><option>Male</option><option>Female</option><option>Other</option></select>
+                </div>
+            </div>
+            <div class="cli-section-title" style="margin-top: 24px;">Baseline Assessment</div>
+            <div class="cli-form-group">
+                <label class="cli-form-label">Medical History</label>
+                <textarea class="cli-form-textarea" placeholder="Relevant medical history...">Hypertension (controlled), Type 2 diabetes. Previous cardiac stent placement 2024.</textarea>
+            </div>
+            <div class="cli-form-group">
+                <label class="cli-form-label">Investigator Notes</label>
+                <textarea class="cli-form-textarea" placeholder="Notes from enrollment visit..."></textarea>
+            </div>
+            <button class="cli-btn cli-btn-primary">Save Patient Record</button>
+        </div>
+
+        <!-- FOLLOW-UPS -->
+        <div class="tab-panel" id="clinical-followups">
+            <div class="cli-page-title">Follow-up Visits</div>
+            <div class="cli-page-subtitle">Scheduled and completed follow-up assessments</div>
+            <div class="cli-divider"></div>
+            <table class="cli-table">
+                <thead><tr><th>Visit</th><th>Scheduled</th><th>Completed</th><th>Investigator</th><th>Status</th></tr></thead>
+                <tbody>
+                    <tr><td style="font-weight: 600;">30-Day</td><td>Feb 14, 2026</td><td>Feb 14, 2026</td><td>Dr. Martinez</td><td><span class="alm-badge alm-badge-green">Complete</span></td></tr>
+                    <tr><td style="font-weight: 600;">90-Day</td><td>Apr 15, 2026</td><td>—</td><td>—</td><td><span class="alm-badge alm-badge-amber">Scheduled</span></td></tr>
+                    <tr><td style="font-weight: 600;">6-Month</td><td>Jul 15, 2026</td><td>—</td><td>—</td><td><span class="alm-badge alm-badge-amber">Scheduled</span></td></tr>
+                    <tr><td style="font-weight: 600;">12-Month</td><td>Jan 15, 2027</td><td>—</td><td>—</td><td><span class="alm-badge alm-badge-amber">Scheduled</span></td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- DEVICES -->
+        <div class="tab-panel" id="clinical-devices">
+            <div class="cli-page-title">Device Information</div>
+            <div class="cli-page-subtitle">Implanted devices, serial numbers, and specifications</div>
+            <div class="cli-divider"></div>
+            <div class="cli-section-title">Implanted Device</div>
+            <div class="two-col">
+                <div class="cli-form-group">
+                    <label class="cli-form-label">Device Model</label>
+                    <input class="cli-form-input" value="CardioStent Pro 3.0">
+                </div>
+                <div class="cli-form-group">
+                    <label class="cli-form-label">Serial Number</label>
+                    <input class="cli-form-input" value="CS3-2026-00847">
+                </div>
+                <div class="cli-form-group">
+                    <label class="cli-form-label">Implant Date</label>
+                    <input class="cli-form-input" type="date" value="2026-01-15">
+                </div>
+                <div class="cli-form-group">
+                    <label class="cli-form-label">Lot Number</label>
+                    <input class="cli-form-input" value="LOT-2025-1247">
+                </div>
+            </div>
+        </div>
+
+        <!-- ADVERSE EVENTS -->
+        <div class="tab-panel" id="clinical-adverse">
+            <div class="cli-page-title">Adverse Events</div>
+            <div class="cli-page-subtitle">Report and track adverse events and complications</div>
+            <div class="cli-divider"></div>
+            <table class="cli-table">
+                <thead><tr><th>Date</th><th>Event</th><th>Severity</th><th>Related</th><th>Resolution</th></tr></thead>
+                <tbody>
+                    <tr><td>Feb 2, 2026</td><td>Mild bruising at access site</td><td>Mild</td><td>Probable</td><td>Resolved — Feb 10</td></tr>
+                </tbody>
+            </table>
+            <div class="cli-section-title" style="margin-top: 24px;">Report New Event</div>
+            <div class="two-col">
+                <div class="cli-form-group">
+                    <label class="cli-form-label">Event Date</label>
+                    <input class="cli-form-input" type="date">
+                </div>
+                <div class="cli-form-group">
+                    <label class="cli-form-label">Severity</label>
+                    <select class="cli-form-input"><option>Mild</option><option>Moderate</option><option>Severe</option><option>Life-threatening</option></select>
+                </div>
+            </div>
+            <div class="cli-form-group">
+                <label class="cli-form-label">Event Description</label>
+                <textarea class="cli-form-textarea" placeholder="Describe the adverse event..."></textarea>
+            </div>
+            <button class="cli-btn cli-btn-primary">Submit Report</button>
+        </div>
+
+        <!-- SUMMARY -->
+        <div class="tab-panel" id="clinical-summary">
+            <div class="cli-page-title">Case Summary</div>
+            <div class="cli-page-subtitle">AI-generated summary of patient case and status</div>
+            <div class="cli-divider"></div>
+            <div class="cli-card">
+                <div class="cli-card-title">Auto-Generated Summary</div>
+                <div class="cli-card-text">Patient PT-2026-0142, 58M, enrolled January 15, 2026. CardioStent Pro 3.0 implanted same day. 30-day follow-up completed on schedule with no significant findings. One mild adverse event (access site bruising) resolved within 8 days. Next follow-up: 90-day visit scheduled April 15, 2026. Overall compliance: on track.</div>
+            </div>
+            <button class="cli-btn cli-btn-primary" style="margin-right: 8px;">Regenerate Summary</button>
+            <button class="cli-btn" style="background: #eef4f9; color: #1a4a6e;">Export PDF</button>
+        </div>
+
+    </div>
+</div>
+</div>
+
+<!-- ============================================
+     3. MASTER PROMPTS
+     ============================================ -->
+<div class="journal-page" id="journal-prompts">
+<div class="journal-shell prompts-shell">
+    <div class="tab-bar">
+        <button class="tab-btn active" onclick="showTab('prompts', 'cover', this)">Cover</button>
+        <button class="tab-btn" onclick="showTab('prompts', 'team', this)">Team</button>
+        <button class="tab-btn" onclick="showTab('prompts', 'tokens', this)">API Tools</button>
+        <button class="tab-btn" onclick="showTab('prompts', 'workflows', this)">Workflows</button>
+        <button class="tab-btn" onclick="showTab('prompts', 'context', this)">Client Context</button>
+        <button class="tab-btn" onclick="showTab('prompts', 'glossary', this)">Glossary</button>
+        <button class="tab-btn" onclick="showTab('prompts', 'export', this)">Export</button>
+    </div>
+    <div class="tab-content prompts-content">
+
+        <!-- COVER -->
+        <div class="tab-panel active" id="prompts-cover">
+            <div style="text-align: center; padding: 32px 0 24px;">
+                <div style="font-size: 12px; font-weight: 600; letter-spacing: 3px; text-transform: uppercase; color: #a08a60; margin-bottom: 16px;">CropClient AI System</div>
+                <div class="prm-page-title" style="font-size: 36px;">InitAI Master Prompts</div>
+                <div class="prm-page-subtitle" style="max-width: 560px; margin: 8px auto 28px;">Art and information with live portholes. A living book that travels wherever you go. Browse what your AI knows, edit it in place, export it in one click. Relaxing to read, quick to update, always current.</div>
+                <div class="prm-divider" style="margin: 0 auto 28px;"></div>
+            </div>
+            <div class="three-col">
+                <div class="prm-card" style="text-align: center;">
+                    <div style="font-size: 28px; margin-bottom: 8px;">&#128273;</div>
+                    <div class="prm-card-title">15 API Tools</div>
+                    <div class="prm-card-text">8 CropManage + 7 data storage — editable</div>
+                </div>
+                <div class="prm-card" style="text-align: center;">
+                    <div style="font-size: 28px; margin-bottom: 8px;">&#9881;</div>
+                    <div class="prm-card-title">mcp-engine</div>
+                    <div class="prm-card-text">URL, Staging, Send — three clean functions</div>
+                </div>
+                <div class="prm-card" style="text-align: center;">
+                    <div style="font-size: 28px; margin-bottom: 8px;">&#129302;</div>
+                    <div class="prm-card-title">Kit (Tool 0)</div>
+                    <div class="prm-card-text">initAI — fires at onload, briefs the AI</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TEAM -->
+        <div class="tab-panel" id="prompts-team">
+            <div class="prm-page-title">Team</div>
+            <div class="prm-page-subtitle">Roles, rules, and the promise</div>
+            <div class="prm-divider"></div>
+            <div class="prm-section-title">Team Members</div>
+            <div class="two-col">
+                <div class="prm-card">
+                    <div class="prm-card-title">Steve (Coach)</div>
+                    <div class="prm-card-text">CEO / Architect / Designer. His word is final.</div>
+                </div>
+                <div class="prm-card">
+                    <div class="prm-card-title">George</div>
+                    <div class="prm-card-text">AI / Developer / Analyst. Built Kit and ai-engine2.5.</div>
+                </div>
+                <div class="prm-card">
+                    <div class="prm-card-title">Mac</div>
+                    <div class="prm-card-text">Project Lead. Built mcp-engine and the harness.</div>
+                </div>
+                <div class="prm-card">
+                    <div class="prm-card-title">Kit</div>
+                    <div class="prm-card-text">Knowledge Injection Tool. Tool 0. The AI brain loader.</div>
+                </div>
+            </div>
+            <div class="prm-section-title" style="margin-top: 24px;">The Rules</div>
+            <div class="prm-code">NO code without Coach's GOFORIT. Tell the plan first, wait for the signal.
+ONE small change at a time. Dot notation versions only.
+APIServer2.5.1.js — READ ONLY. Never touch. Ever.
+Always read CLAUDE.md fresh before making any claims.</div>
+        </div>
+
+        <!-- API TOOLS -->
+        <div class="tab-panel" id="prompts-tokens">
+            <div class="prm-page-title">API Tools</div>
+            <div class="prm-page-subtitle">15 tools — 8 CropManage API + 7 data storage. Select a tool to edit.</div>
+            <div class="prm-divider"></div>
+
+            <div class="prm-section-title">CropManage API Tools</div>
+            <div id="apiToolCards" style="display: grid; gap: 10px; margin-bottom: 28px;"></div>
+
+            <div class="prm-section-title">Data Storage Tools</div>
+            <div id="dataToolCards" style="display: grid; gap: 10px; margin-bottom: 28px;"></div>
+
+            <!-- Tool Editor (shows when a tool is selected) -->
+            <div id="toolEditor" style="display: none; margin-top: 8px;">
+                <div class="prm-section-title" id="editorTitle">Edit Tool</div>
+                <div class="prm-card" style="background: #fffcf6;">
+                    <div class="two-col" style="margin-bottom: 14px;">
+                        <div class="prm-form-group" style="margin-bottom: 0;">
+                            <label class="prm-form-label">Purpose</label>
+                            <input class="prm-form-input" id="toolPurpose" placeholder="What does this tool do?">
+                        </div>
+                        <div class="prm-form-group" style="margin-bottom: 0;">
+                            <label class="prm-form-label">When to Use</label>
+                            <input class="prm-form-input" id="toolWhen" placeholder="When should AI call this?">
+                        </div>
+                    </div>
+                    <div class="prm-form-group">
+                        <label class="prm-form-label">Farmer says things like...</label>
+                        <textarea class="prm-form-textarea" id="toolFarmerSays" style="min-height: 50px;" placeholder="Natural language triggers — what would a grower say?"></textarea>
+                    </div>
+                    <div class="prm-form-group">
+                        <label class="prm-form-label">AI Response Pattern</label>
+                        <textarea class="prm-form-textarea" id="toolResponse" style="min-height: 50px;" placeholder="Step by step — what should the AI do?"></textarea>
+                    </div>
+                    <div class="prm-form-group">
+                        <label class="prm-form-label">Important Rules</label>
+                        <textarea class="prm-form-textarea" id="toolRules" style="min-height: 40px;" placeholder="Safety rules, confirmations required, things to watch for..."></textarea>
+                    </div>
+                    <button class="prm-btn prm-btn-primary" onclick="saveToolEdits()" style="margin-right: 8px;">Save</button>
+                    <button class="prm-btn prm-btn-secondary" onclick="document.getElementById('toolEditor').style.display='none'">Close</button>
+                    <span id="toolSaveMsg" style="margin-left: 12px; color: #3d6b35; font-weight: 600; display: none;">Saved</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- WORKFLOWS -->
+        <div class="tab-panel" id="prompts-workflows">
+            <div class="prm-page-title">Workflows</div>
+            <div class="prm-page-subtitle">Standard patterns the AI follows — each one is a recipe</div>
+            <div class="prm-divider"></div>
+
+            <div id="workflowCards"></div>
+
+            <div style="margin-top: 20px;">
+                <button class="prm-btn prm-btn-secondary" onclick="addWorkflow()">+ Add Workflow</button>
+            </div>
+        </div>
+
+        <!-- CLIENT CONTEXT -->
+        <div class="tab-panel" id="prompts-context">
+            <div class="prm-page-title">Client Context</div>
+            <div class="prm-page-subtitle">Who is the grower, what do they need — filled in per client at session start</div>
+            <div class="prm-divider"></div>
+            <div class="prm-section-title">Client Profile</div>
+            <div class="two-col">
+                <div class="prm-form-group">
+                    <label class="prm-form-label">Client / Farm Name</label>
+                    <input class="prm-form-input" id="ctxFarmName" placeholder="e.g., Smith Ranch" oninput="saveContext()">
+                </div>
+                <div class="prm-form-group">
+                    <label class="prm-form-label">CropManage Account</label>
+                    <input class="prm-form-input" id="ctxAccount" placeholder="CropManage username" oninput="saveContext()">
+                </div>
+                <div class="prm-form-group">
+                    <label class="prm-form-label">Region</label>
+                    <input class="prm-form-input" id="ctxRegion" placeholder="e.g., Salinas Valley, CA" oninput="saveContext()">
+                </div>
+                <div class="prm-form-group">
+                    <label class="prm-form-label">Current Season</label>
+                    <input class="prm-form-input" id="ctxSeason" placeholder="e.g., Spring 2026" oninput="saveContext()">
+                </div>
+                <div class="prm-form-group">
+                    <label class="prm-form-label">Primary Crops</label>
+                    <input class="prm-form-input" id="ctxCrops" placeholder="e.g., Strawberry, Lettuce, Broccoli" oninput="saveContext()">
+                </div>
+                <div class="prm-form-group">
+                    <label class="prm-form-label">Irrigation Methods</label>
+                    <select class="prm-form-input" id="ctxMethod" onchange="saveContext()">
+                        <option>Drip</option><option>Sprinkler</option><option>Both</option>
+                    </select>
+                </div>
+                <div class="prm-form-group">
+                    <label class="prm-form-label">Preferred Units</label>
+                    <select class="prm-form-input" id="ctxUnits" onchange="saveContext()">
+                        <option>Inches / Hours</option><option>Gallons</option><option>Acre-Feet</option>
+                    </select>
+                </div>
+                <div class="prm-form-group">
+                    <label class="prm-form-label">User Role</label>
+                    <select class="prm-form-input" id="ctxRole" onchange="saveContext()">
+                        <option>Grower / Ranch Manager</option><option>Field Worker</option><option>Consultant</option><option>Researcher</option>
+                    </select>
+                </div>
+            </div>
+            <div class="prm-form-group">
+                <label class="prm-form-label">Special Instructions for AI</label>
+                <textarea class="prm-form-textarea" id="ctxNotes" placeholder="What should the AI know about this client? Language preferences, experience level, specific concerns..." oninput="saveContext()"></textarea>
+            </div>
+            <span id="ctxSaveMsg" style="color: #7a8e6d; font-size: 13px;">Auto-saves as you type</span>
+        </div>
+
+        <!-- GLOSSARY -->
+        <div class="tab-panel" id="prompts-glossary">
+            <div class="prm-page-title">Glossary</div>
+            <div class="prm-page-subtitle">Standard vocabulary — the AI must use these meanings consistently</div>
+            <div class="prm-divider"></div>
+            <div id="glossaryCards"></div>
+            <div style="margin-top: 20px;">
+                <button class="prm-btn prm-btn-secondary" onclick="addGlossaryTerm()">+ Add Term</button>
+            </div>
+        </div>
+
+        <!-- EXPORT -->
+        <div class="tab-panel" id="prompts-export">
+            <div class="prm-page-title">Export</div>
+            <div class="prm-page-subtitle">Generate the final master prompt MD — ready to inject</div>
+            <div class="prm-divider"></div>
+            <div class="prm-section-title">Preview</div>
+            <div class="prm-form-group">
+                <textarea class="prm-form-textarea" id="exportPreview" style="min-height: 400px; font-family: 'JetBrains Mono', monospace; font-size: 12px; line-height: 1.6; background: #faf8f2;" readonly></textarea>
+            </div>
+            <button class="prm-btn prm-btn-primary" onclick="generateExport()" style="margin-right: 8px;">Generate MD</button>
+            <button class="prm-btn prm-btn-secondary" onclick="copyExport()">Copy to Clipboard</button>
+            <span id="exportMsg" style="margin-left: 12px; color: #3d6b35; font-weight: 600; display: none;">Copied!</span>
+        </div>
+
+    </div>
+</div>
+</div>
+
+<!-- ============================================
+     JAVASCRIPT
+     ============================================ -->
+<script>
+function showJournal(id, btn) {
+    document.querySelectorAll('.journal-page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.journal-btn').forEach(b => {
+        b.classList.remove('active-green', 'active-blue', 'active-orange');
+    });
+    document.getElementById('journal-' + id).classList.add('active');
+    const colorMap = { almanac: 'active-green', clinical: 'active-blue', prompts: 'active-orange' };
+    btn.classList.add(colorMap[id]);
+
+    // Reset to first tab
+    const shell = document.querySelector('#journal-' + id + ' .journal-shell');
+    shell.querySelectorAll('.tab-btn').forEach((t, i) => t.classList.toggle('active', i === 0));
+    shell.querySelectorAll('.tab-panel').forEach((p, i) => p.classList.toggle('active', i === 0));
+}
+
+function showTab(journal, tab, btn) {
+    const shell = document.querySelector('#journal-' + journal + ' .journal-shell');
+    shell.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    shell.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById(journal + '-' + tab).classList.add('active');
+    btn.classList.add('active');
+}
+
+// ============================================================
+// MASTER PROMPT DATA — from cropclient-ai-assist-v1.md
+// ============================================================
+
+const masterPromptData = {
+    apiTools: [
+        { name: 'get_token', method: 'POST', auth: 'None', params: 'username, password', returns: 'access_token',
+          purpose: 'Log into CropManage to start a session',
+          when: 'Always first — required before anything else. Session handles this automatically.',
+          farmerSays: '',
+          response: '1. Token is loaded at session start automatically',
+          rules: 'Never ask user for password in chat. Token is loaded at session start automatically.' },
+        { name: 'get_ranches', method: 'GET', auth: 'Bearer', params: '—', returns: 'Ranch[]',
+          purpose: 'Get list of all ranches for this account',
+          when: 'User asks about ranches, you need a ranchGuid, beginning of any workflow',
+          farmerSays: 'Show me my ranches\nWhat fields do I have?\nWhich properties are in my account?',
+          response: '1. Call get_ranches\n2. Show list in clean readable format\n3. Ask which ranch they want to work with',
+          rules: '' },
+        { name: 'get_plantings', method: 'GET', auth: 'Bearer', params: 'ranchGuid', returns: 'Planting[]',
+          purpose: 'Get all plantings (crops/fields) for a ranch',
+          when: 'User wants to see fields or crops, you need a plantingId',
+          farmerSays: 'Show me my almonds\nWhat blocks are on the north ranch?\nWhat crops do I have planted?',
+          response: '1. If you dont have ranchGuid - call get_ranches first\n2. Call get_plantings with correct ranchGuid\n3. Display fields clearly\n4. Ask what they want to do with a specific field',
+          rules: '' },
+        { name: 'get_irrigation_details', method: 'GET', auth: 'Bearer', params: 'plantingId', returns: 'Event[]',
+          purpose: 'Get full irrigation history and current data for a planting',
+          when: 'User wants irrigation records, water applied, history, preparing to add/update',
+          farmerSays: 'Show me irrigation for block 4\nHow much water has field 2 gotten?\nPull up my irrigation records',
+          response: '1. Confirm which field/planting\n2. Call get_irrigation_details with plantingId\n3. Summarize key data\n4. Highlight recommended vs actual differences',
+          rules: '' },
+        { name: 'load_into_displayRecords', method: 'POST', auth: 'Bearer', params: 'plantingId', returns: 'Dashboard records',
+          purpose: 'Load irrigation data into dashboard display format',
+          when: 'Refreshing dashboard, after posting new events',
+          farmerSays: 'Refresh my dashboard\nUpdate the display\nShow me the latest data',
+          response: 'Often called automatically after posting or updating events',
+          rules: '' },
+        { name: 'post_new_irrigation', method: 'POST', auth: 'Bearer', params: 'plantingId, scheduledDate, appliedHours, irrigationMethod', returns: 'Confirmation',
+          purpose: 'Add a new irrigation event to CropManage',
+          when: 'User wants to log an irrigation, schedule a future one, add water records',
+          farmerSays: 'I irrigated block 3 yesterday for 8 hours\nLog an irrigation for field 2\nRecord that I watered the almonds',
+          response: '1. Collect needed info conversationally\n2. CONFIRM before posting\n3. Post only after confirmation\n4. Confirm success\n5. Offer to refresh dashboard',
+          rules: 'Always confirm details before posting. Never post without user verification.' },
+        { name: 'update_irrigation', method: 'PUT', auth: 'Bearer', params: 'eventId, appliedHours, mgrHours', returns: 'Confirmation',
+          purpose: 'Edit an existing irrigation event record',
+          when: 'User needs to correct an entry, update hours, fix a record',
+          farmerSays: 'I entered the wrong hours\nFix the June 10th irrigation\nUpdate the manager recommendation',
+          response: '1. Pull up records to find event\n2. Show current record\n3. Confirm change\n4. Show before/after\n5. Update after confirmation',
+          rules: 'Always show current and new value before updating. Get explicit confirmation.' },
+        { name: 'batch_post_queue', method: 'POST', auth: 'Bearer', params: 'records[]', returns: 'Batch results',
+          purpose: 'Process multiple pending irrigation records at once',
+          when: 'Multiple events to post, processing a pending queue, bulk upload',
+          farmerSays: 'Post all my pending irrigations\nProcess everything in the queue\nSubmit all pending entries',
+          response: '1. Show how many pending\n2. Summarize what will be posted/updated\n3. CONFIRM before processing\n4. Report results',
+          rules: 'Always summarize the batch before processing. Batch operations affect multiple records.' }
+    ],
+    dataTools: [
+        { name: 'json_write', purpose: 'Save any data to a file on the server', params: 'filepath, data' },
+        { name: 'json_read', purpose: 'Read previously saved data from server', params: 'filepath' },
+        { name: 'json_update', purpose: 'Update part of an existing data file', params: 'filepath, updates' },
+        { name: 'json_delete', purpose: 'Remove a data file from server', params: 'filepath' },
+        { name: 'json_list', purpose: 'See what data files exist on server', params: 'directory' },
+        { name: 'json_exists', purpose: 'Check if a specific file exists', params: 'filepath' },
+        { name: 'data_operation', purpose: 'Full table operations — read/write/update/delete', params: 'action, table, data' }
+    ],
+    workflows: [
+        { id: 'A', name: 'View Irrigation Status', trigger: 'How is my irrigation looking?',
+          steps: 'get_ranches > get_plantings > get_irrigation_details > Summarize for farmer' },
+        { id: 'B', name: 'Log New Irrigation', trigger: 'I watered block 4 for 8 hours yesterday',
+          steps: 'Confirm plantingId > Collect date, hours, method > Show confirmation > post_new_irrigation > Refresh dashboard' },
+        { id: 'C', name: 'Fix an Irrigation Record', trigger: 'I entered the wrong hours for last Tuesday',
+          steps: 'get_irrigation_details > Show current record > Confirm change > Show before/after > update_irrigation' },
+        { id: 'D', name: 'Batch Upload Pending', trigger: 'Post all my pending irrigations',
+          steps: 'Load pending records > Count and summarize > Show batch summary > batch_post_queue > Report results' }
+    ],
+    glossary: [
+        { term: 'Ranch', definition: 'Top-level geographic or operational unit containing one or more blocks.' },
+        { term: 'Block', definition: 'Sub-unit within a ranch representing a specific planted area.' },
+        { term: 'Irrigation Event', definition: 'A recorded instance of water applied to a block, including date, duration, and method.' },
+        { term: 'Recommendation', definition: 'System-generated irrigation guidance based on crop stage, ET, soil, and prior irrigation. The crown jewel.' },
+        { term: 'Planting', definition: 'A crop planted in a specific block with a wet date and harvest date.' },
+        { term: 'ET', definition: 'Evapotranspiration — the combined water loss from soil evaporation and plant transpiration.' }
+    ]
+};
+
+// ============================================================
+// RENDER FUNCTIONS
+// ============================================================
+
+let selectedTool = null;
+
+function renderAPIToolCards() {
+    const el = document.getElementById('apiToolCards');
+    el.innerHTML = masterPromptData.apiTools.map((t, i) => `
+        <div class="prm-card" style="cursor: pointer; padding: 14px 18px; transition: all 0.15s; ${selectedTool === i ? 'border-color: #c47a1a; background: #faf4e8;' : ''}" onclick="selectTool(${i})">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <span style="font-weight: 700; color: #6a4a1a;">${t.name}</span>
+                    <span style="color: #a08a60; margin-left: 8px; font-size: 13px;">${t.purpose}</span>
+                </div>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <span class="alm-badge" style="background: ${t.method === 'POST' || t.method === 'PUT' ? '#faecd4' : '#e0f0d8'}; color: ${t.method === 'POST' || t.method === 'PUT' ? '#6a4a1a' : '#2d5a1e'}; font-size: 10px;">${t.method}</span>
+                    <span style="color: #c47a1a; font-size: 13px;">${t.params}</span>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+function renderDataToolCards() {
+    const el = document.getElementById('dataToolCards');
+    el.innerHTML = masterPromptData.dataTools.map(t => `
+        <div class="prm-card" style="padding: 12px 18px;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-weight: 700; color: #6a4a1a;">${t.name}</span>
+                <span style="color: #a08a60; font-size: 13px;">${t.purpose}</span>
+            </div>
+        </div>
+    `).join('');
+}
+
+function selectTool(i) {
+    selectedTool = i;
+    const t = masterPromptData.apiTools[i];
+    document.getElementById('editorTitle').textContent = 'Editing: ' + t.name;
+    document.getElementById('toolPurpose').value = t.purpose || '';
+    document.getElementById('toolWhen').value = t.when || '';
+    document.getElementById('toolFarmerSays').value = t.farmerSays || '';
+    document.getElementById('toolResponse').value = t.response || '';
+    document.getElementById('toolRules').value = t.rules || '';
+    document.getElementById('toolEditor').style.display = 'block';
+    document.getElementById('toolSaveMsg').style.display = 'none';
+    renderAPIToolCards();
+}
+
+function saveToolEdits() {
+    if (selectedTool === null) return;
+    const t = masterPromptData.apiTools[selectedTool];
+    t.purpose = document.getElementById('toolPurpose').value;
+    t.when = document.getElementById('toolWhen').value;
+    t.farmerSays = document.getElementById('toolFarmerSays').value;
+    t.response = document.getElementById('toolResponse').value;
+    t.rules = document.getElementById('toolRules').value;
+    localStorage.setItem('masterPromptData', JSON.stringify(masterPromptData));
+    const msg = document.getElementById('toolSaveMsg');
+    msg.style.display = 'inline'; setTimeout(() => msg.style.display = 'none', 2000);
+    renderAPIToolCards();
+}
+
+function renderWorkflows() {
+    const el = document.getElementById('workflowCards');
+    el.innerHTML = masterPromptData.workflows.map((w, i) => `
+        <div class="prm-card" style="margin-bottom: 14px;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
+                <div class="prm-card-title">Workflow ${w.id}: ${w.name}</div>
+            </div>
+            <div class="prm-form-group" style="margin-bottom: 10px;">
+                <label class="prm-form-label">Farmer says</label>
+                <input class="prm-form-input" value="${w.trigger}" oninput="masterPromptData.workflows[${i}].trigger=this.value; saveAll()">
+            </div>
+            <div class="prm-form-group" style="margin-bottom: 0;">
+                <label class="prm-form-label">Steps</label>
+                <textarea class="prm-form-textarea" style="min-height: 50px;" oninput="masterPromptData.workflows[${i}].steps=this.value; saveAll()">${w.steps}</textarea>
+            </div>
+        </div>
+    `).join('');
+}
+
+function addWorkflow() {
+    const id = String.fromCharCode(65 + masterPromptData.workflows.length);
+    masterPromptData.workflows.push({ id, name: 'New Workflow', trigger: '', steps: '' });
+    renderWorkflows();
+    saveAll();
+}
+
+function renderGlossary() {
+    const el = document.getElementById('glossaryCards');
+    el.innerHTML = masterPromptData.glossary.map((g, i) => `
+        <div class="prm-card" style="margin-bottom: 10px; padding: 14px 18px;">
+            <div class="two-col">
+                <div class="prm-form-group" style="margin-bottom: 0;">
+                    <label class="prm-form-label">Term</label>
+                    <input class="prm-form-input" value="${g.term}" oninput="masterPromptData.glossary[${i}].term=this.value; saveAll()">
+                </div>
+                <div class="prm-form-group" style="margin-bottom: 0;">
+                    <label class="prm-form-label">Definition</label>
+                    <input class="prm-form-input" value="${g.definition}" oninput="masterPromptData.glossary[${i}].definition=this.value; saveAll()">
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+function addGlossaryTerm() {
+    masterPromptData.glossary.push({ term: '', definition: '' });
+    renderGlossary();
+}
+
+// ============================================================
+// CONTEXT SAVE/LOAD
+// ============================================================
+
+function saveContext() {
+    const ctx = {
+        farmName: document.getElementById('ctxFarmName').value,
+        account: document.getElementById('ctxAccount').value,
+        region: document.getElementById('ctxRegion').value,
+        season: document.getElementById('ctxSeason').value,
+        crops: document.getElementById('ctxCrops').value,
+        method: document.getElementById('ctxMethod').value,
+        units: document.getElementById('ctxUnits').value,
+        role: document.getElementById('ctxRole').value,
+        notes: document.getElementById('ctxNotes').value
+    };
+    localStorage.setItem('clientContext', JSON.stringify(ctx));
+}
+
+function loadContext() {
+    const raw = localStorage.getItem('clientContext');
+    if (!raw) return;
+    const ctx = JSON.parse(raw);
+    document.getElementById('ctxFarmName').value = ctx.farmName || '';
+    document.getElementById('ctxAccount').value = ctx.account || '';
+    document.getElementById('ctxRegion').value = ctx.region || '';
+    document.getElementById('ctxSeason').value = ctx.season || '';
+    document.getElementById('ctxCrops').value = ctx.crops || '';
+    document.getElementById('ctxMethod').value = ctx.method || 'Drip';
+    document.getElementById('ctxUnits').value = ctx.units || 'Inches / Hours';
+    document.getElementById('ctxRole').value = ctx.role || 'Grower / Ranch Manager';
+    document.getElementById('ctxNotes').value = ctx.notes || '';
+}
+
+function saveAll() {
+    localStorage.setItem('masterPromptData', JSON.stringify(masterPromptData));
+}
+
+// ============================================================
+// EXPORT — Generate MD
+// ============================================================
+
+function generateExport() {
+    const ctx = JSON.parse(localStorage.getItem('clientContext') || '{}');
+    let md = '';
+    md += '# CropClient.com AI Assist\n## Master System Prompt\n\n---\n\n';
+    md += '## Identity\n\n';
+    md += 'YOU ARE: CropClient Assistant - an intelligent agricultural water management aide.\n';
+    md += 'YOU SERVE: Farmers and ranch managers who need practical, clear guidance.\n';
+    md += 'YOU ARE POWERED BY: CropManage API (UC Davis water science) via MCP tools.\n\n';
+    md += '---\n\n## API Tools\n\n';
+
+    masterPromptData.apiTools.forEach((t, i) => {
+        md += `### Tool ${i+1}: ${t.name}\n`;
+        md += `PURPOSE: ${t.purpose}\n`;
+        md += `WHEN TO USE: ${t.when}\n`;
+        md += `REQUIRES: ${t.params}\n`;
+        md += `RETURNS: ${t.returns}\n`;
+        if (t.farmerSays) md += `FARMER SAYS: ${t.farmerSays.replace(/\n/g, ' | ')}\n`;
+        if (t.response) md += `RESPONSE PATTERN: ${t.response.replace(/\n/g, ' | ')}\n`;
+        if (t.rules) md += `RULES: ${t.rules}\n`;
+        md += '\n';
+    });
+
+    md += '## Data Storage Tools\n\n';
+    masterPromptData.dataTools.forEach(t => {
+        md += `### ${t.name}\nPURPOSE: ${t.purpose}\nREQUIRES: ${t.params}\n\n`;
+    });
+
+    md += '---\n\n## Workflows\n\n';
+    masterPromptData.workflows.forEach(w => {
+        md += `### Workflow ${w.id}: ${w.name}\n`;
+        md += `TRIGGER: "${w.trigger}"\n`;
+        md += `STEPS: ${w.steps}\n\n`;
+    });
+
+    md += '---\n\n## Glossary\n\n';
+    masterPromptData.glossary.forEach(g => {
+        if (g.term) md += `**${g.term}**: ${g.definition}\n`;
+    });
+
+    md += '\n---\n\n## Client Context\n\n';
+    md += `Client Name: ${ctx.farmName || '[FILL IN]'}\n`;
+    md += `CropManage Account: ${ctx.account || '[FILL IN]'}\n`;
+    md += `Region: ${ctx.region || '[FILL IN]'}\n`;
+    md += `Season: ${ctx.season || '[FILL IN]'}\n`;
+    md += `Primary Crops: ${ctx.crops || '[FILL IN]'}\n`;
+    md += `Irrigation Method: ${ctx.method || '[FILL IN]'}\n`;
+    md += `Units: ${ctx.units || '[FILL IN]'}\n`;
+    md += `Role: ${ctx.role || '[FILL IN]'}\n`;
+    if (ctx.notes) md += `Notes: ${ctx.notes}\n`;
+    md += '\n---\n\n## Behavior Rules\n\n';
+    md += '1. Only use approved MCP tools\n';
+    md += '2. Never fabricate irrigation data\n';
+    md += '3. Read current data before making recommendations\n';
+    md += '4. Validate targets before any write action\n';
+    md += '5. Always confirm before posting or changing data\n';
+    md += '6. Never show raw error codes — explain in plain language\n';
+    md += '\n---\nGenerated by CropClient InitAI Master Prompts\n';
+
+    document.getElementById('exportPreview').value = md;
+}
+
+function copyExport() {
+    const el = document.getElementById('exportPreview');
+    el.select();
+    document.execCommand('copy');
+    const msg = document.getElementById('exportMsg');
+    msg.style.display = 'inline'; setTimeout(() => msg.style.display = 'none', 2000);
+}
+
+// ============================================================
+// INIT
+// ============================================================
+
+document.addEventListener('DOMContentLoaded', () => {
+    // Load saved data if exists
+    const saved = localStorage.getItem('masterPromptData');
+    if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.apiTools) masterPromptData.apiTools = parsed.apiTools;
+        if (parsed.workflows) masterPromptData.workflows = parsed.workflows;
+        if (parsed.glossary) masterPromptData.glossary = parsed.glossary;
+    }
+    renderAPIToolCards();
+    renderDataToolCards();
+    renderWorkflows();
+    renderGlossary();
+    loadContext();
+});
+</script>
+
+</body>
+</html>
