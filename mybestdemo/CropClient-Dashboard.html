@@ -956,7 +956,12 @@
                 return;
             }
 
-            // The handler mutated vIRR.displayRecords in place (found by id) — just re-select it.
+            // Offline mode mutates vIRR.displayRecords in place (same array, by reference), so this
+            // is a no-op there. Local/online mode mutates the server's copy only — the client's
+            // displayRecords never hears about it otherwise — so replace it explicitly, same either way.
+            const idx = vIRR.displayRecords.findIndex(r => r.id === result.data.id);
+            if (idx !== -1) vIRR.displayRecords[idx] = result.data;
+
             vIRR.SelectedRecord   = result.data;
             vIRR.SelectedRanch    = result.data.ranch;
             vIRR.SelectedPlanting = result.data.planting;
