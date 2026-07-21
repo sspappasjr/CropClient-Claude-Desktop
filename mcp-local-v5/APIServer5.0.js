@@ -4,12 +4,12 @@
  * Renamed/version-stamped for the MCP-local-mode pass — see MCP-Local-Plan.md in this folder.
  * Run: npm install && node APIServer5.0.js | Port: 3101
  *
- * PENDING (per MCP-Local-Plan.md, needs GOFORIT):
- *   const irrigationTools = require('./irrigation-component.js')(handleDataOperation);
- *   irrigationTools.forEach(tool => server.registerTool(tool));
- *   — plus adding ...irrigationTools to the three [...apiServiceTools, ...jsonFileTools]
- *   array spreads below (/ping tool count, /tools list, /tools/:toolName dispatch).
- *   Nothing else in this file should change — CropManage and JSON-file tools stay as-is.
+ * irrigation-component.js is injected below (reset_table, read_meter,
+ * create_next_irrigation, update_record) — extracted from
+ * mybestdemo/CropClient-Dashboard.html (1.5), not rewritten. Self-seeds
+ * irrigation/irrigation_snapshot tables from the same 26 hardcoded records
+ * on first call. Everything else in this file — CropManage and JSON-file
+ * tools — is unchanged from the uploaded APIServer3.4.1.js.
  */
 
 const readline = require('readline');
@@ -847,10 +847,13 @@ apiServiceTools.forEach(tool => server.registerTool(tool));
 jsonFileTools.forEach(tool => server.registerTool(tool));
 
 // ========================================
-// @@@@ IRRIGATION_COMPONENT INJECTION POINT — PENDING, see MCP-Local-Plan.md @@@@
-// const irrigationTools = require('./irrigation-component.js')(handleDataOperation);
-// irrigationTools.forEach(tool => server.registerTool(tool));
+// @@@@ IRRIGATION_COMPONENT INJECTION POINT @@@@
+// Source: ./irrigation-component.js — extracted from mybestdemo/CropClient-Dashboard.html (1.5).
+// handleDataOperation is defined later in this file as a hoisted function declaration,
+// so passing it here is safe — it's only called once a request actually comes in.
 // ========================================
+const irrigationTools = require('./irrigation-component.js')(handleDataOperation);
+irrigationTools.forEach(tool => server.registerTool(tool));
 
 // ========================================
 // HTTP BRIDGE (Express + CORS)
@@ -986,13 +989,13 @@ app.get('/ping', (req, res) => {
         server: 'CropClient APIServer5.0',
         mode: 'standalone',
         timestamp: new Date().toISOString(),
-        tools: apiServiceTools.length + jsonFileTools.length
+        tools: apiServiceTools.length + jsonFileTools.length + irrigationTools.length
     });
 });
 
 // List tools — include inputSchema so clients (mcp-engine, AI) can validate all tools
 app.get('/tools', (req, res) => {
-    const toolList = [...apiServiceTools, ...jsonFileTools].map(t => ({
+    const toolList = [...apiServiceTools, ...jsonFileTools, ...irrigationTools].map(t => ({
         name: t.name,
         description: t.description,
         inputSchema: t.inputSchema
@@ -1005,7 +1008,7 @@ app.post('/tools/:toolName', async (req, res) => {
     const { toolName } = req.params;
     const args = req.body;
     try {
-        const tool = [...apiServiceTools, ...jsonFileTools].find(t => t.name === toolName);
+        const tool = [...apiServiceTools, ...jsonFileTools, ...irrigationTools].find(t => t.name === toolName);
         if (!tool) return res.status(404).json({ success: false, error: `Tool not found: ${toolName}` });
         const result = await tool.handler(args);
         res.json(result);
@@ -1017,7 +1020,7 @@ app.post('/tools/:toolName', async (req, res) => {
 // Start HTTP server
 app.listen(PORT, () => {
     console.log(`APIServer5.0 running on port ${PORT}`);
-    console.log(`Tools available: ${apiServiceTools.length + jsonFileTools.length}`);
+    console.log(`Tools available: ${apiServiceTools.length + jsonFileTools.length + irrigationTools.length}`);
 });
 
 // Start stdio MCP server (standalone only)
