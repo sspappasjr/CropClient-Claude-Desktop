@@ -33,20 +33,34 @@ tools — those only ever existed in the 4.0 server (the one that got
 abandoned). So irrigation's business logic doesn't already live
 server-side here; it has to be added.
 
-## The Approach: Export + Inject, Not Rewrite
-Rather than re-deriving the business logic against generic
-`data_operation` calls from the client (a read-compute-write recipe
-per token), the business logic itself — the same logic already tested
-in the dashboard's `localHandlers` — gets exported into its own
-module and **injected** into the running server:
+## The Approach: Extract From 1.5, Not Rewrite
+`irrigation-component.js` is not new code written to match the
+dashboard's behavior — it **is** the dashboard's own code, taken out.
+The harness pass wasn't a rehearsal we throw away: it was the MCP
+token language (the `success`/`statusMessage`/`data` shape, the date
+rules, the record math) being written and proven correct before it had
+a real server to live on. Extracting it now is close to mechanical:
 
-- **`irrigation-component.js`** — a standalone Node module. Exports a
-  factory function: `(handleDataOperation) => [tools...]`. Returns
-  `reset_table`, `read_meter`, `create_next_irrigation`,
-  `update_record` in the exact tool shape (`name`, `description`,
-  `inputSchema`, `handler`) `APIServer5.0.js` already uses for its own
-  tools. Includes the same date-normalize/no-null/no-duplicate rules
-  already tested client-side.
+- **Source: `mybestdemo/CropClient-Dashboard.html` (v1.5)** —
+  specifically the `localHandlers` object (`reset_table`, `read_meter`,
+  `create_next_irrigation`, `update_record`) and its helper functions
+  (`parseAndNormalizeDate`, `parseEventDate`, `formatDate`). Same
+  bodies, same rules, same error messages — carried over, not
+  reauthored.
+- **`irrigation-component.js`** — that extracted code, wrapped as a
+  standalone Node module: a factory function
+  `(handleDataOperation) => [tools...]`, returning the four tools in
+  the exact shape (`name`, `description`, `inputSchema`, `handler`)
+  `APIServer5.0.js` already uses for its own tools.
+- **The one real seam that changes:** in the dashboard, each handler
+  reads/writes `vIRR.displayRecords` directly — an in-memory JS
+  variable in the browser tab. As server tools, they read/write
+  through `handleDataOperation('read'/'write', 'irrigation', ...)`
+  instead — same shape of operation (get the records, mutate, save
+  them back), different storage underneath (a JSON file on the
+  server instead of a page-scoped variable). Everything else —
+  arguments in, results out, the date/duplicate/null rules — is
+  unchanged.
 - **Persistence** — the module calls the *host server's own*
   `handleDataOperation(action, table, data)` (already defined in
   `APIServer5.0.js` for the JSON file tools) rather than inventing a
@@ -89,8 +103,11 @@ underneath `runToken()` requires touching nothing else.
 - `package.json` — `express` + `cors`, so it's `npm install && node APIServer5.0.js`
 
 ## Order of Work (next session)
-1. **GOFORIT** — write `irrigation-component.js` and the injection
-   edit to `APIServer5.0.js`.
+1. **GOFORIT** — extract `localHandlers` + helpers from
+   `mybestdemo/CropClient-Dashboard.html` into `irrigation-component.js`
+   (swapping direct `vIRR.displayRecords` access for
+   `handleDataOperation` calls), and add the injection edit to
+   `APIServer5.0.js`.
 2. You run it locally (`npm install`, then `node APIServer5.0.js`,
    port 3101).
 3. Confirm `GET http://localhost:3101/tools` lists the four new tools
