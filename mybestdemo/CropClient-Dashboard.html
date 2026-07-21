@@ -554,6 +554,10 @@
                         </div>
                     </div>
 
+                    <!-- Inline result/error message — the last token's outcome, right where you're
+                         looking, instead of only in the Command Log above where it's easy to miss. -->
+                    <div id="formMessage" style="min-height: 18px; margin-bottom: 6px; font-size: 0.85em; font-weight: 600; text-align: center;"></div>
+
                     <!-- CRUD Buttons - Proper height for easy clicking -->
                     <div class="crud-buttons" style="display: flex; gap: 4px; margin-top: auto;">
                         <button class="crud-btn create" onclick="setPromptAndSend('Create next irrigation for the selected field')" style="padding: 12px 8px; font-size: 0.95em; flex: 1; min-height: 42px; font-weight: 600;">
@@ -633,6 +637,26 @@
         let CURRENT_TARGET = 'harness';
         function isOffline() { return CURRENT_TARGET === 'harness'; }
 
+        // Validates and normalizes a typed date to the app's own M/D/YY convention (zero-padded,
+        // 2-digit year — matching what parseEventDate/formatDate/the hardcoded records all use),
+        // regardless of whether the user typed "5/12/26", "05/12/2026", or similar. Returns null
+        // for anything that isn't a real calendar date, so string-equality checks (duplicate-date)
+        // stay reliable no matter how the date was entered.
+        function parseAndNormalizeDate(str) {
+            if (!str) return null;
+            const parts = str.trim().split('/');
+            if (parts.length !== 3) return null;
+            let [m, d, y] = parts;
+            m = parseInt(m, 10);
+            d = parseInt(d, 10);
+            if (y.length === 4) y = y.slice(-2);
+            if (y.length !== 2 || isNaN(m) || isNaN(d) || m < 1 || m > 12 || d < 1 || d > 31) return null;
+            const yNum = parseInt(y, 10);
+            const check = new Date(2000 + yNum, m - 1, d);
+            if (check.getMonth() !== m - 1 || check.getDate() !== d) return null; // e.g. Feb 30 rolled over
+            return `${String(m).padStart(2, '0')}/${String(d).padStart(2, '0')}/${y.padStart(2, '0')}`;
+        }
+
         // Mirrors APIServer4.0.js's tool handlers, run locally instead of over the wire.
         const localHandlers = {
             reset_table: function(params) {
@@ -702,18 +726,26 @@
                     return { success: false, statusMessage: '❌ Date cannot be empty' };
                 }
 
+                // Normalize before comparing — a typed "5/12/26" and a stored "05/12/26" are the
+                // same day and must be recognized as a duplicate; a malformed date must be rejected
+                // outright instead of silently corrupting scheduledDate for every later sort/parse.
+                const normalizedDate = parseAndNormalizeDate(params.scheduledDate);
+                if (!normalizedDate) {
+                    return { success: false, statusMessage: `❌ "${params.scheduledDate}" is not a valid date, use M/D/YY` };
+                }
+
                 // Data edit rule: no duplicate date for a planting
                 const dup = records.find(r =>
                     r.id !== params.id &&
                     r.ranch === rec.ranch &&
                     r.planting === rec.planting &&
-                    r.scheduledDate === params.scheduledDate
+                    r.scheduledDate === normalizedDate
                 );
                 if (dup) {
-                    return { success: false, statusMessage: `❌ Duplicate date — ${rec.planting} already has a record on ${params.scheduledDate}` };
+                    return { success: false, statusMessage: `❌ Duplicate date, ${rec.planting} already has a record on ${normalizedDate}` };
                 }
 
-                rec.scheduledDate   = params.scheduledDate;
+                rec.scheduledDate   = normalizedDate;
                 rec.interval        = params.interval;
                 rec.mgrHours        = parseFloat(params.mgrHours);
                 rec.appliedHours    = parseFloat(params.appliedHours);
@@ -1027,14 +1059,20 @@
         }
 
         function formatDate(date) {
-            const month = date.getMonth() + 1;
-            const day = date.getDate();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
             const year = String(date.getFullYear()).slice(-2);
             return `${month}/${day}/${year}`;
         }
 
         function showResult(message) {
             logToChat(message, 'M');
+
+            const formMsg = document.getElementById('formMessage');
+            if (formMsg) {
+                formMsg.textContent = message.split('\n')[0]; // first line only, stays compact
+                formMsg.style.color = (message.includes('❌') || message.startsWith('ERROR')) ? '#c62828' : '#2e7d32';
+            }
         }
 
         // ========================================
