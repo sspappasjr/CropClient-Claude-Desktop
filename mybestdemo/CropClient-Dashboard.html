@@ -1274,7 +1274,10 @@
             displayRecords.forEach(record => {
                 const row = tbody.insertRow();
                 row.dataset.recordId = record.id;
-                row.onclick = () => selectRecord(record.id);
+                row.onclick = () => {
+                    selectRecord(record.id);
+                    showResult(`Record ${record.id} selected`);
+                };
 
                 row.insertCell(0).textContent = record.ranch;
                 row.insertCell(1).textContent = record.planting;
