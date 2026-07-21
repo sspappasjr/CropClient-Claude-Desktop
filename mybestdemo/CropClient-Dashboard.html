@@ -482,8 +482,9 @@
                 <!-- @@@@ BEGIN S3 ID: IrrigationGrid @@@@ -->
                 <div class="grid-section">
                     <div class="record-count" style="display: flex; align-items: center; margin-bottom: 10px; font-weight: 600; color: #2e7d32;">
-                        <h3 style="flex: 0 0 auto;">📊 Irrigation Records (<span id="recordCount">0</span>) <span class="info-icon" title="Click any row to select">ℹ️</span></h3>
+                        <h3 style="flex: 0 0 auto; margin: 0;">📊 Count (<span id="recordCount">0</span>) <span class="info-icon" title="Click any row to select">ℹ️</span></h3>
                         <span id="dataSourceLabel" style="flex: 1; text-align: center; margin: 0 8px; padding: 2px 10px; background: #fff3cd; color: #856404; border-radius: 12px; font-size: 0.75em; font-weight: 700; letter-spacing: 0.5px;">Demo Irrigations</span>
+                        <span style="flex: 0 0 auto; font-size: 0.85em; white-space: nowrap;">In the Queue (<span id="queueCount">0</span>)</span>
                     </div>
                     <div class="data-grid">
                         <table>
@@ -764,6 +765,7 @@
                 rec.lastUpdatedDate = new Date().toLocaleString();
                 rec.updatedBy       = 'Field Worker';
                 rec.isUpdated       = true;
+                rec.status          = -1; // queued — not yet synced to CropManage, same as create_next_irrigation
 
                 return {
                     success: true,
@@ -1339,8 +1341,9 @@
                 row.insertCell(6).textContent = record.appliedHours;
             });
 
-            // Update record count
+            // Update record count and queue count (status === -1 means "queued, not yet synced")
             document.getElementById('recordCount').textContent = displayRecords.length;
+            document.getElementById('queueCount').textContent = displayRecords.filter(r => r.status === -1).length;
 
             // Auto-select first record
             if (displayRecords.length > 0 && !selectedRecord) {

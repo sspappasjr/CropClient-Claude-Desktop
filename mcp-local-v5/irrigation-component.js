@@ -237,6 +237,7 @@ module.exports = function createIrrigationTools(handleDataOperation) {
                 rec.lastUpdatedDate = new Date().toLocaleString();
                 rec.updatedBy = 'Field Worker';
                 rec.isUpdated = true;
+                rec.status = -1; // queued — not yet synced to CropManage, same as create_next_irrigation
 
                 await handleDataOperation('write', TABLE, records);
                 return {
