@@ -481,8 +481,9 @@
                 <!-- S3: IrrigationGrid -->
                 <!-- @@@@ BEGIN S3 ID: IrrigationGrid @@@@ -->
                 <div class="grid-section">
-                    <div class="record-count">
-                        <h3>📊 Irrigation Records (<span id="recordCount">0</span>) <span class="info-icon" title="Click any row to select">ℹ️</span></h3>
+                    <div class="record-count" style="display: flex; align-items: center; margin-bottom: 10px; font-weight: 600; color: #2e7d32;">
+                        <h3 style="flex: 0 0 auto;">📊 Irrigation Records (<span id="recordCount">0</span>) <span class="info-icon" title="Click any row to select">ℹ️</span></h3>
+                        <span id="dataSourceLabel" style="flex: 1; text-align: center; margin: 0 8px; padding: 2px 10px; background: #fff3cd; color: #856404; border-radius: 12px; font-size: 0.75em; font-weight: 700; letter-spacing: 0.5px;">Demo Irrigations</span>
                     </div>
                     <div class="data-grid">
                         <table>
@@ -840,6 +841,10 @@
 
             // vIRR passes its WHOLE state across the fence to vDOM
             DOM_receive(JSON.parse(JSON.stringify(vIRR)));
+
+            // reset_table always means "back to demo/snapshot data" — regardless of how it was
+            // triggered (startup fallback or a manual Reset click) — so the label always follows.
+            setDataSourceLabel('Demo Irrigations');
         }
 
         // ========================================
@@ -849,7 +854,11 @@
         // ========================================
 
         async function loadOnStartup() {
-            const result = await runToken('data_operation', { action: 'read', table: 'steve' });
+            // Table name doubles as the label source — capitalize + " Irrigations" (e.g. "steve" ->
+            // "Steve Irrigations"). Hardcoded to 'steve' for now; will become the logged-in user's
+            // name once there is one.
+            const sourceTable = 'steve';
+            const result = await runToken('data_operation', { action: 'read', table: sourceTable });
 
             if (result && result.success && Array.isArray(result.data) && result.data.length > 0) {
                 vIRR.displayRecords = JSON.parse(JSON.stringify(result.data));
@@ -862,9 +871,10 @@
                     Record: null,
                     Error: null,
                     Value: null,
-                    Message: `✅ Loaded live CropManage data — ${vIRR.displayRecords.length} records (steve.json)`
+                    Message: `✅ Loaded live CropManage data — ${vIRR.displayRecords.length} records (${sourceTable}.json)`
                 };
                 DOM_receive(JSON.parse(JSON.stringify(vIRR)));
+                setDataSourceLabel(sourceTable.charAt(0).toUpperCase() + sourceTable.slice(1) + ' Irrigations');
                 return;
             }
 
@@ -1125,6 +1135,11 @@
                 formMsg.textContent = message.split('\n')[0]; // first line only, stays compact
                 formMsg.style.color = (message.includes('❌') || message.startsWith('ERROR')) ? '#c62828' : '#2e7d32';
             }
+        }
+
+        function setDataSourceLabel(text) {
+            const el = document.getElementById('dataSourceLabel');
+            if (el) el.textContent = text;
         }
 
         // ========================================
