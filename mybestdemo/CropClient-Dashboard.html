@@ -369,9 +369,14 @@
 </head>
 <body>
     <div class="container">
-        <header>
+        <header style="position: relative;">
             <h1>🌾 CropClient MCP Water Tools</h1>
             <p>Natural Language Field Water Reporting</p>
+            <select id="envSelect" title="Connection Mode" onchange="setEnvMode(this.value)" style="position: absolute; top: 8px; right: 20px; width: 90px; padding: 5px; font-size: 0.85em; border: 2px solid #ddd; border-radius: 6px; background: #fff;">
+                <option value="local" selected>Local</option>
+                <option value="online">Online</option>
+                <option value="offline">Offline</option>
+            </select>
         </header>
 
 
@@ -634,8 +639,14 @@
         // 'production' = live server (not wired yet)
         // ========================================
 
-        let CURRENT_TARGET = 'local';
-        function isOffline() { return CURRENT_TARGET === 'harness'; }
+        let CURRENT_TARGET = 'local'; // 'offline' | 'local' | 'online' — set by the #envSelect dropdown
+        function isOffline() { return CURRENT_TARGET === 'offline'; }
+
+        // Dropdown handler — the one place mode switches, logged so it's visible when it changed.
+        function setEnvMode(value) {
+            CURRENT_TARGET = value;
+            showResult(`ℹ️ Mode switched to ${value}`);
+        }
 
         // Validates and normalizes a typed date to the app's own M/D/YY convention (zero-padded,
         // 2-digit year — matching what parseEventDate/formatDate/the hardcoded records all use),
@@ -762,7 +773,7 @@
         };
 
         async function runToken(toolName, args) {
-            const target = CURRENT_TARGET === 'production' ? 'production' : 'local';
+            const target = CURRENT_TARGET === 'online' ? 'online' : 'local';
             const staged = mcpEngineStaging(target, toolName, args);
             if (isOffline()) {
                 return localHandlers[toolName](staged.params);

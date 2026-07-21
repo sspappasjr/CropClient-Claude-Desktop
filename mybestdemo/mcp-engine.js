@@ -14,7 +14,7 @@
 function mcpEngineURL(target) {
     const servers = {
         local: 'http://localhost:3101',
-        production: 'https://api.cropclient.com'
+        online: 'https://api.cropclient.com'
     };
     return servers[target] || servers.local;
 }
@@ -36,7 +36,7 @@ function mcpEngineStaging(target, toolName, params) {
 // POST to server, get result back
 // Takes a staged object — not loose args
 // Hits /tools/:toolName with plain args — matches APIServer2.0 HTTP bridge
-// Usage: mcpEngineSend(mcpEngineStaging('production', 'get_token', { username, password }))
+// Usage: mcpEngineSend(mcpEngineStaging('online', 'get_token', { username, password }))
 async function mcpEngineSend(staged) {
     try {
         const response = await fetch(staged.serverUrl + '/tools/' + staged.toolName, {
