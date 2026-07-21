@@ -656,6 +656,41 @@
                     statusMessage: `✅ Ready for Meter Reading — ${last.scheduledDate}`,
                     data: JSON.parse(JSON.stringify(last))
                 };
+            },
+            create_next_irrigation: function(params) {
+                const records = vIRR.displayRecords;
+                const same = records.filter(r => r.ranch === params.ranch && r.planting === params.planting);
+                if (!same.length) {
+                    return { success: false, statusMessage: `No records for ${params.ranch} / ${params.planting}` };
+                }
+                same.sort((a, b) => parseEventDate(a.scheduledDate) - parseEventDate(b.scheduledDate));
+                const last = same[same.length - 1];
+                const nextDate = new Date(parseEventDate(last.scheduledDate));
+                const interval = Math.round(parseFloat(last.interval) || 1);
+                nextDate.setDate(nextDate.getDate() + interval);
+                const tinyAdjust = Math.random() * 0.2 + 0.1;
+                const newRecord = {
+                    id: Math.max(...records.map(r => r.id)) + 1,
+                    ranch: last.ranch, planting: last.planting,
+                    hours: Math.max(0.1, parseFloat((last.hours + tinyAdjust).toFixed(1))),
+                    mgrHours: parseFloat((last.mgrHours + 0.1).toFixed(1)),
+                    appliedHours: 0, interval: last.interval,
+                    scheduledDate: formatDate(nextDate),
+                    irrigationMethod: last.irrigationMethod,
+                    recommendedInches: last.recommendedInches,
+                    lastUpdatedDate: new Date().toLocaleString(),
+                    updatedBy: 'CropClient System',
+                    isNew: true, isOriginal: false, isUpdated: false,
+                    ranchId: last.ranchId, plantingId: last.plantingId, status: -1
+                };
+                // Returns just the new record — matches APIServer4.0.js's create_next_irrigation
+                // contract exactly (irrigCreateNext returns { data: newRecord }, not the whole list).
+                // The token function (testCreateNext) is the one that merges it into displayRecords.
+                return {
+                    success: true,
+                    statusMessage: `✅ Created Next Irrigation — ${formatDate(nextDate)}`,
+                    data: JSON.parse(JSON.stringify(newRecord))
+                };
             }
         };
 
@@ -727,92 +762,48 @@
         // CREATE NEXT IRRIGATION (CORE TOOL #1) — untouched this pass
         // ========================================
 
-        function testCreateNext() {
-            if (!selectedRecord) {
+        async function testCreateNext() {
+            if (!vIRR.SelectedRecord) {
                 showResult('ERROR: No record selected. Click a row first.');
                 return;
             }
 
-            // Find all records for this ranch/planting
-            const sameFieldRecords = displayRecords.filter(r =>
-                r.ranch === selectedRecord.ranch &&
-                r.planting === selectedRecord.planting
-            );
-
-            // Sort by date to get most recent
-            sameFieldRecords.sort((a, b) => {
-                const dateA = parseEventDate(a.scheduledDate);
-                const dateB = parseEventDate(b.scheduledDate);
-                return dateA - dateB;
+            const result = await runToken('create_next_irrigation', {
+                ranch: vIRR.SelectedRecord.ranch,
+                planting: vIRR.SelectedRecord.planting
             });
 
-            const lastRecord = sameFieldRecords[sameFieldRecords.length - 1];
+            if (!result.success) {
+                showResult(`❌ ${result.statusMessage || result.error}`);
+                return;
+            }
 
-            // Calculate next date
-            const currentDate = parseEventDate(lastRecord.scheduledDate);
-            const nextDate = new Date(currentDate);
-            const intervalDays = parseFloat(lastRecord.interval) || 1;
-            const roundedInterval = Math.round(intervalDays);
-
-            nextDate.setDate(nextDate.getDate() + roundedInterval);
-            const nextDateStr = formatDate(nextDate);
-
-            // Calculate new hours
-            const tinyAdjust = (Math.random() * 0.2 + 0.1);
-            const newRecHours = Math.max(0.1, parseFloat((lastRecord.hours + tinyAdjust).toFixed(1)));
-            const newMgrHours = parseFloat((lastRecord.mgrHours + 0.1).toFixed(1));
-
-            // Create new record with next integer ID
-            const maxId = Math.max(...displayRecords.map(r => r.id));
-
-            const newRecord = {
-                id: maxId + 1,
-                ranch: lastRecord.ranch,
-                planting: lastRecord.planting,
-                hours: newRecHours,
-                mgrHours: newMgrHours,
-                appliedHours: 0,
-                interval: lastRecord.interval,
-                scheduledDate: nextDateStr,
-                irrigationMethod: lastRecord.irrigationMethod,
-                recommendedInches: lastRecord.recommendedInches,
-                lastUpdatedDate: new Date().toLocaleString(),
-                updatedBy: "CropClient System",
-                isNew: true,
-                isOriginal: false,
-                isUpdated: false
-            };
-
-            displayRecords.push(newRecord);
-
-            // Save the new record ID before sorting
-            const newRecordId = newRecord.id;
-
-            // Sort by ranch → planting → date (ascending)
-            displayRecords.sort((a, b) => {
+            // vIRR folds the new record into its own displayRecords — the handler returns just the
+            // new record (matching the real server tool's contract), so the token function is the one
+            // that merges it in, same for offline or online.
+            vIRR.displayRecords.forEach(r => { r.isNew = false; });
+            vIRR.displayRecords.push(result.data);
+            vIRR.displayRecords.sort((a, b) => {
                 if (a.ranch < b.ranch) return -1;
                 if (a.ranch > b.ranch) return 1;
                 if (a.planting < b.planting) return -1;
                 if (a.planting > b.planting) return 1;
-                const dateA = parseEventDate(a.scheduledDate);
-                const dateB = parseEventDate(b.scheduledDate);
-                return dateA - dateB;
+                return parseEventDate(a.scheduledDate) - parseEventDate(b.scheduledDate);
             });
+            vIRR.SelectedRecord   = result.data;
+            vIRR.SelectedRanch    = result.data.ranch;
+            vIRR.SelectedPlanting = result.data.planting;
+            vIRR.Result = {
+                TokenName: 'create_next_irrigation',
+                Success: true,
+                Record: null,
+                Error: null,
+                Value: null,
+                Message: result.statusMessage
+            };
 
-            renderTable();
-            selectRecord(newRecordId);
-
-            showResult(`✅ MCP TOOL #1: Created Next Irrigation
-
-Ranch: ${newRecord.ranch}
-Planting: ${newRecord.planting}
-Previous Date: ${lastRecord.scheduledDate}
-Interval: ${roundedInterval} days
-Next Date: ${nextDateStr}
-Water Budget: ${newRecHours} hours
-Manager Hours: ${newMgrHours}
-
-Field workers get instant water budget calculations!`);
+            // vIRR passes its WHOLE state across the fence to vDOM
+            DOM_receive(JSON.parse(JSON.stringify(vIRR)));
         }
 
         // ========================================
