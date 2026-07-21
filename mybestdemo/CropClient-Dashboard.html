@@ -587,7 +587,7 @@
         // Same shape as vDOM. Only IRR_receive() may write vIRR.*
         // ========================================
 
-        const vIRR = {
+        let vIRR = {
             originalRecords: [
                 { id: 7, eventId: 4123147, ranch: "Steve Ranch 1", planting: "Planting 1A", hours: 0, mgrHours: 0, appliedHours: 0, interval: "0 days", scheduledDate: "05/01/26", irrigationMethod: "Sprinkler", recommendedInches: "0", lastUpdatedDate: "7/20/2026, 5:41:25 PM", updatedBy: "CropManage API", isNew: false, isOriginal: true, isUpdated: false, ranchId: 16150, plantingId: 64196, status: 0 },
                 { id: 8, eventId: 4126601, ranch: "Steve Ranch 1", planting: "Planting 1A", hours: 2.8, mgrHours: 0.3, appliedHours: 0.3, interval: "0 days", scheduledDate: "05/05/26", irrigationMethod: "Sprinkler", recommendedInches: "0.85", lastUpdatedDate: "7/20/2026, 5:41:25 PM", updatedBy: "CropManage API", isNew: false, isOriginal: true, isUpdated: false, ranchId: 16150, plantingId: 64196, status: 0 },
@@ -668,14 +668,10 @@
             return mcpEngineSend(staged);
         }
 
-        // Only IRR_receive() may write vIRR.* — whole vDOM object crosses in, JSON copy.
+        // Only IRR_receive() may write vIRR.* — whole vDOM object crosses in, already a JSON
+        // copy from the call site, so taking it directly creates no live link back to vDOM.
         function IRR_receive(domState) {
-            vIRR.originalRecords  = JSON.parse(JSON.stringify(domState.originalRecords));
-            vIRR.displayRecords   = JSON.parse(JSON.stringify(domState.displayRecords));
-            vIRR.SelectedRecord   = domState.SelectedRecord;
-            vIRR.SelectedRanch    = domState.SelectedRanch;
-            vIRR.SelectedPlanting = domState.SelectedPlanting;
-            vIRR.Result           = domState.Result;
+            vIRR = domState;
 
             // vIRR sets its own legacy variables from what it just received —
             // not from assuming shared scope with vDOM's side — so
@@ -916,7 +912,7 @@ Changes saved to working memory!`);
         // Same shape as vIRR. Only DOM_receive() may write vDOM.*
         // ========================================
 
-        const vDOM = {
+        let vDOM = {
             originalRecords: [
                 { id: 7, eventId: 4123147, ranch: "Steve Ranch 1", planting: "Planting 1A", hours: 0, mgrHours: 0, appliedHours: 0, interval: "0 days", scheduledDate: "05/01/26", irrigationMethod: "Sprinkler", recommendedInches: "0", lastUpdatedDate: "7/20/2026, 5:41:25 PM", updatedBy: "CropManage API", isNew: false, isOriginal: true, isUpdated: false, ranchId: 16150, plantingId: 64196, status: 0 },
                 { id: 8, eventId: 4126601, ranch: "Steve Ranch 1", planting: "Planting 1A", hours: 2.8, mgrHours: 0.3, appliedHours: 0.3, interval: "0 days", scheduledDate: "05/05/26", irrigationMethod: "Sprinkler", recommendedInches: "0.85", lastUpdatedDate: "7/20/2026, 5:41:25 PM", updatedBy: "CropManage API", isNew: false, isOriginal: true, isUpdated: false, ranchId: 16150, plantingId: 64196, status: 0 },
@@ -954,18 +950,16 @@ Changes saved to working memory!`);
 
         // Only DOM_receive() may write vDOM.* — whole vIRR object crosses in, JSON copy.
         function DOM_receive(irrState) {
-            vDOM.originalRecords = JSON.parse(JSON.stringify(irrState.originalRecords));
-            vDOM.displayRecords  = JSON.parse(JSON.stringify(irrState.displayRecords));
-            // SelectedRecord is its own field — every token sets it directly (reset_table: first
-            // record, read_meter: the record it found). Never null, never read out of Result.
-            // Captured here, before renderTable() runs, because renderTable()'s auto-select calls
-            // selectRecord() which itself now writes vDOM.SelectedRecord — that write must not be
-            // allowed to clobber what the token actually asked for.
-            const targetSelected = irrState.SelectedRecord || vDOM.displayRecords[0] || null;
-            vDOM.SelectedRecord  = targetSelected;
-            vDOM.SelectedRanch   = targetSelected ? targetSelected.ranch : null;
-            vDOM.SelectedPlanting = targetSelected ? targetSelected.planting : null;
-            vDOM.Result          = irrState.Result;
+            // SelectedRecord is its own field — every token already set it directly before crossing
+            // (reset_table: first record, read_meter: the record it found). Captured here, before
+            // renderTable() runs, because renderTable()'s auto-select calls selectRecord(), which
+            // itself now writes vDOM.SelectedRecord — that write must not clobber what the token
+            // actually asked for.
+            const targetSelected = irrState.SelectedRecord || irrState.displayRecords[0] || null;
+
+            // Whole object crosses in, already a JSON copy from the call site — taking it directly
+            // creates no live link back to vIRR.
+            vDOM = irrState;
 
             // vDOM is the only thing that renders. Sync the page's working data from vDOM's own
             // state so renderTable()/selectRecord() (untouched) draw from what just crossed the fence,
