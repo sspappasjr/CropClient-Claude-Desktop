@@ -707,8 +707,13 @@
                 return;
             }
 
-            // vIRR folds the token result into its own state
+            // vIRR folds the token result into its own state.
+            // SelectedRecord is its own field — tokens set it directly, never via Result.
             vIRR.displayRecords = JSON.parse(JSON.stringify(result.data));
+            vIRR.SelectedRecord = vIRR.displayRecords[0] || null;
+            vIRR.SelectedRanch    = vIRR.SelectedRecord ? vIRR.SelectedRecord.ranch : null;
+            vIRR.SelectedPlanting = vIRR.SelectedRecord ? vIRR.SelectedRecord.planting : null;
+            // Result is command-log-only — TokenName/Success/Message for display, nothing operational.
             vIRR.Result = {
                 TokenName: 'reset_table',
                 Success: true,
@@ -819,14 +824,14 @@ Field workers get instant water budget calculations!`);
         // ========================================
 
         async function testReadMeter() {
-            if (!selectedRecord) {
+            if (!vIRR.SelectedRecord) {
                 showResult('ERROR: No record selected. Click a row first.');
                 return;
             }
 
             const result = await runToken('read_meter', {
-                ranch: selectedRecord.ranch,
-                planting: selectedRecord.planting
+                ranch: vIRR.SelectedRecord.ranch,
+                planting: vIRR.SelectedRecord.planting
             });
 
             if (!result.success) {
@@ -834,12 +839,17 @@ Field workers get instant water budget calculations!`);
                 return;
             }
 
-            // vIRR folds the token result into its own state
+            // vIRR folds the token result into its own state.
+            // SelectedRecord is its own field — the found record goes there directly, not into Result.
             vIRR.displayRecords = JSON.parse(JSON.stringify(displayRecords));
+            vIRR.SelectedRecord = JSON.parse(JSON.stringify(result.data));
+            vIRR.SelectedRanch    = vIRR.SelectedRecord.ranch;
+            vIRR.SelectedPlanting = vIRR.SelectedRecord.planting;
+            // Result is command-log-only — TokenName/Success/Message for display, nothing operational.
             vIRR.Result = {
                 TokenName: 'read_meter',
                 Success: true,
-                Record: JSON.parse(JSON.stringify(result.data)),
+                Record: null,
                 Error: null,
                 Value: null,
                 Message: result.statusMessage
@@ -946,11 +956,15 @@ Changes saved to working memory!`);
         function DOM_receive(irrState) {
             vDOM.originalRecords = JSON.parse(JSON.stringify(irrState.originalRecords));
             vDOM.displayRecords  = JSON.parse(JSON.stringify(irrState.displayRecords));
-            // A token that found a specific record (e.g. read_meter) carries it in Result.Record —
-            // select that. Otherwise (e.g. reset_table) selection lands on the first record. Never null.
-            vDOM.SelectedRecord  = (irrState.Result && irrState.Result.Record) || vDOM.displayRecords[0] || null;
-            vDOM.SelectedRanch   = vDOM.SelectedRecord ? vDOM.SelectedRecord.ranch : null;
-            vDOM.SelectedPlanting = vDOM.SelectedRecord ? vDOM.SelectedRecord.planting : null;
+            // SelectedRecord is its own field — every token sets it directly (reset_table: first
+            // record, read_meter: the record it found). Never null, never read out of Result.
+            // Captured here, before renderTable() runs, because renderTable()'s auto-select calls
+            // selectRecord() which itself now writes vDOM.SelectedRecord — that write must not be
+            // allowed to clobber what the token actually asked for.
+            const targetSelected = irrState.SelectedRecord || vDOM.displayRecords[0] || null;
+            vDOM.SelectedRecord  = targetSelected;
+            vDOM.SelectedRanch   = targetSelected ? targetSelected.ranch : null;
+            vDOM.SelectedPlanting = targetSelected ? targetSelected.planting : null;
             vDOM.Result          = irrState.Result;
 
             // vDOM is the only thing that renders. Sync the page's working data from vDOM's own
@@ -962,8 +976,8 @@ Changes saved to working memory!`);
 
             renderTable();
 
-            if (vDOM.SelectedRecord && vDOM.SelectedRecord.id !== displayRecords[0].id) {
-                selectRecord(vDOM.SelectedRecord.id);
+            if (targetSelected && targetSelected.id !== displayRecords[0].id) {
+                selectRecord(targetSelected.id);
             }
 
             // Token-specific UI step: read_meter clears + focuses Water Applied for entry.
@@ -1231,6 +1245,13 @@ Changes saved to working memory!`);
             }
             document.getElementById('formManagerHours').value = selectedRecord.mgrHours;
             document.getElementById('formWaterApplied').value = selectedRecord.appliedHours;
+
+            // A manual row click is a selection change same as a token's — vDOM.SelectedRecord
+            // is what tokens read, so it has to be current here too, not just after a token runs.
+            vDOM.SelectedRecord   = selectedRecord;
+            vDOM.SelectedRanch    = selectedRecord.ranch;
+            vDOM.SelectedPlanting = selectedRecord.planting;
+            IRR_receive(JSON.parse(JSON.stringify(vDOM)));
         }
 
         // ========================================
