@@ -1,0 +1,13 @@
+{
+  "name": "cropclient-apiserver5",
+  "version": "5.0.0",
+  "description": "APIServer5.0 — CropManage MCP server, with irrigation-component.js injected for local MCP mode testing.",
+  "main": "APIServer5.0.js",
+  "scripts": {
+    "start": "node APIServer5.0.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "cors": "^2.8.5"
+  }
+}
