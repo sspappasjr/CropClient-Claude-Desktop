@@ -633,13 +633,28 @@
         let CURRENT_TARGET = 'harness';
         function isOffline() { return CURRENT_TARGET === 'harness'; }
 
-        // Mirrors APIServer4.0.js's reset_table handler, run locally instead of over the wire.
+        // Mirrors APIServer4.0.js's tool handlers, run locally instead of over the wire.
         const localHandlers = {
             reset_table: function(params) {
                 return {
                     success: true,
                     statusMessage: `✅ Reset — ${vIRR.originalRecords.length} records restored`,
                     data: JSON.parse(JSON.stringify(vIRR.originalRecords))
+                };
+            },
+            read_meter: function(params) {
+                const matching = vIRR.displayRecords.filter(r =>
+                    r.ranch === params.ranch && r.planting === params.planting
+                );
+                if (!matching.length) {
+                    return { success: false, statusMessage: `No records for ${params.ranch} / ${params.planting}` };
+                }
+                matching.sort((a, b) => parseEventDate(a.scheduledDate) - parseEventDate(b.scheduledDate));
+                const last = matching[matching.length - 1];
+                return {
+                    success: true,
+                    statusMessage: `✅ Ready for Meter Reading — ${last.scheduledDate}`,
+                    data: JSON.parse(JSON.stringify(last))
                 };
             }
         };
@@ -661,6 +676,13 @@
             vIRR.SelectedRanch    = domState.SelectedRanch;
             vIRR.SelectedPlanting = domState.SelectedPlanting;
             vIRR.Result           = domState.Result;
+
+            // vIRR sets its own legacy variables from what it just received —
+            // not from assuming shared scope with vDOM's side — so
+            // testCreateNext/testReadMeter/updateRecord keep working off fresh state.
+            irrigationData = JSON.parse(JSON.stringify(vIRR.originalRecords));
+            displayRecords = JSON.parse(JSON.stringify(vIRR.displayRecords));
+            selectedRecord = vIRR.SelectedRecord;
         }
 
         // ========================================
@@ -793,56 +815,38 @@ Field workers get instant water budget calculations!`);
         }
 
         // ========================================
-        // READ METER (CORE TOOL #2) — untouched this pass
+        // READ METER (CORE TOOL #2) — routed through the fence
         // ========================================
 
-        function testReadMeter() {
+        async function testReadMeter() {
             if (!selectedRecord) {
                 showResult('ERROR: No record selected. Click a row first.');
                 return;
             }
 
-            // Use selected record's ranch and planting
-            const targetRanch = selectedRecord.ranch;
-            const targetPlanting = selectedRecord.planting;
+            const result = await runToken('read_meter', {
+                ranch: selectedRecord.ranch,
+                planting: selectedRecord.planting
+            });
 
-            // Find all records for this ranch/planting
-            const matchingRecords = displayRecords.filter(r =>
-                r.ranch === targetRanch &&
-                r.planting === targetPlanting
-            );
-
-            if (matchingRecords.length === 0) {
-                showResult(`❌ No records found for ${targetRanch} ${targetPlanting}`);
+            if (!result.success) {
+                showResult(`❌ ${result.statusMessage || result.error}`);
                 return;
             }
 
-            // Sort by date to get most recent (last)
-            matchingRecords.sort((a, b) => {
-                const dateA = parseEventDate(a.scheduledDate);
-                const dateB = parseEventDate(b.scheduledDate);
-                return dateA - dateB;
-            });
+            // vIRR folds the token result into its own state
+            vIRR.displayRecords = JSON.parse(JSON.stringify(displayRecords));
+            vIRR.Result = {
+                TokenName: 'read_meter',
+                Success: true,
+                Record: JSON.parse(JSON.stringify(result.data)),
+                Error: null,
+                Value: null,
+                Message: result.statusMessage
+            };
 
-            const lastRecord = matchingRecords[matchingRecords.length - 1];
-
-            // Select this record in the grid
-            selectRecord(lastRecord.id);
-
-            // Clear Water Applied field for meter reading entry
-            document.getElementById('formWaterApplied').value = '';
-            document.getElementById('formWaterApplied').focus();
-
-            showResult(`✅ MCP TOOL #2: Ready for Meter Reading
-
-Ranch: ${lastRecord.ranch}
-Planting: ${lastRecord.planting}
-Date: ${lastRecord.scheduledDate}
-Current Water Applied: ${lastRecord.appliedHours}
-
-→ Enter actual meter reading in Water Applied field
-
-Capture real usage data on-site where the work happens!`);
+            // vIRR passes its WHOLE state across the fence to vDOM
+            DOM_receive(JSON.parse(JSON.stringify(vIRR)));
         }
 
         // ========================================
@@ -942,7 +946,9 @@ Changes saved to working memory!`);
         function DOM_receive(irrState) {
             vDOM.originalRecords = JSON.parse(JSON.stringify(irrState.originalRecords));
             vDOM.displayRecords  = JSON.parse(JSON.stringify(irrState.displayRecords));
-            vDOM.SelectedRecord  = vDOM.displayRecords[0] || null;
+            // A token that found a specific record (e.g. read_meter) carries it in Result.Record —
+            // select that. Otherwise (e.g. reset_table) selection lands on the first record. Never null.
+            vDOM.SelectedRecord  = (irrState.Result && irrState.Result.Record) || vDOM.displayRecords[0] || null;
             vDOM.SelectedRanch   = vDOM.SelectedRecord ? vDOM.SelectedRecord.ranch : null;
             vDOM.SelectedPlanting = vDOM.SelectedRecord ? vDOM.SelectedRecord.planting : null;
             vDOM.Result          = irrState.Result;
@@ -952,9 +958,20 @@ Changes saved to working memory!`);
             // and Create/Meter/Update (untouched this pass) keep operating on fresh data afterward.
             irrigationData  = JSON.parse(JSON.stringify(vDOM.originalRecords));
             displayRecords  = JSON.parse(JSON.stringify(vDOM.displayRecords));
-            selectedRecord  = null; // renderTable() auto-selects the first record when null
+            selectedRecord  = null; // renderTable() auto-selects the first record when null; overridden below if needed
 
             renderTable();
+
+            if (vDOM.SelectedRecord && vDOM.SelectedRecord.id !== displayRecords[0].id) {
+                selectRecord(vDOM.SelectedRecord.id);
+            }
+
+            // Token-specific UI step: read_meter clears + focuses Water Applied for entry.
+            if (vDOM.Result.TokenName === 'read_meter') {
+                document.getElementById('formWaterApplied').value = '';
+                document.getElementById('formWaterApplied').focus();
+            }
+
             showResult(vDOM.Result.Message);
 
             // vDOM pushes its WHOLE state back to vIRR — resync
@@ -1221,8 +1238,9 @@ Changes saved to working memory!`);
         // ========================================
 
         window.onload = function() {
-            read();
-            showResult('✅ CropClient Water Tools Loaded\n\n12 irrigation records ready.\nSelect a record and try the natural language prompts above.');
+            // Startup runs through the fence too, so vIRR/vDOM are authoritative
+            // from first paint — not just after a manual Reset click.
+            resetTable();
         };
     </script>
     <!-- @@@@ END S11 ID: DashboardComponent @@@@ -->
