@@ -769,6 +769,12 @@
                     statusMessage: `✅ Record ${params.id} updated`,
                     data: JSON.parse(JSON.stringify(rec))
                 };
+            },
+            // Offline mode has no server-side files at all — same shape as the real
+            // data_operation tool's "file not found" response, so callers don't need
+            // to special-case offline separately from "the file just isn't there yet."
+            data_operation: function(params) {
+                return { success: false, statusMessage: 'Not available offline', fileNotFound: true };
             }
         };
 
@@ -834,6 +840,36 @@
 
             // vIRR passes its WHOLE state across the fence to vDOM
             DOM_receive(JSON.parse(JSON.stringify(vIRR)));
+        }
+
+        // ========================================
+        // STARTUP — try live CropManage-sourced data (steve.json on the server) first,
+        // fall back to the normal seeded reset when it's not there (offline mode, or
+        // the file just hasn't been saved yet).
+        // ========================================
+
+        async function loadOnStartup() {
+            const result = await runToken('data_operation', { action: 'read', table: 'steve' });
+
+            if (result && result.success && Array.isArray(result.data) && result.data.length > 0) {
+                vIRR.displayRecords = JSON.parse(JSON.stringify(result.data));
+                vIRR.SelectedRecord = vIRR.displayRecords[0] || null;
+                vIRR.SelectedRanch    = vIRR.SelectedRecord ? vIRR.SelectedRecord.ranch : null;
+                vIRR.SelectedPlanting = vIRR.SelectedRecord ? vIRR.SelectedRecord.planting : null;
+                vIRR.Result = {
+                    TokenName: 'data_operation',
+                    Success: true,
+                    Record: null,
+                    Error: null,
+                    Value: null,
+                    Message: `✅ Loaded live CropManage data — ${vIRR.displayRecords.length} records (steve.json)`
+                };
+                DOM_receive(JSON.parse(JSON.stringify(vIRR)));
+                return;
+            }
+
+            // No steve.json (offline mode, or it doesn't exist yet on the server) — normal startup.
+            resetTable();
         }
 
         // ========================================
@@ -1339,8 +1375,10 @@
 
         window.onload = function() {
             // Startup runs through the fence too, so vIRR/vDOM are authoritative
-            // from first paint — not just after a manual Reset click.
-            resetTable();
+            // from first paint — not just after a manual Reset click. Tries steve.json
+            // (live CropManage-sourced demo data) first, falls back to the normal
+            // seeded reset if it's not there.
+            loadOnStartup();
         };
     </script>
     <!-- @@@@ END S11 ID: DashboardComponent @@@@ -->
