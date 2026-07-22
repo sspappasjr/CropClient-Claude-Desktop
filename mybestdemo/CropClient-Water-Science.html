@@ -896,6 +896,14 @@
         async function loadOnStartup() {
             const ok = await restoreTable();
             if (!ok) resetTable(); // No SOURCE_TABLE data (offline mode, or it doesn't exist yet) — normal startup.
+
+            // CropManage is inherently ranch-scoped — even "get everything" has to know what
+            // ranches exist first. Auto-fetch on load (same as the reference apps did), but
+            // through runToken()/MCP — no CORS addon, works for anyone, not just this browser.
+            if (!isOffline()) {
+                const loggedIn = await loginToCropManage('stevep@sspnet.com', 'gosteve1!');
+                if (loggedIn) await loadRanches();
+            }
         }
 
         // ========================================
