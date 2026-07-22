@@ -388,9 +388,9 @@
                 <!-- S1: ToolSelector -->
                 <!-- @@@@ BEGIN S1 ID: ToolSelector @@@@ -->
                 <div class="grid-section">
-                    <h2 style="color: #2e7d32; margin-bottom: 8px; font-size: 1.1em;">🔑 Select a CropManage API Token:</h2>
+                    <h2 style="color: #2e7d32; margin-bottom: 8px; font-size: 1.1em;">📝 Select a Water Tool:</h2>
 
-                    <!-- CropManage API Tokens Grid -->
+                    <!-- Water Tools Grid -->
                     <div style="background: white; border: 1px solid #ddd; border-radius: 6px; overflow: auto; max-height: 180px; margin-bottom: 10px;">
                         <table style="width: 100%; border-collapse: collapse;">
                             <thead>
@@ -400,29 +400,21 @@
                                 </tr>
                             </thead>
                             <tbody id="toolsTableBody">
-                                <tr onclick="selectToolFromGrid('get_token')" style="cursor: pointer; border-bottom: 1px solid #eee;">
-                                    <td style="padding: 8px; font-size: 0.85em;">🔑 Get Token</td>
-                                    <td style="padding: 8px; font-size: 0.85em;">Authenticate with CropManage</td>
+                                <tr onclick="selectToolFromGrid('reset')" style="cursor: pointer; border-bottom: 1px solid #eee;">
+                                    <td style="padding: 8px; font-size: 0.85em;">🔄 Reset Table</td>
+                                    <td style="padding: 8px; font-size: 0.85em;">Refresh irrigation data</td>
                                 </tr>
-                                <tr onclick="selectToolFromGrid('get_ranches')" style="cursor: pointer; border-bottom: 1px solid #eee;">
-                                    <td style="padding: 8px; font-size: 0.85em;">🏠 Get Ranches</td>
-                                    <td style="padding: 8px; font-size: 0.85em;">Fetch all ranches</td>
+                                <tr onclick="selectToolFromGrid('create')" style="cursor: pointer; border-bottom: 1px solid #eee;">
+                                    <td style="padding: 8px; font-size: 0.85em;">➕ Create Next</td>
+                                    <td style="padding: 8px; font-size: 0.85em;">Calculate next irrigation</td>
                                 </tr>
-                                <tr onclick="selectToolFromGrid('get_plantings')" style="cursor: pointer; border-bottom: 1px solid #eee;">
-                                    <td style="padding: 8px; font-size: 0.85em;">🌱 Get Plantings</td>
-                                    <td style="padding: 8px; font-size: 0.85em;">Plantings for selected ranch</td>
+                                <tr onclick="selectToolFromGrid('meter')" style="cursor: pointer; border-bottom: 1px solid #eee;">
+                                    <td style="padding: 8px; font-size: 0.85em;">📊 Read Meter</td>
+                                    <td style="padding: 8px; font-size: 0.85em;">Prepare meter entry</td>
                                 </tr>
-                                <tr onclick="selectToolFromGrid('get_irrigation_details')" style="cursor: pointer; border-bottom: 1px solid #eee;">
-                                    <td style="padding: 8px; font-size: 0.85em;">💧 Get Irrigation Details</td>
-                                    <td style="padding: 8px; font-size: 0.85em;">Events for selected planting</td>
-                                </tr>
-                                <tr onclick="selectToolFromGrid('post_new_irrigation')" style="cursor: pointer; border-bottom: 1px solid #eee;">
-                                    <td style="padding: 8px; font-size: 0.85em;">📤 Post New Irrigation</td>
-                                    <td style="padding: 8px; font-size: 0.85em;">POST new event to CropManage</td>
-                                </tr>
-                                <tr onclick="selectToolFromGrid('update_irrigation')" style="cursor: pointer; border-bottom: 1px solid #eee;">
-                                    <td style="padding: 8px; font-size: 0.85em;">🔁 Update Irrigation</td>
-                                    <td style="padding: 8px; font-size: 0.85em;">PUT changes for selected event</td>
+                                <tr onclick="selectToolFromGrid('update')" style="cursor: pointer; border-bottom: 1px solid #eee;">
+                                    <td style="padding: 8px; font-size: 0.85em;">💾 Update Record</td>
+                                    <td style="padding: 8px; font-size: 0.85em;">Save water applied</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -431,26 +423,6 @@
                     <!-- Description area -->
                     <div id="toolDescription" style="padding: 10px; background: #f5f5f5; border-radius: 4px; color: #666; font-style: italic; font-size: 0.85em; margin-bottom: 10px; min-height: 40px;">
                         Click a tool above to see full description...
-                    </div>
-
-                    <!-- Ranch / Planting pickers + params preview — fed by vAPI state -->
-                    <div style="display: flex; gap: 10px; margin-bottom: 10px;">
-                        <div style="flex: 1;">
-                            <label for="apiRanchSelect" style="display: block; font-weight: 600; color: #333; font-size: 0.85em; margin-bottom: 3px;">Ranch:</label>
-                            <select id="apiRanchSelect" onchange="apiSelectRanch(this.value)" style="width: 100%; padding: 6px; font-size: 0.85em; border: 2px solid #ddd; border-radius: 6px; background: white;">
-                                <option value="">— run Get Ranches —</option>
-                            </select>
-                        </div>
-                        <div style="flex: 1;">
-                            <label for="apiPlantingSelect" style="display: block; font-weight: 600; color: #333; font-size: 0.85em; margin-bottom: 3px;">Planting:</label>
-                            <select id="apiPlantingSelect" onchange="apiSelectPlanting(this.value)" style="width: 100%; padding: 6px; font-size: 0.85em; border: 2px solid #ddd; border-radius: 6px; background: white;">
-                                <option value="">— select a ranch —</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div style="margin-bottom: 10px;">
-                        <label style="display: block; font-weight: 600; color: #333; font-size: 0.85em; margin-bottom: 3px;">Params about to send:</label>
-                        <pre id="apiParamsPreview" style="background: #263238; color: #aed581; padding: 8px; border-radius: 6px; font-size: 0.78em; max-height: 110px; overflow: auto; white-space: pre-wrap; margin: 0;">Select a token above to preview its params…</pre>
                     </div>
 
                     <!-- Prompt input -->
@@ -1219,21 +1191,17 @@
 
         function selectToolFromGrid(toolName) {
             const descriptions = {
-                'get_token': 'POST /Token — Authenticate with CropManage and obtain a Bearer token. Every other API token needs this first.\n\nOffline mode returns a demo token, no server needed.',
-                'get_ranches': 'GET /v2/ranches.json — Fetch all ranches for the logged-in user and fill the Ranch picker below.\n\nRequires: Get Token first.',
-                'get_plantings': 'GET /v2/ranches/{ranchGuid}/plantings.json — Fetch plantings for the selected ranch and fill the Planting picker below.\n\nRequires: a ranch selected in the Ranch picker.',
-                'get_irrigation_details': 'GET /v2/plantings/{plantingId}/irrigation-events/details.json — Fetch irrigation events (with recommendations) for the selected planting and load them into the grid below.\n\nRequires: a planting selected in the Planting picker.',
-                'post_new_irrigation': 'POST /v3/plantings/{plantingId}/irrigation-events.json — Push a NEW irrigation event to CropManage using the selected planting and the form values on the right.\n\nRequires: a planting selected + form values.',
-                'update_irrigation': 'PUT /v3/irrigation-events/{eventId}.json — Update the selected irrigation record in CropManage with the form values on the right.\n\nRequires: a record selected in the grid below.'
+                'reset': 'Refresh the Irrigation Table to Original - Reloads all 12 irrigation records and resets any filters\n\nGet back to a clean slate instantly!',
+                'create': 'Create next irrigation for the selected field and calculate water budget - Automatically calculates the next irrigation date based on interval\n\nField workers get instant water budget calculations!',
+                'meter': 'Read water meter for the selected planting and prepare for water applied entry - Selects the most recent record and clears the water applied field for new entry\n\nCapture real usage data on-site where the work happens!',
+                'update': 'After Read Meter has selected the correct irrigation it is READY to enter the water meter hours. Update will store the water applied entry - Saves manager hours and water applied values\n\nChanges saved to working memory!'
             };
 
             const prompts = {
-                'get_token': 'Get CropManage API token',
-                'get_ranches': 'Get ranches from CropManage',
-                'get_plantings': 'Get plantings for the selected ranch',
-                'get_irrigation_details': 'Get irrigation details for the selected planting',
-                'post_new_irrigation': 'Post new irrigation for the selected planting',
-                'update_irrigation': 'Update irrigation for the selected record'
+                'reset': 'Reset table to show all irrigation records',
+                'create': 'Create next irrigation for the selected field and calculate water budget',
+                'meter': 'Read water meter for the selected planting and prepare for water applied entry',
+                'update': 'Update water applied for selected record'
             };
 
             // Highlight selected row
@@ -1250,9 +1218,6 @@
 
             // Set prompt text
             document.getElementById('promptInput').value = prompts[toolName] || '';
-
-            // Stage the token in vAPI so the params preview shows exactly what Send will send
-            apiStageTool(toolName);
         }
 
         // ========================================
