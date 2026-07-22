@@ -910,8 +910,12 @@
                 return;
             }
 
+            // Nothing live yet — show the demo data as a placeholder so the grid is never
+            // empty, then check CropManage in the background and follow up with what's next.
+            resetTable();
+
             const loggedIn = await loginToCropManage('stevep@sspnet.com', 'gosteve1!');
-            if (!loggedIn) return; // loginToCropManage already showed the error
+            if (!loggedIn) return; // loginToCropManage already showed the error; demo data stays visible
 
             const ranchCount = await loadRanches();
             if (ranchCount === 0) {
