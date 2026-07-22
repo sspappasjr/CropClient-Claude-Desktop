@@ -1446,12 +1446,20 @@
         // ========================================
 
         window.onload = function() {
+            // Sync CURRENT_TARGET from the dropdown's actual value BEFORE loading
+            // anything — matches Crop-Client-MCP-Audit-Que.src3.4.1.html's onload.
+            // Previously CURRENT_TARGET only came from its hardcoded 'let' literal,
+            // never from the DOM, so it could silently disagree with what #envSelect
+            // shows on screen.
+            const sel = document.getElementById('envSelect');
+            const mode = (sel && sel.value) || 'local';
+            setEnvMode(mode);
+
             // Startup runs through the fence too, so vIRR/vDOM are authoritative
             // from first paint — not just after a manual Reset click. Tries steve.json
             // (live CropManage-sourced demo data) first, falls back to the normal
             // seeded reset if it's not there.
             loadOnStartup();
-            renderApiPanel();
         };
     </script>
     <!-- @@@@ END S11 ID: DashboardComponent @@@@ -->
