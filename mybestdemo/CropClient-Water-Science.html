@@ -893,16 +893,31 @@
             showResult(`✅ Saved ${vIRR.displayRecords.length} records to ${SOURCE_TABLE}.json`);
         }
 
+        // Pecking order: 1) whatever they were last working with (steve.json) — if it's there,
+        // show it and stop. 2) Offline, nothing saved — fall back to demo data, nothing else
+        // exists offline. 3) Local/online, nothing saved — get their ranches so they can pick
+        // one and pull live data; if CropManage genuinely has none defined, say so plainly
+        // instead of showing an empty dropdown with no explanation.
         async function loadOnStartup() {
-            const ok = await restoreTable();
-            if (!ok) resetTable(); // No SOURCE_TABLE data (offline mode, or it doesn't exist yet) — normal startup.
+            const restored = await runToken('data_operation', { action: 'read', table: SOURCE_TABLE });
+            if (restored && restored.success && Array.isArray(restored.data) && restored.data.length > 0) {
+                await restoreTable();
+                return;
+            }
 
-            // CropManage is inherently ranch-scoped — even "get everything" has to know what
-            // ranches exist first. Auto-fetch on load (same as the reference apps did), but
-            // through runToken()/MCP — no CORS addon, works for anyone, not just this browser.
-            if (!isOffline()) {
-                const loggedIn = await loginToCropManage('stevep@sspnet.com', 'gosteve1!');
-                if (loggedIn) await loadRanches();
+            if (isOffline()) {
+                resetTable();
+                return;
+            }
+
+            const loggedIn = await loginToCropManage('stevep@sspnet.com', 'gosteve1!');
+            if (!loggedIn) return; // loginToCropManage already showed the error
+
+            const ranchCount = await loadRanches();
+            if (ranchCount === 0) {
+                showResult('ℹ️ No ranches found in CropManage — define your ranches there first.');
+            } else if (ranchCount > 0) {
+                showResult(`👉 Pick a Ranch above to get started (${ranchCount} available).`);
             }
         }
 
@@ -939,12 +954,14 @@
             if (el) el.textContent = JSON.stringify({ ranchGuid: SELECTED_RANCH_GUID, plantingId: SELECTED_PLANTING_ID });
         }
 
+        // Returns RANCHES.length on success (0 is a valid, meaningful result — no ranches
+        // defined in CropManage yet), or -1 on failure (couldn't even ask).
         async function loadRanches() {
             const result = await runToken('get_ranches', {});
 
             if (!result || !result.success) {
                 showResult(`❌ Get Ranches failed: ${(result && (result.error || result.message)) || 'unknown error'}`);
-                return;
+                return -1;
             }
 
             RANCHES = result.ranches || result.data || [];
@@ -959,6 +976,7 @@
             });
 
             showResult(`✅ Loaded ${RANCHES.length} ranches`);
+            return RANCHES.length;
         }
 
         async function onRanchChange() {
