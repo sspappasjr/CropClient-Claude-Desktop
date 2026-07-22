@@ -559,8 +559,8 @@
                                 title="Active MCP Server URL"
                             >
                             <select id="envSelect" title="Connection Mode" style="width: 78px; min-width: 78px; padding: 5px; font-size: var(--small-font); border: 2px solid #ddd; border-radius: 6px; background: #fff;">
-                                <option value="local">Local</option>
-                                <option value="online" selected>Online</option>
+                                <option value="local" selected>Local</option>
+                                <option value="online">Online</option>
                                 <option value="offline">Offline</option>
                             </select>
                         </div>
@@ -1408,9 +1408,10 @@ function retrieveDisplay(jsonData, targetRecords) {
         */
         // --- MCP Connection Mode (Harness Runtime State) ---
 // Single source of truth while the harness is running.
-// Online is the default for server installs.
+// Local is the default — matches the dashboard's default, so Restore/other MCP
+// calls give the same answer in both apps instead of silently hitting different servers.
 const CC_STATE = {
-            mode: 'online',                // 'local' | 'online' | 'offline'
+            mode: 'local',                // 'local' | 'online' | 'offline'
             localBase: 'http://localhost:3101',
             onlineBase: 'http://api.cropclient.com',
             overrideBase: ''               // optional: set by "mcp host <url>"
