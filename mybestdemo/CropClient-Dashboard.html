@@ -434,6 +434,12 @@
                         >
                         <button class="send-button" onclick="sendPrompt()" style="padding: 8px 20px; font-size: 0.95em;">🚀 Send</button>
                     </div>
+
+                    <!-- Save / Restore footer -->
+                    <div style="display: flex; justify-content: space-between; gap: 10px;">
+                        <button onclick="saveTable()" style="padding: 8px 16px; background: linear-gradient(135deg, #673AB7 0%, #512DA8 100%); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.9em;">💾 Save</button>
+                        <button onclick="restoreTable()" style="padding: 8px 16px; background: linear-gradient(135deg, #009688 0%, #00796B 100%); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.9em;">📂 Restore</button>
+                    </div>
                 </div>
                 <!-- @@@@ END S1 ID: ToolSelector @@@@ -->
 
@@ -643,6 +649,10 @@
 
         let CURRENT_TARGET = 'local'; // 'offline' | 'local' | 'online' — set by the #envSelect dropdown
         function isOffline() { return CURRENT_TARGET === 'offline'; }
+
+        // The data_operation table name — hardcoded for now, becomes the logged-in user's name
+        // later. Shared by loadOnStartup/saveTable/restoreTable so they all agree on it.
+        let SOURCE_TABLE = 'steve';
 
         // Dropdown handler — the one place mode switches, logged so it's visible when it changed.
         function setEnvMode(value) {
@@ -855,33 +865,53 @@
         // the file just hasn't been saved yet).
         // ========================================
 
-        async function loadOnStartup() {
-            // Table name doubles as the label source — capitalize + " Irrigations" (e.g. "steve" ->
-            // "Steve Irrigations"). Hardcoded to 'steve' for now; will become the logged-in user's
-            // name once there is one.
-            const sourceTable = 'steve';
-            const result = await runToken('data_operation', { action: 'read', table: sourceTable });
+        // Reads SOURCE_TABLE back into the grid. Used both by the Restore button and by startup
+        // (loadOnStartup silently falls back to resetTable() on failure; a manual Restore click
+        // shows the error instead — the user asked for their data back, not a silent swap).
+        async function restoreTable() {
+            const result = await runToken('data_operation', { action: 'read', table: SOURCE_TABLE });
 
-            if (result && result.success && Array.isArray(result.data) && result.data.length > 0) {
-                vIRR.displayRecords = JSON.parse(JSON.stringify(result.data));
-                vIRR.SelectedRecord = vIRR.displayRecords[0] || null;
-                vIRR.SelectedRanch    = vIRR.SelectedRecord ? vIRR.SelectedRecord.ranch : null;
-                vIRR.SelectedPlanting = vIRR.SelectedRecord ? vIRR.SelectedRecord.planting : null;
-                vIRR.Result = {
-                    TokenName: 'data_operation',
-                    Success: true,
-                    Record: null,
-                    Error: null,
-                    Value: null,
-                    Message: `✅ Loaded live CropManage data — ${vIRR.displayRecords.length} records (${sourceTable}.json)`
-                };
-                DOM_receive(JSON.parse(JSON.stringify(vIRR)));
-                setDataSourceLabel(sourceTable.charAt(0).toUpperCase() + sourceTable.slice(1) + ' Irrigations');
+            if (!result || !result.success || !Array.isArray(result.data) || result.data.length === 0) {
+                showResult(`❌ Restore failed: ${(result && (result.error || result.statusMessage)) || 'no saved data found'}`);
+                return false;
+            }
+
+            vIRR.displayRecords = JSON.parse(JSON.stringify(result.data));
+            vIRR.SelectedRecord = vIRR.displayRecords[0] || null;
+            vIRR.SelectedRanch    = vIRR.SelectedRecord ? vIRR.SelectedRecord.ranch : null;
+            vIRR.SelectedPlanting = vIRR.SelectedRecord ? vIRR.SelectedRecord.planting : null;
+            vIRR.Result = {
+                TokenName: 'data_operation',
+                Success: true,
+                Record: null,
+                Error: null,
+                Value: null,
+                Message: `✅ Restored ${vIRR.displayRecords.length} records from ${SOURCE_TABLE}.json`
+            };
+            DOM_receive(JSON.parse(JSON.stringify(vIRR)));
+            setDataSourceLabel(SOURCE_TABLE.charAt(0).toUpperCase() + SOURCE_TABLE.slice(1) + ' Irrigations');
+            return true;
+        }
+
+        // Writes the current grid, as-is, to SOURCE_TABLE.
+        async function saveTable() {
+            const result = await runToken('data_operation', {
+                action: 'write',
+                table: SOURCE_TABLE,
+                data: vIRR.displayRecords
+            });
+
+            if (!result || !result.success) {
+                showResult(`❌ Save failed: ${(result && (result.error || result.statusMessage)) || 'unknown error'}`);
                 return;
             }
 
-            // No steve.json (offline mode, or it doesn't exist yet on the server) — normal startup.
-            resetTable();
+            showResult(`✅ Saved ${vIRR.displayRecords.length} records to ${SOURCE_TABLE}.json`);
+        }
+
+        async function loadOnStartup() {
+            const ok = await restoreTable();
+            if (!ok) resetTable(); // No SOURCE_TABLE data (offline mode, or it doesn't exist yet) — normal startup.
         }
 
         // ========================================
