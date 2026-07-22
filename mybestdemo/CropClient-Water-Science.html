@@ -386,54 +386,38 @@
                 <!-- S1: ToolSelector -->
                 <!-- @@@@ BEGIN S1 ID: ToolSelector @@@@ -->
                 <div class="grid-section">
-                    <h2 style="color: #2e7d32; margin-bottom: 8px; font-size: 1.1em;">📝 Select a Water Tool:</h2>
+                    <h2 style="color: #2e7d32; margin-bottom: 8px; font-size: 1.1em;">🔬 Live CropManage Data</h2>
 
-                    <!-- Water Tools Grid -->
-                    <div style="background: white; border: 1px solid #ddd; border-radius: 6px; overflow: auto; max-height: 180px; margin-bottom: 10px;">
-                        <table style="width: 100%; border-collapse: collapse;">
-                            <thead>
-                                <tr style="background: #2e7d32; color: white; position: sticky; top: 0;">
-                                    <th style="padding: 8px; text-align: left; font-size: 0.9em;">Tool</th>
-                                    <th style="padding: 8px; text-align: left; font-size: 0.9em;">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody id="toolsTableBody">
-                                <tr onclick="selectToolFromGrid('reset')" style="cursor: pointer; border-bottom: 1px solid #eee;">
-                                    <td style="padding: 8px; font-size: 0.85em;">🔄 Reset Table</td>
-                                    <td style="padding: 8px; font-size: 0.85em;">Refresh irrigation data</td>
-                                </tr>
-                                <tr onclick="selectToolFromGrid('create')" style="cursor: pointer; border-bottom: 1px solid #eee;">
-                                    <td style="padding: 8px; font-size: 0.85em;">➕ Create Next</td>
-                                    <td style="padding: 8px; font-size: 0.85em;">Calculate next irrigation</td>
-                                </tr>
-                                <tr onclick="selectToolFromGrid('meter')" style="cursor: pointer; border-bottom: 1px solid #eee;">
-                                    <td style="padding: 8px; font-size: 0.85em;">📊 Read Meter</td>
-                                    <td style="padding: 8px; font-size: 0.85em;">Prepare meter entry</td>
-                                </tr>
-                                <tr onclick="selectToolFromGrid('update')" style="cursor: pointer; border-bottom: 1px solid #eee;">
-                                    <td style="padding: 8px; font-size: 0.85em;">💾 Update Record</td>
-                                    <td style="padding: 8px; font-size: 0.85em;">Save water applied</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <!-- Description area -->
-                    <div id="toolDescription" style="padding: 10px; background: #f5f5f5; border-radius: 4px; color: #666; font-style: italic; font-size: 0.85em; margin-bottom: 10px; min-height: 40px;">
-                        Click a tool above to see full description...
-                    </div>
-
-                    <!-- Prompt input -->
+                    <!-- Login -->
                     <div style="margin-bottom: 10px; display: flex; align-items: center; gap: 10px;">
-                        <label for="promptInput" style="font-weight: 600; color: #333; white-space: nowrap; min-width: fit-content; font-size: 0.95em;">Prompt:</label>
-                        <input
-                            type="text"
-                            id="promptInput"
-                            style="width: 100%; padding: 8px; font-size: 0.95em; border: 2px solid #ddd; border-radius: 6px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;"
-                            placeholder="Select a tool or type your command..."
-                        >
-                        <button class="send-button" onclick="sendPrompt()" style="padding: 8px 20px; font-size: 0.95em;">🚀 Send</button>
+                        <button onclick="loginToCropManage('stevep@sspnet.com', 'gosteve1!')" style="padding: 8px 16px; background: linear-gradient(135deg, #00796B 0%, #004D40 100%); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.9em;">🔑 Login</button>
+                        <button onclick="loadRanches()" style="padding: 8px 16px; background: linear-gradient(135deg, #2e7d32 0%, #4caf50 100%); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.9em;">🏠 Load Ranches</button>
                     </div>
+
+                    <!-- Ranch / Planting selection -->
+                    <div style="margin-bottom: 10px;">
+                        <label style="display: block; font-weight: 600; color: #333; font-size: 0.9em; margin-bottom: 4px;">Ranch:</label>
+                        <select id="ranchSelect" onchange="onRanchChange()" style="width: 100%; padding: 8px; font-size: 0.95em; border: 2px solid #ddd; border-radius: 6px;">
+                            <option value="ALL">All Ranches</option>
+                        </select>
+                    </div>
+                    <div style="margin-bottom: 10px;">
+                        <label style="display: block; font-weight: 600; color: #333; font-size: 0.9em; margin-bottom: 4px;">Planting:</label>
+                        <select id="plantingSelect" onchange="onPlantingChange()" style="width: 100%; padding: 8px; font-size: 0.95em; border: 2px solid #ddd; border-radius: 6px;">
+                            <option value="ALL">All Plantings</option>
+                        </select>
+                    </div>
+
+                    <!-- Params preview — exactly what the next call will send -->
+                    <div style="margin-bottom: 10px;">
+                        <label style="display: block; font-weight: 600; color: #333; font-size: 0.85em; margin-bottom: 4px;">Params:</label>
+                        <div id="paramsPreview" style="padding: 8px; background: #263238; color: #aed581; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 0.8em; min-height: 20px;">{"ranchGuid":"ALL","plantingId":"ALL"}</div>
+                    </div>
+
+                    <button onclick="loadLiveIrrigationDetails()" style="width: 100%; padding: 10px; margin-bottom: 10px; background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.95em;">💧 Get Irrigation Details</button>
+
+                    <!-- Hidden — S4's CRUD buttons and S2's chat still route through sendPrompt()'s keyword parser -->
+                    <input type="hidden" id="promptInput" value="">
 
                     <!-- Save / Restore footer -->
                     <div style="display: flex; justify-content: space-between; gap: 10px;">
@@ -931,6 +915,153 @@
 
             showResult('✅ CropManage token acquired — stored server-side for this session');
             return true;
+        }
+
+        // ========================================
+        // vAPI — Ranch/Planting selection + live Get Irrigation Details
+        // ========================================
+
+        let RANCHES = [];
+        let PLANTINGS = [];
+        let SELECTED_RANCH_GUID = 'ALL';
+        let SELECTED_PLANTING_ID = 'ALL';
+
+        function updateParamsPreview() {
+            const el = document.getElementById('paramsPreview');
+            if (el) el.textContent = JSON.stringify({ ranchGuid: SELECTED_RANCH_GUID, plantingId: SELECTED_PLANTING_ID });
+        }
+
+        async function loadRanches() {
+            const result = await runToken('get_ranches', {});
+
+            if (!result || !result.success) {
+                showResult(`❌ Get Ranches failed: ${(result && (result.error || result.message)) || 'unknown error'}`);
+                return;
+            }
+
+            RANCHES = result.ranches || result.data || [];
+            const sel = document.getElementById('ranchSelect');
+            sel.innerHTML = '<option value="ALL">All Ranches</option>';
+            RANCHES.forEach(r => {
+                const opt = document.createElement('option');
+                opt.value = r.Ranch_External_GUID;
+                opt.dataset.ranchId = r.Id;
+                opt.textContent = r.Name;
+                sel.appendChild(opt);
+            });
+
+            showResult(`✅ Loaded ${RANCHES.length} ranches`);
+        }
+
+        async function onRanchChange() {
+            const sel = document.getElementById('ranchSelect');
+            const opt = sel.options[sel.selectedIndex];
+            SELECTED_RANCH_GUID = sel.value;
+            SELECTED_PLANTING_ID = 'ALL';
+
+            const plantingSel = document.getElementById('plantingSelect');
+            plantingSel.innerHTML = '<option value="ALL">All Plantings</option>';
+
+            if (SELECTED_RANCH_GUID !== 'ALL') {
+                await loadPlantings(SELECTED_RANCH_GUID);
+            }
+            updateParamsPreview();
+        }
+
+        async function loadPlantings(ranchGuid) {
+            const result = await runToken('get_plantings', { ranchGuid });
+
+            if (!result || !result.success) {
+                showResult(`❌ Get Plantings failed: ${(result && (result.error || result.message)) || 'unknown error'}`);
+                return;
+            }
+
+            PLANTINGS = result.plantings || result.data || [];
+            const sel = document.getElementById('plantingSelect');
+            sel.innerHTML = '<option value="ALL">All Plantings</option>';
+            PLANTINGS.forEach(p => {
+                const opt = document.createElement('option');
+                opt.value = p.Id;
+                opt.textContent = p.Name;
+                sel.appendChild(opt);
+            });
+
+            showResult(`✅ Loaded ${PLANTINGS.length} plantings`);
+        }
+
+        function onPlantingChange() {
+            SELECTED_PLANTING_ID = document.getElementById('plantingSelect').value;
+            updateParamsPreview();
+        }
+
+        // Raw CropManage event fields -> our internal record shape (same fields as the
+        // hardcoded demo/steve.json records, so the existing grid/form/tokens all work unchanged).
+        function transformCropManageEvents(events) {
+            return events.map((event, index) => {
+                let scheduledDate = '-';
+                if (event.EventDate) {
+                    scheduledDate = formatDate(new Date(event.EventDate));
+                }
+                const recInch = parseFloat(event.RecommendedIrrigationAmount) || 0;
+                const hours = event.RecommendedIrrigationTime || (recInch > 0 ? parseFloat((recInch / 0.3).toFixed(1)) : 0);
+                const appliedInch = parseFloat(event.WaterApplied) || 0;
+                const appliedHours = appliedInch > 0 ? parseFloat((appliedInch / 0.3).toFixed(1)) : 0;
+                const intervalDays = event.RecommendedInterval ? parseFloat(event.RecommendedInterval).toFixed(1) : '0';
+                let irrigationMethod = 'Sprinkler';
+                if (event.IrrigationMethodId === 2) irrigationMethod = 'Drip';
+                else if (event.IrrigationMethodId === 3) irrigationMethod = 'Micro-Sprinkler';
+                return {
+                    id: index + 1,
+                    eventId: event.Id,
+                    ranch: event.RanchName || '-',
+                    planting: event.PlantingName || '-',
+                    hours,
+                    mgrHours: event.ManagerAmountRecommendationHours || 0,
+                    appliedHours,
+                    interval: intervalDays + ' days',
+                    scheduledDate,
+                    irrigationMethod,
+                    recommendedInches: event.RecommendedIrrigationAmount || '0',
+                    lastUpdatedDate: new Date().toLocaleString(),
+                    updatedBy: 'CropManage API',
+                    isNew: false, isOriginal: true, isUpdated: false,
+                    ranchId: event.RanchId || 0,
+                    plantingId: event.PlantingId || 0,
+                    status: 0
+                };
+            });
+        }
+
+        async function loadLiveIrrigationDetails() {
+            if (SELECTED_PLANTING_ID === 'ALL') {
+                showResult('❌ APIServer5.0 (3.4.1-based) needs one specific planting — pick a Planting first, "All Plantings" isn\'t supported yet.');
+                return;
+            }
+
+            const result = await runToken('get_irrigation_details', { plantingId: SELECTED_PLANTING_ID });
+
+            if (!result || !result.success) {
+                showResult(`❌ Get Irrigation Details failed: ${(result && (result.error || result.message)) || 'unknown error'}`);
+                return;
+            }
+
+            const events = result.events || result.data || [];
+            const records = transformCropManageEvents(events);
+
+            vIRR.displayRecords = records;
+            vIRR.SelectedRecord = records[0] || null;
+            vIRR.SelectedRanch    = vIRR.SelectedRecord ? vIRR.SelectedRecord.ranch : null;
+            vIRR.SelectedPlanting = vIRR.SelectedRecord ? vIRR.SelectedRecord.planting : null;
+            vIRR.Result = {
+                TokenName: 'get_irrigation_details',
+                Success: true,
+                Record: null,
+                Error: null,
+                Value: null,
+                Message: `✅ Loaded ${records.length} live irrigation records`
+            };
+            DOM_receive(JSON.parse(JSON.stringify(vIRR)));
+            setDataSourceLabel('Live CropManage');
         }
 
         // ========================================
