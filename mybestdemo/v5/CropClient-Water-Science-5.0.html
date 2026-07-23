@@ -431,12 +431,10 @@
                     <!-- Token (left) + Ranches grid + Plantings grid — next to each other, ranches/plantings
                          grid markup copied exactly from que 3.4.1's "Three Grids Side-by-Side" section. -->
                     <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 10px; height: 100px; min-height: 100px; max-height: 100px;">
-                        <!-- Token -->
-                        <div style="border: 1px solid #ddd; border-radius: 6px; overflow: hidden; display: flex; flex-direction: column;">
-                            <div style="background: #f5f5f5; padding: 4px 8px; font-weight: 600; font-size: 0.75em; border-bottom: 1px solid #ddd; flex-shrink: 0;">Token</div>
-                            <div style="flex: 1; overflow: auto; padding: 4px; display: flex; align-items: center; justify-content: center;">
-                                <span id="apiTokenDisplay" style="font-size: 0.75em; color: #666; word-break: break-all; text-align: center;">— run Get Token —</span>
-                            </div>
+                        <!-- Token — Dashboard's own field-group style (label on top, bordered input below) -->
+                        <div class="field-group" style="margin-bottom: 0;">
+                            <label for="apiTokenDisplay">Token:</label>
+                            <input type="text" id="apiTokenDisplay" readonly placeholder="— run Get Token —" style="width: 100%; padding: 6px; font-size: 0.85em; text-align: center; border: 2px solid #ddd; border-radius: 4px; background: #f5f5f5; color: #666;">
                         </div>
 
                         <!-- Ranches Grid -->
@@ -1277,7 +1275,7 @@
             const pGrid = document.getElementById('plantingsGrid');
             if (!tokenField || !rGrid || !pGrid) return;
 
-            tokenField.textContent = vAPI.Token || '— run Get Token —';
+            tokenField.value = vAPI.Token || '';
 
             // Ranches grid — table/row markup copied from que 3.4.1's populateRanchesGrid()
             if (!vAPI.Ranches.length) {
