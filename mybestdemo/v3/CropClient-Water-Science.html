@@ -374,11 +374,6 @@
         <header style="position: relative;">
             <h1>🌾 CropClient Water Science</h1>
             <p>CropManage API Tokens over MCP</p>
-            <select id="envSelect" title="Connection Mode" onchange="setEnvMode(this.value)" style="position: absolute; top: 8px; right: 20px; width: 90px; padding: 5px; font-size: 0.85em; border: 2px solid #ddd; border-radius: 6px; background: #fff;">
-                <option value="local" selected>Local</option>
-                <option value="online">Online</option>
-                <option value="offline">Offline</option>
-            </select>
         </header>
 
 
@@ -388,7 +383,34 @@
                 <!-- S1: ToolSelector -->
                 <!-- @@@@ BEGIN S1 ID: ToolSelector @@@@ -->
                 <div class="grid-section">
-                    <h2 style="color: #2e7d32; margin-bottom: 8px; font-size: 1.1em;">📝 Select a Water Science Tool:</h2>
+                    <!-- Top line — Login + URL + Mode, copied from que 3.4.1's S1 first row.
+                         (que's 2nd row — script dropdown + Send — is NOT wanted, skipped.) -->
+                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; flex-wrap: nowrap;">
+                        <h2 style="margin: 0; color: #2e7d32; font-size: 1.1em; white-space: nowrap;">📝 Select a Water Science Tool:</h2>
+                        <div style="display: flex; align-items: center; gap: 6px; margin-left: auto; flex-wrap: nowrap;">
+                            <label style="font-weight: 600; color: #333; font-size: 0.85em; white-space: nowrap;">Login</label>
+                            <input
+                                type="text"
+                                id="credentialsInput"
+                                style="width: 150px; min-width: 150px; max-width: 150px; padding: 5px; font-size: 0.85em; border: 2px solid #ddd; border-radius: 6px;"
+                                placeholder="username/password"
+                                readonly
+                                value="stevep@sspnet.com"
+                            >
+                            <input
+                                type="text"
+                                id="urlDisplay"
+                                style="width: 145px; min-width: 145px; max-width: 145px; padding: 5px; font-size: 0.85em; border: 2px solid #ddd; border-radius: 6px; background: #f0f7f0; color: #2e7d32; font-weight: 600;"
+                                readonly
+                                title="Active MCP Server URL"
+                            >
+                            <select id="envSelect" title="Connection Mode" onchange="setEnvMode(this.value)" style="width: 78px; min-width: 78px; padding: 5px; font-size: 0.85em; border: 2px solid #ddd; border-radius: 6px; background: #fff;">
+                                <option value="local" selected>Local</option>
+                                <option value="online">Online</option>
+                                <option value="offline">Offline</option>
+                            </select>
+                        </div>
+                    </div>
 
                     <!-- Water Science API Tools + Ranches + Plantings — Claude Design format,
                          3 equal-ish columns of matching green-header tables side by side -->
@@ -687,6 +709,8 @@
         // Dropdown handler — the one place mode switches, logged so it's visible when it changed.
         function setEnvMode(value) {
             CURRENT_TARGET = value;
+            const urlField = document.getElementById('urlDisplay');
+            if (urlField) urlField.value = value === 'offline' ? '(offline)' : mcpEngineURL(value);
             showResult(`ℹ️ Mode switched to ${value}`);
         }
 
