@@ -390,62 +390,66 @@
                 <div class="grid-section">
                     <h2 style="color: #2e7d32; margin-bottom: 8px; font-size: 1.1em;">📝 Select a Water Science Tool:</h2>
 
-                    <!-- Water Science API Tools Grid + Token/Ranch/Planting pickers, side by side -->
-                    <div style="display: flex; gap: 10px; margin-bottom: 10px;">
-                        <div style="flex: 1; min-width: 0; background: white; border: 1px solid #ddd; border-radius: 6px; overflow: auto; max-height: 180px;">
-                            <table style="width: 100%; border-collapse: collapse;">
-                                <thead>
-                                    <tr style="background: #2e7d32; color: white; position: sticky; top: 0;">
-                                        <th style="padding: 8px; text-align: left; font-size: 0.9em;">Tool</th>
-                                        <th style="padding: 8px; text-align: left; font-size: 0.9em;">Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="toolsTableBody">
-                                    <tr onclick="selectToolFromGrid('get_token')" style="cursor: pointer; border-bottom: 1px solid #eee;">
-                                        <td style="padding: 8px; font-size: 0.85em;">🔑 Get Token</td>
-                                        <td style="padding: 8px; font-size: 0.85em;">Authenticate with CropManage</td>
-                                    </tr>
-                                    <tr onclick="selectToolFromGrid('get_ranches')" style="cursor: pointer; border-bottom: 1px solid #eee;">
-                                        <td style="padding: 8px; font-size: 0.85em;">🏠 Get Ranches</td>
-                                        <td style="padding: 8px; font-size: 0.85em;">Fetch all ranches</td>
-                                    </tr>
-                                    <tr onclick="selectToolFromGrid('get_plantings')" style="cursor: pointer; border-bottom: 1px solid #eee;">
-                                        <td style="padding: 8px; font-size: 0.85em;">🌱 Get Plantings</td>
-                                        <td style="padding: 8px; font-size: 0.85em;">Plantings for selected ranch</td>
-                                    </tr>
-                                    <tr onclick="selectToolFromGrid('get_irrigation_details')" style="cursor: pointer; border-bottom: 1px solid #eee;">
-                                        <td style="padding: 8px; font-size: 0.85em;">💧 Get Irrigation Details</td>
-                                        <td style="padding: 8px; font-size: 0.85em;">Events for selected planting</td>
-                                    </tr>
-                                    <tr onclick="selectToolFromGrid('post_new_irrigation')" style="cursor: pointer; border-bottom: 1px solid #eee;">
-                                        <td style="padding: 8px; font-size: 0.85em;">📤 Post New Irrigation</td>
-                                        <td style="padding: 8px; font-size: 0.85em;">POST new event to CropManage</td>
-                                    </tr>
-                                    <tr onclick="selectToolFromGrid('update_irrigation')" style="cursor: pointer; border-bottom: 1px solid #eee;">
-                                        <td style="padding: 8px; font-size: 0.85em;">🔁 Update Irrigation</td>
-                                        <td style="padding: 8px; font-size: 0.85em;">PUT changes for selected event</td>
-                                    </tr>
-                                </tbody>
-                            </table>
+                    <!-- Water Science API Tools Grid -->
+                    <div style="background: white; border: 1px solid #ddd; border-radius: 6px; overflow: auto; max-height: 180px; margin-bottom: 10px;">
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <thead>
+                                <tr style="background: #2e7d32; color: white; position: sticky; top: 0;">
+                                    <th style="padding: 8px; text-align: left; font-size: 0.9em;">Tool</th>
+                                    <th style="padding: 8px; text-align: left; font-size: 0.9em;">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="toolsTableBody">
+                                <tr onclick="selectToolFromGrid('get_token')" style="cursor: pointer; border-bottom: 1px solid #eee;">
+                                    <td style="padding: 8px; font-size: 0.85em;">🔑 Get Token</td>
+                                    <td style="padding: 8px; font-size: 0.85em;">Authenticate with CropManage</td>
+                                </tr>
+                                <tr onclick="selectToolFromGrid('get_ranches')" style="cursor: pointer; border-bottom: 1px solid #eee;">
+                                    <td style="padding: 8px; font-size: 0.85em;">🏠 Get Ranches</td>
+                                    <td style="padding: 8px; font-size: 0.85em;">Fetch all ranches</td>
+                                </tr>
+                                <tr onclick="selectToolFromGrid('get_plantings')" style="cursor: pointer; border-bottom: 1px solid #eee;">
+                                    <td style="padding: 8px; font-size: 0.85em;">🌱 Get Plantings</td>
+                                    <td style="padding: 8px; font-size: 0.85em;">Plantings for selected ranch</td>
+                                </tr>
+                                <tr onclick="selectToolFromGrid('get_irrigation_details')" style="cursor: pointer; border-bottom: 1px solid #eee;">
+                                    <td style="padding: 8px; font-size: 0.85em;">💧 Get Irrigation Details</td>
+                                    <td style="padding: 8px; font-size: 0.85em;">Events for selected planting</td>
+                                </tr>
+                                <tr onclick="selectToolFromGrid('post_new_irrigation')" style="cursor: pointer; border-bottom: 1px solid #eee;">
+                                    <td style="padding: 8px; font-size: 0.85em;">📤 Post New Irrigation</td>
+                                    <td style="padding: 8px; font-size: 0.85em;">POST new event to CropManage</td>
+                                </tr>
+                                <tr onclick="selectToolFromGrid('update_irrigation')" style="cursor: pointer; border-bottom: 1px solid #eee;">
+                                    <td style="padding: 8px; font-size: 0.85em;">🔁 Update Irrigation</td>
+                                    <td style="padding: 8px; font-size: 0.85em;">PUT changes for selected event</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Token (left) + Ranches grid + Plantings grid — next to each other, ranches/plantings
+                         grid markup copied exactly from que 3.4.1's "Three Grids Side-by-Side" section. -->
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 10px; height: 100px; min-height: 100px; max-height: 100px;">
+                        <!-- Token -->
+                        <div style="border: 1px solid #ddd; border-radius: 6px; overflow: hidden; display: flex; flex-direction: column;">
+                            <div style="background: #f5f5f5; padding: 4px 8px; font-weight: 600; font-size: 0.75em; border-bottom: 1px solid #ddd; flex-shrink: 0;">Token</div>
+                            <div style="flex: 1; overflow: auto; padding: 4px; display: flex; align-items: center; justify-content: center;">
+                                <span id="apiTokenDisplay" style="font-size: 0.75em; color: #666; word-break: break-all; text-align: center;">— run Get Token —</span>
+                            </div>
                         </div>
 
-                        <!-- Token name, Ranch DD, Planting DD — fed by vAPI, right of the tool list -->
-                        <div style="width: 150px; flex-shrink: 0; display: flex; flex-direction: column; gap: 8px;">
-                            <div>
-                                <label for="apiTokenDisplay" style="display: block; font-weight: 600; color: #333; font-size: 0.8em; margin-bottom: 3px;">Token:</label>
-                                <input type="text" id="apiTokenDisplay" readonly placeholder="— run Get Token —" style="width: 100%; padding: 5px; font-size: 0.75em; border: 2px solid #ddd; border-radius: 6px; background: #f5f5f5; color: #666;">
+                        <!-- Ranches Grid -->
+                        <div style="border: 1px solid #ddd; border-radius: 6px; overflow: hidden; display: flex; flex-direction: column;">
+                            <div id="ranchesGrid" style="flex: 1; overflow: auto; padding: 4px;">
+                                <div style="color: #999; text-align: center; padding: 20px; font-size: 0.75em;">No data</div>
                             </div>
-                            <div>
-                                <label for="apiRanchSelect" style="display: block; font-weight: 600; color: #333; font-size: 0.8em; margin-bottom: 3px;">Ranch:</label>
-                                <select id="apiRanchSelect" onchange="apiSelectRanch(this.value)" style="width: 100%; padding: 5px; font-size: 0.8em; border: 2px solid #ddd; border-radius: 6px; background: white;">
-                                    <option value="">— run Get Ranches —</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label for="apiPlantingSelect" style="display: block; font-weight: 600; color: #333; font-size: 0.8em; margin-bottom: 3px;">Planting:</label>
-                                <select id="apiPlantingSelect" onchange="apiSelectPlanting(this.value)" style="width: 100%; padding: 5px; font-size: 0.8em; border: 2px solid #ddd; border-radius: 6px; background: white;">
-                                    <option value="">— select a ranch —</option>
-                                </select>
+                        </div>
+
+                        <!-- Plantings Grid -->
+                        <div style="border: 1px solid #ddd; border-radius: 6px; overflow: hidden; display: flex; flex-direction: column;">
+                            <div id="plantingsGrid" style="flex: 1; overflow: auto; padding: 4px;">
+                                <div style="color: #999; text-align: center; padding: 20px; font-size: 0.75em;">No data</div>
                             </div>
                         </div>
                     </div>
@@ -1269,29 +1273,41 @@
         // twin of renderTable(). Just 3 fields now: token name, ranch DD, planting DD.
         function renderApiPanel() {
             const tokenField = document.getElementById('apiTokenDisplay');
-            const rSel = document.getElementById('apiRanchSelect');
-            const pSel = document.getElementById('apiPlantingSelect');
-            if (!tokenField || !rSel || !pSel) return;
+            const rGrid = document.getElementById('ranchesGrid');
+            const pGrid = document.getElementById('plantingsGrid');
+            if (!tokenField || !rGrid || !pGrid) return;
 
-            tokenField.value = vAPI.Token || '';
+            tokenField.textContent = vAPI.Token || '— run Get Token —';
 
-            rSel.innerHTML = '';
+            // Ranches grid — table/row markup copied from que 3.4.1's populateRanchesGrid()
             if (!vAPI.Ranches.length) {
-                rSel.appendChild(new Option('— run Get Ranches —', ''));
+                rGrid.innerHTML = '<div style="color: #999; text-align: center; padding: 20px; font-size: 0.75em;">No ranches</div>';
             } else {
-                rSel.appendChild(new Option('— select a ranch —', ''));
-                vAPI.Ranches.forEach(r => rSel.appendChild(new Option(r.Name, r.Ranch_External_GUID)));
+                let html = '<table style="width: 100%; font-size: 0.75em; border-collapse: collapse;">';
+                html += '<thead><tr style="background: #f5f5f5;"><th style="padding: 4px; text-align: left;">Name</th></tr></thead><tbody>';
+                vAPI.Ranches.forEach(r => {
+                    const selected = vAPI.SelectedRanch && vAPI.SelectedRanch.Ranch_External_GUID === r.Ranch_External_GUID;
+                    html += `<tr style="border-bottom: 1px solid #eee; cursor: pointer;${selected ? ' background: #C8E6C9;' : ''}" onclick="apiSelectRanch('${r.Ranch_External_GUID}')">`;
+                    html += `<td style="padding: 4px;">${r.Name}</td></tr>`;
+                });
+                html += '</tbody></table>';
+                rGrid.innerHTML = html;
             }
-            rSel.value = vAPI.SelectedRanch ? vAPI.SelectedRanch.Ranch_External_GUID : '';
 
-            pSel.innerHTML = '';
+            // Plantings grid — same pattern, copied from que 3.4.1's populatePlantingsGrid()
             if (!vAPI.Plantings.length) {
-                pSel.appendChild(new Option(vAPI.SelectedRanch ? '— run Get Plantings —' : '— select a ranch —', ''));
+                pGrid.innerHTML = `<div style="color: #999; text-align: center; padding: 20px; font-size: 0.75em;">${vAPI.SelectedRanch ? 'No plantings' : 'Select a ranch'}</div>`;
             } else {
-                pSel.appendChild(new Option('— select a planting —', ''));
-                vAPI.Plantings.forEach(p => pSel.appendChild(new Option(p.Name, String(p.Id))));
+                let html = '<table style="width: 100%; font-size: 0.75em; border-collapse: collapse;">';
+                html += '<thead><tr style="background: #f5f5f5;"><th style="padding: 4px; text-align: left;">Name</th></tr></thead><tbody>';
+                vAPI.Plantings.forEach(p => {
+                    const selected = vAPI.SelectedPlanting && String(vAPI.SelectedPlanting.Id) === String(p.Id);
+                    html += `<tr style="border-bottom: 1px solid #eee; cursor: pointer;${selected ? ' background: #C8E6C9;' : ''}" onclick="apiSelectPlanting('${p.Id}')">`;
+                    html += `<td style="padding: 4px;">${p.Name}</td></tr>`;
+                });
+                html += '</tbody></table>';
+                pGrid.innerHTML = html;
             }
-            pSel.value = vAPI.SelectedPlanting ? String(vAPI.SelectedPlanting.Id) : '';
         }
 
         // ========================================
