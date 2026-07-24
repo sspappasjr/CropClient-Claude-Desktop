@@ -67,7 +67,14 @@
       "Bash(cmd.exe /c \"cd /d C:\\\\AICode\\\\CropClient-Claude-Desktop\\\\MCP-API-Tools-Audit\\\\v2.0-apiupdate\\\\deploy && copy /Y api-component2.0.js C:\\\\Crop-Client-Services\\\\api-server\\\\api-component2.0.js && echo [OK] api-component2.0.js to pre-test\")",
       "Bash(git pull)",
       "Bash(git checkout -- .)",
-      "Bash(git clean -fd)"
+      "Bash(git clean -fd)",
+      "Bash(git checkout *)",
+      "Bash(git pull *)",
+      "Bash(mkdir -p mybestdemo/v6)",
+      "Bash(cp \"/root/.claude/uploads/5ba49aeb-488e-5773-8b35-910eaf2a0b01/95bab5e0-CropClientWaterScience1.0_.html\" \"mybestdemo/v6/CropClient-Water-Science-1.0.html\")",
+      "Bash(cp \"/root/.claude/uploads/5ba49aeb-488e-5773-8b35-910eaf2a0b01/695db9e8-apicomponent3.4.1.js\" \"mybestdemo/v6/api-component-3.4.1.js\")",
+      "Bash(cp \"/root/.claude/uploads/5ba49aeb-488e-5773-8b35-910eaf2a0b01/75498820-APIServer5.1.js\" \"mybestdemo/v6/APIServer5.1.js\")",
+      "Bash(cp \"/root/.claude/uploads/5ba49aeb-488e-5773-8b35-910eaf2a0b01/d7f84056-CropClientWaterTools3.4.1APIUpdatePlan_1.md\" \"mybestdemo/v6/CropClientWaterTools3.4.1APIUpdatePlan_1.md\")"
     ]
   }
 }
