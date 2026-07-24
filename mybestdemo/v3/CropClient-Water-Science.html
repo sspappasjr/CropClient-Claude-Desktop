@@ -1143,10 +1143,10 @@
             renderApiPanel();
         }
 
-        // Demo credentials — offline mocks ignore them; for a live run against
-        // APIServer4.0 replace with real CropManage credentials (never commit them).
-        const API_DEMO_USER = 'demo@cropclient.com';
-        const API_DEMO_PASS = 'demo-password';
+        // Real credentials, matching que 3.4.1's getToken() exactly — offline mode
+        // ignores them (mock only checks non-empty), local/online sends them for real.
+        const API_DEMO_USER = 'stevep@sspnet.com';
+        const API_DEMO_PASS = 'gosteve1!';
 
         // Offline seed — ranches/plantings that match the vIRR demo records, so
         // Get Irrigation Details can hand real rows to the grid below.
