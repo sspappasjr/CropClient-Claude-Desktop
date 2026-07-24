@@ -646,6 +646,7 @@
     </div>
 
     <!-- MCP-ENGINE — transport layer, unmodified (v2.1) -->
+    <script src="mcp-engine-4.0.js"></script>
     <script src="mcp-engine.js"></script>
 
     <!-- S10: IrrigationComponent -->
@@ -1119,434 +1120,119 @@
 
     <!-- S13: ApiComponent -->
     <!-- @@@@ BEGIN S13 ID: ApiComponent @@@@ -->
+    <script src="api-component-3.4.1.js"></script>
+
+    <!-- Hidden — que's real functions write into these directly (unmodified
+         que code, no null-guards on some of them), but S1 never shows them. -->
+    <div style="display:none;">
+        <input type="text" id="tokenDisplay" readonly>
+        <div id="ranchesGrid"></div>
+        <div id="plantingsGrid"></div>
+        <div id="recommendationsGrid"></div>
+        <table><tbody id="irrigationDetailsBody"></tbody></table>
+    </div>
+
     <script>
         // ========================================
-        // FENCE: vAPI — CropManage API state, independent of vIRR/vDOM.
-        // Same discipline: only API_receive() may write vAPI.* — whole-object
-        // JSON crossing, no shared references.
+        // Real que 3.4.1 functions (getToken, getRanches, getPlantingsByRanch,
+        // getIrrigationEventsByPlanting, postIrrigationToCropManage,
+        // updateRecordToCropManage — all from api-component-3.4.1.js, unmodified)
+        // now power S1. S1's own markup/IDs are untouched — this section only
+        // adds the hidden elements those real functions need internally (they
+        // write into them, no visual effect), plus a bridge that mirrors the
+        // real result into S1's existing visible tables.
+        //
+        // Offline/local/online branching is NOT reimplemented here — every real
+        // function already has its own "if (base) {online/local} else {offline
+        // direct fetch}" logic built in (getMcpBase() reads mcpServerUrl, which
+        // mcp-engine-4.0.js's mcpEngineLogon()/mcpEngineHarnessOffline() set).
+        // This override of setEnvMode() just calls those, same as que does.
         // ========================================
 
-        let vAPI = {
-            Token: null,
-            Ranches: [],            // [{ Id, Ranch_External_GUID, Name }] — get_ranches result
-            Plantings: [],          // [{ Id, Name }] — get_plantings result for SelectedRanch
-            SelectedRanch: null,    // { Id, Ranch_External_GUID, Name }
-            SelectedPlanting: null, // { Id, Name }
-            Pending: { toolName: null, params: {} },   // params-about-to-send (preview)
-            Result: { TokenName: null, Success: null, Error: null, Message: null }
-        };
-
-        // Only API_receive() may write vAPI.* — callers build a fresh deep copy,
-        // fold their changes in, and hand the whole object across.
-        function API_receive(apiState) {
-            vAPI = apiState;
-            renderApiPanel();
-        }
-
-        // Real credentials, matching que 3.4.1's getToken() exactly — offline mode
-        // ignores them (mock only checks non-empty), local/online sends them for real.
-        const API_DEMO_USER = 'stevep@sspnet.com';
-        const API_DEMO_PASS = 'gosteve1!';
-
-        // Offline seed — ranches/plantings that match the vIRR demo records, so
-        // Get Irrigation Details can hand real rows to the grid below.
-        const API_MOCK = {
-            ranches: [
-                { Id: 16150, Ranch_External_GUID: 'RANCH-GUID-16150', Name: 'Steve Ranch 1' },
-                { Id: 17150, Ranch_External_GUID: 'RANCH-GUID-17150', Name: 'Steve Ranch 2' }
-            ],
-            plantingsByGuid: {
-                'RANCH-GUID-16150': [ { Id: 64196, Name: 'Planting 1A' }, { Id: 57571, Name: 'Planting 1B' } ],
-                'RANCH-GUID-17150': [ { Id: 64198, Name: 'Planting 2A' }, { Id: 64199, Name: 'Planting 2B' } ]
-            }
-        };
-
-        // ========================================
-        // OFFLINE MOCKS — mirror APIServer4.0.js's 6 API tool contracts exactly
-        // (same names, same response shapes), run locally instead of over the wire.
-        // Registered into the existing localHandlers table so runToken() needs no change.
-        // ========================================
-
-        let apiMockEventSeq = 4200000; // fake CropManage ids for offline post_new_irrigation
-
-        Object.assign(localHandlers, {
-            get_token: function(params) {
-                if (!params.username || !params.password) {
-                    return { success: false, message: 'username and password required' };
-                }
-                return { success: true, token: 'demo-token-' + Date.now(), message: 'Token acquired successfully' };
-            },
-            get_ranches: function(params) {
-                if (!vAPI.Token) return { success: false, message: 'No token available. Call get_token first.' };
-                const ranches = JSON.parse(JSON.stringify(API_MOCK.ranches));
-                return { success: true, ranches: ranches, count: ranches.length };
-            },
-            get_plantings: function(params) {
-                if (!vAPI.Token) return { success: false, message: 'No token available. Call get_token first.' };
-                if (!params.ranchGuid) return { success: false, message: 'Ranch GUID required' };
-                const plantings = JSON.parse(JSON.stringify(API_MOCK.plantingsByGuid[params.ranchGuid] || []));
-                return { success: true, plantings: plantings, count: plantings.length };
-            },
-            get_irrigation_details: function(params) {
-                if (!vAPI.Token) return { success: false, message: 'No token available. Call get_token first.' };
-                if (!params.plantingId) {
-                    return { success: false, message: 'ranchId:ALL, plantingId:ALL+ranchGuid, plantings[], or plantingId required' };
-                }
-                // Events built from the vIRR demo records for this planting — same enriched
-                // fields the real server returns after its get_event_recommendation pass.
-                const recs = vIRR.originalRecords.filter(r => String(r.plantingId) === String(params.plantingId));
-                const events = recs.map(r => ({
-                    Id: r.eventId,
-                    EventDate: parseEventDate(r.scheduledDate).toISOString(),
-                    RanchName: r.ranch,
-                    PlantingName: r.planting,
-                    RanchId: r.ranchId,
-                    PlantingId: r.plantingId,
-                    RecommendedIrrigationAmount: parseFloat(r.recommendedInches) || 0,
-                    RecommendedIrrigationTime: r.hours,
-                    ManagerAmountRecommendationHours: r.mgrHours,
-                    WaterAppliedHours: r.appliedHours,
-                    RecommendedInterval: parseFloat(r.interval) || 0,
-                    IrrigationMethodId: 1
-                }));
-                return {
-                    success: true,
-                    events: events,
-                    count: events.length,
-                    message: `Loaded and enriched ${events.length} irrigation events from 1 planting(s)`
-                };
-            },
-            post_new_irrigation: function(params) {
-                if (!vAPI.Token) return { success: false, message: 'No token available. Call get_token first.' };
-                if (!params.plantingId) return { success: false, message: 'plantingId required' };
-                if (!params.eventdate) return { success: false, message: 'eventdate required' };
-                apiMockEventSeq += 1;
-                return { success: true, eventId: apiMockEventSeq, id: apiMockEventSeq, message: 'Irrigation event posted successfully' };
-            },
-            update_irrigation: function(params) {
-                if (!vAPI.Token) return { success: false, message: 'No token available. Call get_token first.' };
-                if (!params.eventId) return { success: false, message: 'eventId required' };
-                if (!params.eventDateMDY) return { success: false, message: 'eventDateMDY required' };
-                return { success: true, message: 'Irrigation event updated successfully' };
-            }
-        });
-
-        // ========================================
-        // PARAMS BUILDER + PREVIEW — vAPI.Pending is exactly what Send will send
-        // ========================================
-
-        // M/D/YY (grid convention) → YYYY-MM-DD (post_new_irrigation) / M/D/YYYY (update_irrigation)
-        function apiDateYMD(mdyy) {
-            const d = parseEventDate(mdyy);
-            return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-        }
-        function apiDateMDYYYY(mdyy) {
-            const d = parseEventDate(mdyy);
-            return `${d.getMonth() + 1}/${d.getDate()}/${d.getFullYear()}`;
-        }
-
-        function buildParamsForTool(toolName) {
-            switch (toolName) {
-                case 'get_token':
-                    return { username: API_DEMO_USER, password: API_DEMO_PASS };
-                case 'get_ranches':
-                    return {};
-                case 'get_plantings':
-                    return { ranchGuid: vAPI.SelectedRanch ? vAPI.SelectedRanch.Ranch_External_GUID : null };
-                case 'get_irrigation_details':
-                    return { plantingId: vAPI.SelectedPlanting ? String(vAPI.SelectedPlanting.Id) : null };
-                case 'post_new_irrigation': {
-                    const dateVal = document.getElementById('formDate').value;
-                    return {
-                        plantingId: vAPI.SelectedPlanting ? String(vAPI.SelectedPlanting.Id) : null,
-                        eventdate: dateVal && parseAndNormalizeDate(dateVal) ? apiDateYMD(parseAndNormalizeDate(dateVal)) : null,
-                        irrigationmethodid: 1,
-                        manageramountrecommendationhours: parseFloat(document.getElementById('formManagerHours').value) || 0,
-                        waterappliedhours: parseFloat(document.getElementById('formWaterApplied').value) || 0
-                    };
-                }
-                case 'update_irrigation': {
-                    const dateVal = document.getElementById('formDate').value;
-                    return {
-                        eventId: vIRR.SelectedRecord ? String(vIRR.SelectedRecord.eventId) : null,
-                        eventDateMDY: dateVal && parseAndNormalizeDate(dateVal) ? apiDateMDYYYY(parseAndNormalizeDate(dateVal)) : null,
-                        appliedHours: parseFloat(document.getElementById('formWaterApplied').value) || 0,
-                        mgrHours: parseFloat(document.getElementById('formManagerHours').value) || 0,
-                        irrigationMethodId: 1
-                    };
-                }
-                default:
-                    return {};
-            }
-        }
-
-        // Grid click stages the token — preview shows what Send will send, before Send.
-        function apiStageTool(toolName) {
-            const next = JSON.parse(JSON.stringify(vAPI));
-            next.Pending = { toolName: toolName, params: buildParamsForTool(toolName) };
-            API_receive(next);
-        }
-
-        // vAPI is the only writer of the ranches/plantings table bodies — the
-        // api-side twin of renderTable(). Row markup matches the Claude Design
-        // format exactly (same table/row style as the Tool column).
-        function renderApiPanel() {
-            const rBody = document.getElementById('ranchesTableBody');
-            const pBody = document.getElementById('plantingsTableBody');
-            if (!rBody || !pBody) return;
-
-            if (!vAPI.Ranches.length) {
-                rBody.innerHTML = '<tr><td style="padding: 8px; font-size: 0.8em; color: #999; font-style: italic;">— run Get Ranches —</td></tr>';
+        function setEnvMode(value) {
+            CURRENT_TARGET = value;
+            const urlField = document.getElementById('urlDisplay');
+            if (value === 'offline') {
+                if (typeof mcpEngineHarnessOffline === 'function') mcpEngineHarnessOffline();
+                if (urlField) urlField.value = '(offline)';
             } else {
-                rBody.innerHTML = vAPI.Ranches.map(r => {
-                    const selected = vAPI.SelectedRanch && vAPI.SelectedRanch.Ranch_External_GUID === r.Ranch_External_GUID;
-                    return `<tr onclick="apiSelectRanch('${r.Ranch_External_GUID}')" style="cursor: pointer; border-bottom: 1px solid #eee;${selected ? ' background: #C8E6C9;' : ''}">`
-                         + `<td style="padding: 8px; font-size: 0.85em;">${r.Name}</td></tr>`;
-                }).join('');
+                const serverUrl = value === 'online' ? 'https://api.cropclient.com' : 'http://localhost:3101';
+                if (typeof mcpEngineLogon === 'function') mcpEngineLogon(serverUrl);
+                if (urlField) urlField.value = serverUrl;
             }
-
-            if (!vAPI.Plantings.length) {
-                pBody.innerHTML = `<tr><td style="padding: 8px; font-size: 0.8em; color: #999; font-style: italic;">${vAPI.SelectedRanch ? '— run Get Plantings —' : '— select a ranch —'}</td></tr>`;
-            } else {
-                pBody.innerHTML = vAPI.Plantings.map(p => {
-                    const selected = vAPI.SelectedPlanting && String(vAPI.SelectedPlanting.Id) === String(p.Id);
-                    return `<tr onclick="apiSelectPlanting('${p.Id}')" style="cursor: pointer; border-bottom: 1px solid #eee;${selected ? ' background: #C8E6C9;' : ''}">`
-                         + `<td style="padding: 8px; font-size: 0.85em;">${p.Name}</td></tr>`;
-                }).join('');
-            }
+            showResult(`ℹ️ Mode switched to ${value}`);
         }
 
         // ========================================
-        // RANCH → PLANTING DEPENDENCY — lives inside the fence:
-        // selecting a ranch clears plantings, then reloads them via get_plantings.
+        // BRIDGE — mirrors the real global state (ranchData/plantingsData,
+        // que's own plain variables, already set by the real functions above)
+        // into S1's existing visible ranchesTableBody/plantingsTableBody.
+        // Que's own DOM writes (into the hidden elements above) still happen
+        // too, harmlessly, since nothing reads them.
         // ========================================
 
-        async function apiSelectRanch(ranchGuid) {
-            const next = JSON.parse(JSON.stringify(vAPI));
-            next.SelectedRanch = next.Ranches.find(r => r.Ranch_External_GUID === ranchGuid) || null;
-            next.Plantings = [];
-            next.SelectedPlanting = null;
-            next.Pending = { toolName: 'get_plantings', params: { ranchGuid: ranchGuid || null } };
-            API_receive(next);
-            if (next.SelectedRanch) await apiGetPlantings();
-        }
-
-        function apiSelectPlanting(plantingId) {
-            const next = JSON.parse(JSON.stringify(vAPI));
-            next.SelectedPlanting = next.Plantings.find(p => String(p.Id) === String(plantingId)) || null;
-            next.Pending = { toolName: 'get_irrigation_details', params: buildParamsForToolWith(next, 'get_irrigation_details') };
-            API_receive(next);
-        }
-
-        // buildParamsForTool reads live vAPI — this variant previews against a
-        // not-yet-received state so the preview and the crossing stay one atomic step.
-        function buildParamsForToolWith(state, toolName) {
-            const saved = vAPI;
-            vAPI = state;           // temporary, read-only peek for the builder
-            const params = buildParamsForTool(toolName);
-            vAPI = saved;
-            return params;
-        }
-
-        // ========================================
-        // THE 6 API TOKEN FUNCTIONS — all routed through runToken(), same
-        // click-row → description → Send flow as the irrigation tokens.
-        // ========================================
-
-        async function apiGetToken() {
-            const params = buildParamsForTool('get_token');
-            const result = await runToken('get_token', params);
-            const next = JSON.parse(JSON.stringify(vAPI));
-            next.Pending = { toolName: 'get_token', params: { username: params.username, password: '••••••••' } };
-            if (result && result.success) {
-                next.Token = result.token;
-                next.Result = { TokenName: 'get_token', Success: true, Error: null, Message: `✅ ${result.message || 'Token acquired'}` };
-            } else {
-                const msg = (result && (result.message || result.error)) || 'unknown error';
-                next.Result = { TokenName: 'get_token', Success: false, Error: msg, Message: `❌ get_token failed: ${msg}` };
-            }
-            API_receive(next);
-            showResult(next.Result.Message);
-        }
-
-        async function apiGetRanches() {
-            const params = buildParamsForTool('get_ranches');
-            const result = await runToken('get_ranches', params);
-            const next = JSON.parse(JSON.stringify(vAPI));
-            next.Pending = { toolName: 'get_ranches', params: params };
-            if (result && result.success) {
-                next.Ranches = JSON.parse(JSON.stringify(result.ranches || []));
-                next.SelectedRanch = null;
-                next.Plantings = [];
-                next.SelectedPlanting = null;
-                next.Result = { TokenName: 'get_ranches', Success: true, Error: null, Message: `✅ ${next.Ranches.length} ranches loaded — pick one below` };
-            } else {
-                const msg = (result && (result.message || result.error)) || 'unknown error';
-                next.Result = { TokenName: 'get_ranches', Success: false, Error: msg, Message: `❌ get_ranches failed: ${msg}` };
-            }
-            API_receive(next);
-            showResult(next.Result.Message);
-            // Ranch→Planting dependency: auto-select the first ranch so the demo
-            // flows Token → Ranches → Plantings without an extra click.
-            if (result && result.success && next.Ranches.length) {
-                await apiSelectRanch(next.Ranches[0].Ranch_External_GUID);
-            }
-        }
-
-        async function apiGetPlantings() {
-            if (!vAPI.SelectedRanch) {
-                showResult('❌ get_plantings: select a ranch first (run Get Ranches)');
+        function bridgeRenderRanches() {
+            const tbody = document.getElementById('ranchesTableBody');
+            if (!tbody) return;
+            if (!ranchData || !ranchData.length) {
+                tbody.innerHTML = '<tr><td style="padding: 8px; font-size: 0.8em; color: #999; font-style: italic;">— run Get Ranches —</td></tr>';
                 return;
             }
-            const params = buildParamsForTool('get_plantings');
-            const result = await runToken('get_plantings', params);
-            const next = JSON.parse(JSON.stringify(vAPI));
-            next.Pending = { toolName: 'get_plantings', params: params };
-            if (result && result.success) {
-                next.Plantings = JSON.parse(JSON.stringify(result.plantings || []));
-                next.SelectedPlanting = next.Plantings[0] || null;
-                next.Result = { TokenName: 'get_plantings', Success: true, Error: null, Message: `✅ ${next.Plantings.length} plantings loaded for ${next.SelectedRanch.Name}` };
-            } else {
-                const msg = (result && (result.message || result.error)) || 'unknown error';
-                next.Result = { TokenName: 'get_plantings', Success: false, Error: msg, Message: `❌ get_plantings failed: ${msg}` };
-            }
-            API_receive(next);
-            showResult(next.Result.Message);
+            tbody.innerHTML = ranchData.map(r => {
+                const sel = selectedRanchGuid === r.Ranch_External_GUID;
+                return `<tr onclick="bridgeSelectRanch('${r.Ranch_External_GUID}')" style="cursor:pointer;border-bottom:1px solid #eee;${sel ? 'background:#C8E6C9;' : ''}"><td style="padding:8px;font-size:0.85em;">${r.Name}</td></tr>`;
+            }).join('');
         }
 
-        async function apiGetIrrigationDetails() {
-            if (!vAPI.SelectedPlanting) {
-                showResult('❌ get_irrigation_details: select a planting first (run Get Plantings)');
+        function bridgeRenderPlantings() {
+            const tbody = document.getElementById('plantingsTableBody');
+            if (!tbody) return;
+            if (!plantingsData || !plantingsData.length) {
+                tbody.innerHTML = '<tr><td style="padding: 8px; font-size: 0.8em; color: #999; font-style: italic;">— select a ranch —</td></tr>';
                 return;
             }
-            const params = buildParamsForTool('get_irrigation_details');
-            const result = await runToken('get_irrigation_details', params);
-            const next = JSON.parse(JSON.stringify(vAPI));
-            next.Pending = { toolName: 'get_irrigation_details', params: params };
-            if (!result || !result.success) {
-                const msg = (result && (result.message || result.error)) || 'unknown error';
-                next.Result = { TokenName: 'get_irrigation_details', Success: false, Error: msg, Message: `❌ get_irrigation_details failed: ${msg}` };
-                API_receive(next);
-                showResult(next.Result.Message);
-                return;
-            }
-            next.Result = { TokenName: 'get_irrigation_details', Success: true, Error: null, Message: `✅ ${result.message || result.count + ' events loaded'}` };
-            API_receive(next);
-
-            // Fold the API events into the irrigation grid — same transform the server's
-            // displayRecords path does, then the normal vIRR → vDOM fence crossing.
-            const events = result.events || [];
-            const records = events.map((e, i) => {
-                const d = new Date(e.EventDate);
-                // Round to match the restore/demo-data convention: hours/mgrHours/
-                // appliedHours/interval at 1 decimal, inches at 2 — the live API
-                // returns raw floats (e.g. 0.6133333333333333), not pre-rounded.
-                // parseFloat() on RecommendedInterval also fixes "N days days":
-                // it extracts the leading number whether the API sends a plain
-                // number or a string that already contains "days".
-                const round1 = n => parseFloat((parseFloat(n) || 0).toFixed(1));
-                const round2 = n => (parseFloat(n) || 0).toFixed(2);
-                return {
-                    id: i + 1,
-                    eventId: e.Id,
-                    ranch: e.RanchName || vAPI.SelectedRanch.Name,
-                    planting: e.PlantingName || vAPI.SelectedPlanting.Name,
-                    hours: round1(e.RecommendedIrrigationTime),
-                    mgrHours: round1(e.ManagerAmountRecommendationHours),
-                    appliedHours: round1(e.WaterAppliedHours),
-                    interval: round1(e.RecommendedInterval) + ' days',
-                    scheduledDate: formatDate(d),
-                    irrigationMethod: 'Sprinkler',
-                    recommendedInches: round2(e.RecommendedIrrigationAmount),
-                    lastUpdatedDate: new Date().toLocaleString(),
-                    updatedBy: 'CropManage API',
-                    isNew: false, isOriginal: false, isUpdated: false,
-                    ranchId: e.RanchId || 0, plantingId: e.PlantingId || 0, status: 0
-                };
-            });
-            vIRR.displayRecords = records;
-            vIRR.SelectedRecord = records[0] || null;
-            vIRR.SelectedRanch    = vIRR.SelectedRecord ? vIRR.SelectedRecord.ranch : null;
-            vIRR.SelectedPlanting = vIRR.SelectedRecord ? vIRR.SelectedRecord.planting : null;
-            vIRR.Result = {
-                TokenName: 'get_irrigation_details',
-                Success: true, Record: null, Error: null, Value: null,
-                Message: next.Result.Message
-            };
-            DOM_receive(JSON.parse(JSON.stringify(vIRR)));
-            setDataSourceLabel(`CropManage API — ${vAPI.SelectedPlanting.Name}`);
+            tbody.innerHTML = plantingsData.map(p => {
+                const sel = String(selectedPlantingId) === String(p.Id);
+                return `<tr onclick="bridgeSelectPlanting('${p.Id}')" style="cursor:pointer;border-bottom:1px solid #eee;${sel ? 'background:#C8E6C9;' : ''}"><td style="padding:8px;font-size:0.85em;">${p.Name}</td></tr>`;
+            }).join('');
         }
 
-        async function apiPostNewIrrigation() {
-            if (!vAPI.SelectedPlanting) {
-                showResult('❌ post_new_irrigation: select a planting first (run Get Plantings)');
-                return;
-            }
-            const params = buildParamsForTool('post_new_irrigation');
-            if (!params.eventdate) {
-                showResult('❌ post_new_irrigation: enter a valid Date (M/D/YY) in the form first');
-                return;
-            }
-            const result = await runToken('post_new_irrigation', params);
-            const next = JSON.parse(JSON.stringify(vAPI));
-            next.Pending = { toolName: 'post_new_irrigation', params: params };
-            if (result && result.success) {
-                next.Result = { TokenName: 'post_new_irrigation', Success: true, Error: null, Message: `✅ ${result.message || 'Posted'} — eventId ${result.eventId}` };
-            } else {
-                const msg = (result && (result.message || result.error)) || 'unknown error';
-                next.Result = { TokenName: 'post_new_irrigation', Success: false, Error: msg, Message: `❌ post_new_irrigation failed: ${msg}` };
-            }
-            API_receive(next);
-            showResult(next.Result.Message);
+        async function bridgeSelectRanch(ranchGuid) {
+            const ranch = (ranchData || []).find(r => r.Ranch_External_GUID === ranchGuid);
+            if (!ranch) return;
+            selectedRanchGuid = ranch.Ranch_External_GUID;
+            selectedRanchId = ranch.Id;
+            selectedRanchName = ranch.Name;
+            bridgeRenderRanches();
+            const result = await getPlantingsByRanch(selectedRanchGuid);
+            bridgeRenderPlantings();
+            showResult(result && result.success
+                ? `✅ ${plantingsData.length} plantings loaded for ${ranch.Name}`
+                : `❌ ${(result && result.error) || 'Get plantings failed'}`);
         }
 
-        async function apiUpdateIrrigation() {
-            if (!vIRR.SelectedRecord) {
-                showResult('❌ update_irrigation: select a record in the grid first');
-                return;
-            }
-            const params = buildParamsForTool('update_irrigation');
-            if (!params.eventDateMDY) {
-                showResult('❌ update_irrigation: enter a valid Date (M/D/YY) in the form first');
-                return;
-            }
-            const result = await runToken('update_irrigation', params);
-            const next = JSON.parse(JSON.stringify(vAPI));
-            next.Pending = { toolName: 'update_irrigation', params: params };
-            if (result && result.success) {
-                next.Result = { TokenName: 'update_irrigation', Success: true, Error: null, Message: `✅ ${result.message || 'Updated'} — event ${params.eventId}` };
-            } else {
-                const msg = (result && (result.message || result.error)) || 'unknown error';
-                next.Result = { TokenName: 'update_irrigation', Success: false, Error: msg, Message: `❌ update_irrigation failed: ${msg}` };
-            }
-            API_receive(next);
-            showResult(next.Result.Message);
+        function bridgeSelectPlanting(plantingId) {
+            const planting = (plantingsData || []).find(p => String(p.Id) === String(plantingId));
+            if (!planting) return;
+            selectedPlantingId = String(planting.Id);
+            selectedPlantingName = planting.Name;
+            bridgeRenderPlantings();
         }
 
         // ========================================
-        // OVERRIDES — this page only. dashboard-component.js's selectToolFromGrid()/
-        // sendPrompt() know only reset/create/meter/update; redefining them here (after
-        // the shared script loads) swaps in the 6 API tokens for Water Science without
-        // touching the shared file, so Dashboard.html stays generic/untouched.
+        // OVERRIDES — this page only, same pattern as before. Tool rows call
+        // the real functions directly; offline/local/online is handled inside
+        // them, not here.
         // ========================================
 
         function selectToolFromGrid(toolName) {
             const descriptions = {
-                'get_token': 'POST /Token — Authenticate with CropManage and obtain a Bearer token. Every other API token needs this first.\n\nOffline mode returns a demo token, no server needed.',
+                'get_token': 'POST /Token — Authenticate with CropManage and obtain a Bearer token. Every other API token needs this first.',
                 'get_ranches': 'GET /v2/ranches.json — Fetch all ranches for the logged-in user.\n\nRequires: Get Token first.',
-                'get_plantings': 'GET /v2/ranches/{ranchGuid}/plantings.json — Fetch plantings for the selected ranch.\n\nRequires: a ranch (auto-selected from Get Ranches, or click one below).',
-                'get_irrigation_details': 'GET /v2/plantings/{plantingId}/irrigation-events/details.json — Fetch irrigation events for the selected planting and load them into the grid below.\n\nRequires: a planting (auto-selected from Get Plantings, or click one below).',
-                'post_new_irrigation': 'POST /v3/plantings/{plantingId}/irrigation-events.json — Push a NEW irrigation event using the selected planting and the form values on the right.\n\nRequires: a planting + form values.',
-                'update_irrigation': 'PUT /v3/irrigation-events/{eventId}.json — Update the selected irrigation record with the form values on the right.\n\nRequires: a record selected in the grid below.'
-            };
-
-            const prompts = {
-                'get_token': 'Get CropManage API token',
-                'get_ranches': 'Get ranches from CropManage',
-                'get_plantings': 'Get plantings for the selected ranch',
-                'get_irrigation_details': 'Get irrigation details for the selected planting',
-                'post_new_irrigation': 'Post new irrigation for the selected planting',
-                'update_irrigation': 'Update irrigation for the selected record'
+                'get_plantings': 'GET /v2/ranches/{ranchGuid}/plantings.json — Fetch plantings for the selected ranch.\n\nRequires: a ranch selected below.',
+                'get_irrigation_details': 'GET /v2/plantings/{plantingId}/irrigation-events/details.json — Fetch irrigation events for the selected planting and load them into the grid below.\n\nRequires: a planting selected below.',
+                'post_new_irrigation': 'POST /v3/plantings/{plantingId}/irrigation-events.json — Push a NEW irrigation event using the record selected in the grid below.\n\nRequires: a record selected in the grid below.',
+                'update_irrigation': 'PUT /v3/irrigation-events/{eventId}.json — Update the selected irrigation record.\n\nRequires: a record selected in the grid below.'
             };
 
             const rows = document.querySelectorAll('#toolsTableBody tr');
@@ -1557,53 +1243,76 @@
             descDiv.style.whiteSpace = 'pre-line';
             descDiv.textContent = descriptions[toolName] || '';
 
-            document.getElementById('promptInput').value = prompts[toolName] || '';
+            runRealTool(toolName);
+        }
+
+        async function runRealTool(toolName) {
+            switch (toolName) {
+                case 'get_token': {
+                    const r = await getToken();
+                    showResult(r && r.success ? '✅ Token acquired successfully' : `❌ ${(r && r.error) || 'Token failed'}`);
+                    return;
+                }
+                case 'get_ranches': {
+                    const r = await getRanches();
+                    bridgeRenderRanches();
+                    if (r && r.success && ranchData && ranchData.length) {
+                        showResult(`✅ ${ranchData.length} ranches loaded — pick one below`);
+                    } else {
+                        showResult(`❌ ${(r && r.error) || 'Get ranches failed'}`);
+                    }
+                    return;
+                }
+                case 'get_plantings': {
+                    if (!selectedRanchGuid) { showResult('❌ select a ranch first (run Get Ranches)'); return; }
+                    const r = await getPlantingsByRanch(selectedRanchGuid);
+                    bridgeRenderPlantings();
+                    showResult(r && r.success
+                        ? `✅ ${plantingsData.length} plantings loaded`
+                        : `❌ ${(r && r.error) || 'Get plantings failed'}`);
+                    return;
+                }
+                case 'get_irrigation_details': {
+                    if (!selectedPlantingId) { showResult('❌ select a planting first (run Get Plantings)'); return; }
+                    const r = await getIrrigationEventsByPlanting(selectedPlantingId);
+                    if (typeof renderTable === 'function') renderTable();
+                    showResult(r && r.success
+                        ? `✅ ${(r.events && r.events.length) || 0} irrigation events loaded`
+                        : `❌ ${(r && r.error) || 'Get irrigation details failed'}`);
+                    return;
+                }
+                case 'post_new_irrigation': {
+                    const r = await postIrrigationToCropManage();
+                    if (typeof renderTable === 'function') renderTable();
+                    showResult(r && r.success ? `✅ ${r.message || 'Posted'}` : `❌ ${(r && r.error) || 'Post failed'}`);
+                    return;
+                }
+                case 'update_irrigation': {
+                    const r = await updateRecordToCropManage();
+                    if (typeof renderTable === 'function') renderTable();
+                    showResult(r && r.success ? `✅ ${r.message || 'Updated'}` : `❌ ${(r && r.error) || 'Update failed'}`);
+                    return;
+                }
+            }
         }
 
         function sendPrompt() {
             const promptInput = document.getElementById('promptInput');
             const prompt = promptInput.value.trim().toLowerCase();
-
-            if (!prompt) {
-                showResult('❌ Please enter a prompt or select from dropdown');
-                return;
-            }
-
+            if (!prompt) { showResult('❌ Please enter a prompt or select from dropdown'); return; }
             logToChat(promptInput.value.trim(), 'P');
 
-            if (prompt.includes('token')) {
-                apiGetToken();
-            }
-            else if (prompt.includes('ranches')) {
-                apiGetRanches();
-            }
-            else if (prompt.includes('plantings')) {
-                apiGetPlantings();
-            }
-            else if (prompt.includes('irrigation') && prompt.includes('details')) {
-                apiGetIrrigationDetails();
-            }
-            else if (prompt.includes('post') && prompt.includes('irrigation')) {
-                apiPostNewIrrigation();
-            }
-            else if (prompt.includes('update') && prompt.includes('irrigation')) {
-                apiUpdateIrrigation();
-            }
-            else if (prompt.includes('reset') || prompt.includes('refresh') || prompt.includes('show all')) {
-                resetTable();
-            }
-            else if (prompt.includes('create') && prompt.includes('next')) {
-                testCreateNext();
-            }
-            else if (prompt.includes('read') && prompt.includes('meter')) {
-                testReadMeter();
-            }
-            else if (prompt.includes('update')) {
-                updateRecord();
-            }
-            else {
-                showResult('❌ Unknown command. Try: get token, get ranches, get plantings, irrigation details, post irrigation, update irrigation');
-            }
+            if (prompt.includes('token')) runRealTool('get_token');
+            else if (prompt.includes('ranches')) runRealTool('get_ranches');
+            else if (prompt.includes('plantings')) runRealTool('get_plantings');
+            else if (prompt.includes('irrigation') && prompt.includes('details')) runRealTool('get_irrigation_details');
+            else if (prompt.includes('post') && prompt.includes('irrigation')) runRealTool('post_new_irrigation');
+            else if (prompt.includes('update') && prompt.includes('irrigation')) runRealTool('update_irrigation');
+            else if (prompt.includes('reset') || prompt.includes('refresh') || prompt.includes('show all')) resetTable();
+            else if (prompt.includes('create') && prompt.includes('next')) testCreateNext();
+            else if (prompt.includes('read') && prompt.includes('meter')) testReadMeter();
+            else if (prompt.includes('update')) updateRecord();
+            else showResult('❌ Unknown command. Try: get token, get ranches, get plantings, irrigation details, post irrigation, update irrigation');
         }
     </script>
     <!-- @@@@ END S13 ID: ApiComponent @@@@ -->
