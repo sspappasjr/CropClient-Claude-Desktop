@@ -1430,18 +1430,26 @@
             const events = result.events || [];
             const records = events.map((e, i) => {
                 const d = new Date(e.EventDate);
+                // Round to match the restore/demo-data convention: hours/mgrHours/
+                // appliedHours/interval at 1 decimal, inches at 2 — the live API
+                // returns raw floats (e.g. 0.6133333333333333), not pre-rounded.
+                // parseFloat() on RecommendedInterval also fixes "N days days":
+                // it extracts the leading number whether the API sends a plain
+                // number or a string that already contains "days".
+                const round1 = n => parseFloat((parseFloat(n) || 0).toFixed(1));
+                const round2 = n => (parseFloat(n) || 0).toFixed(2);
                 return {
                     id: i + 1,
                     eventId: e.Id,
                     ranch: e.RanchName || vAPI.SelectedRanch.Name,
                     planting: e.PlantingName || vAPI.SelectedPlanting.Name,
-                    hours: e.RecommendedIrrigationTime || 0,
-                    mgrHours: e.ManagerAmountRecommendationHours || 0,
-                    appliedHours: e.WaterAppliedHours || 0,
-                    interval: (e.RecommendedInterval || 0) + ' days',
+                    hours: round1(e.RecommendedIrrigationTime),
+                    mgrHours: round1(e.ManagerAmountRecommendationHours),
+                    appliedHours: round1(e.WaterAppliedHours),
+                    interval: round1(e.RecommendedInterval) + ' days',
                     scheduledDate: formatDate(d),
                     irrigationMethod: 'Sprinkler',
-                    recommendedInches: String(e.RecommendedIrrigationAmount || 0),
+                    recommendedInches: round2(e.RecommendedIrrigationAmount),
                     lastUpdatedDate: new Date().toLocaleString(),
                     updatedBy: 'CropManage API',
                     isNew: false, isOriginal: false, isUpdated: false,
