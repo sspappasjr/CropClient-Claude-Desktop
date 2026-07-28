@@ -436,6 +436,17 @@
             max-width: 80%;
         }
 
+        .message-time {
+            display: block;
+            font-size: 11px;
+            opacity: 0.65;
+            margin-top: 4px;
+        }
+
+        .message.user .message-time {
+            text-align: right;
+        }
+
         .chat-input-area {
             padding: 20px;
             background: #f8f8f8;
@@ -1880,7 +1891,21 @@ Water Applied: ${selectedRecord.appliedHours}`);
             console.log('✅ chatMessages container found, adding message');
             const messageDiv = document.createElement('div');
             messageDiv.className = `message ${role}`;
-            messageDiv.textContent = content;
+
+            const textSpan = document.createElement('span');
+            textSpan.textContent = content;
+            messageDiv.appendChild(textSpan);
+
+            const timeSpan = document.createElement('span');
+            timeSpan.className = 'message-time';
+            timeSpan.textContent = new Date().toLocaleString(undefined, {
+                month: 'short',
+                day: 'numeric',
+                hour: 'numeric',
+                minute: '2-digit'
+            });
+            messageDiv.appendChild(timeSpan);
+
             messagesContainer.appendChild(messageDiv);
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
             console.log('✅ Message added to DOM');
