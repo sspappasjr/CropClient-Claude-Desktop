@@ -1,0 +1,13 @@
+{
+  "name": "cropclient-apiserver",
+  "version": "5.1.0",
+  "description": "CropClient MCP Server -- CropManage + irrigation grid tokens",
+  "main": "APIServer5_1.js",
+  "scripts": {
+    "start": "node APIServer5_1.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "cors": "^2.8.5"
+  }
+}

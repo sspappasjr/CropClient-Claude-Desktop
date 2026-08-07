@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CropClient — Record Format Reference</title>
+<style>
+  :root {
+    --ink: #1a2420;
+    --paper: #f6f7f4;
+    --card: #ffffff;
+    --line: #d8ddd6;
+    --green: #2e7d32;
+    --green-light: #4caf50;
+    --gray: #6b7280;
+    --gray-bg: #f0f1ef;
+    --teal: #0f766e;
+    --teal-bg: #e6f4f3;
+    --amber: #92400e;
+    --amber-bg: #fdf3e6;
+    --final: #1e40af;
+    --final-bg: #eaf0fb;
+    --mono: 'SF Mono', 'Courier New', monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: -apple-system, 'Segoe UI', sans-serif;
+    padding: 40px 24px 80px;
+  }
+  .wrap { max-width: 1180px; margin: 0 auto; }
+  header { margin-bottom: 40px; }
+  header .eyebrow {
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--green);
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+  header h1 {
+    font-size: 1.9rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+  header p {
+    margin-top: 10px;
+    color: var(--gray);
+    max-width: 640px;
+    line-height: 1.5;
+    font-size: 0.95rem;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+  }
+  @media (max-width: 980px) { .grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 620px) { .grid { grid-template-columns: 1fr; } }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  .card-head {
+    padding: 16px 18px 14px;
+    border-bottom: 1px solid var(--line);
+  }
+  .card-head .tag {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 5px;
+    margin-bottom: 10px;
+  }
+  .card-head h2 {
+    font-size: 1.05rem;
+    font-weight: 700;
+    font-family: var(--mono);
+  }
+  .card-head .sub {
+    margin-top: 6px;
+    font-size: 0.82rem;
+    color: var(--gray);
+    line-height: 1.45;
+  }
+  .fields {
+    padding: 14px 18px 18px;
+    flex: 1;
+  }
+  .fields ul { list-style: none; }
+  .fields li {
+    font-family: var(--mono);
+    font-size: 0.82rem;
+    padding: 5px 0;
+    border-bottom: 1px dashed var(--line);
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .fields li:last-child { border-bottom: none; }
+  .fields li .fname { color: var(--ink); }
+  .fields li .fnote { color: var(--gray); font-size: 0.72rem; text-align: right; }
+  .c-garbage .tag { background: var(--gray-bg); color: var(--gray); }
+  .c-garbage .card-head { background: linear-gradient(180deg, #fafafa, #fff); }
+  .c-demo .tag { background: var(--amber-bg); color: var(--amber); }
+  .c-demo .card-head { background: linear-gradient(180deg, #fdf9f2, #fff); }
+  .c-standard .tag { background: var(--teal-bg); color: var(--teal); }
+  .c-standard .card-head { background: linear-gradient(180deg, #f0f9f8, #fff); }
+  .c-final .tag { background: var(--final-bg); color: var(--final); }
+  .c-final .card-head { background: linear-gradient(180deg, #f0f4fc, #fff); }
+  .flow-note {
+    margin-top: 28px;
+    padding: 16px 20px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-left: 4px solid var(--green);
+    border-radius: 8px;
+    font-size: 0.88rem;
+    line-height: 1.6;
+    color: #2b332e;
+  }
+  .flow-note code {
+    font-family: var(--mono);
+    background: var(--gray-bg);
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 0.82rem;
+  }
+  .badge-new {
+    font-family: var(--mono);
+    font-size: 0.68rem;
+    color: #fff;
+    background: var(--final);
+    padding: 1px 6px;
+    border-radius: 4px;
+    margin-left: 6px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">CropClient · MCP Water Science</div>
+    <h1>Record Format Reference</h1>
+    <p>Four record shapes, source to grid. Two are stored in their source's own native format, one is computed on the fly (never persisted, still a real shape), one is the final deployed record.</p>
+  </header>
+
+  <div class="grid">
+
+    <div class="card c-garbage">
+      <div class="card-head">
+        <span class="tag">CropManage native · stored</span>
+        <h2>APIdetail</h2>
+        <div class="sub">CropManage's native response, <code>/v2/plantings/{id}/irrigation-events/details.json</code>. Most fields never get read.</div>
+      </div>
+      <div class="fields">
+        <ul>
+          <li><span class="fname">Id</span></li>
+          <li><span class="fname">EventDate</span></li>
+          <li><span class="fname">RanchName</span></li>
+          <li><span class="fname">PlantingName</span></li>
+          <li><span class="fname">RanchId</span></li>
+          <li><span class="fname">PlantingId</span></li>
+          <li><span class="fname">IrrigationMethodId</span></li>
+          <li><span class="fname">RecommendedIrrigationAmount</span></li>
+          <li><span class="fname">RecommendedIrrigationTime</span></li>
+          <li><span class="fname">ManagerAmountRecommendationHours</span></li>
+          <li><span class="fname">WaterApplied</span></li>
+          <li><span class="fname">RecommendedInterval</span></li>
+          <li><span class="fname">+ other native fields</span><span class="fnote">unused</span></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="card c-demo">
+      <div class="card-head">
+        <span class="tag">Demo native · stored</span>
+        <h2>Demo record</h2>
+        <div class="sub">Hardcoded seed data, <code>vIRR.originalRecords</code> in MCP-Water-Tools.js. Already close to final shape by hand.</div>
+      </div>
+      <div class="fields">
+        <ul>
+          <li><span class="fname">id</span></li>
+          <li><span class="fname">eventId</span></li>
+          <li><span class="fname">ranch</span></li>
+          <li><span class="fname">planting</span></li>
+          <li><span class="fname">hours</span></li>
+          <li><span class="fname">mgrHours</span></li>
+          <li><span class="fname">appliedHours</span></li>
+          <li><span class="fname">interval</span></li>
+          <li><span class="fname">scheduledDate</span></li>
+          <li><span class="fname">irrigationMethod</span></li>
+          <li><span class="fname">recommendedInches</span></li>
+          <li><span class="fname">lastUpdatedDate</span></li>
+          <li><span class="fname">updatedBy</span></li>
+          <li><span class="fname">isNew / isOriginal / isUpdated</span></li>
+          <li><span class="fname">ranchId</span></li>
+          <li><span class="fname">plantingId</span></li>
+          <li><span class="fname">status</span></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="card c-standard">
+      <div class="card-head">
+        <span class="tag">Computed · NOT stored</span>
+        <h2>vAPIstandard</h2>
+        <div class="sub">Never its own variable, never persisted. This is the exact shape <code>loadDisplayRecords</code> builds in memory, in one pass, reading straight off whichever source record above it was given.</div>
+      </div>
+      <div class="fields">
+        <ul>
+          <li><span class="fname">recordID</span></li>
+          <li><span class="fname">ranch</span></li>
+          <li><span class="fname">planting</span></li>
+          <li><span class="fname">scheduledDate</span></li>
+          <li><span class="fname">hours</span></li>
+          <li><span class="fname">interval</span></li>
+          <li><span class="fname">mgrHours</span></li>
+          <li><span class="fname">appliedHours</span></li>
+          <li><span class="fname">ranchId</span></li>
+          <li><span class="fname">plantingId</span></li>
+          <li><span class="fname">status</span></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="card c-final">
+      <div class="card-head">
+        <span class="tag">Final · deployed everywhere</span>
+        <h2>DisplayRecords</h2>
+        <div class="sub">loadDisplayRecords' actual output — vAPIstandard's 11 fields plus 6 bookkeeping fields added in the same pass. One shape, every screen.</div>
+      </div>
+      <div class="fields">
+        <ul>
+          <li><span class="fname">id</span><span class="fnote">position</span></li>
+          <li><span class="fname">recordID</span></li>
+          <li><span class="fname">source<span class="badge-new">new</span></span></li>
+          <li><span class="fname">ranch</span></li>
+          <li><span class="fname">planting</span></li>
+          <li><span class="fname">hours</span></li>
+          <li><span class="fname">mgrHours</span></li>
+          <li><span class="fname">appliedHours</span></li>
+          <li><span class="fname">interval</span></li>
+          <li><span class="fname">scheduledDate</span></li>
+          <li><span class="fname">ranchId</span></li>
+          <li><span class="fname">plantingId</span></li>
+          <li><span class="fname">status</span></li>
+          <li><span class="fname">lastUpdatedDate<span class="badge-new">new</span></span></li>
+          <li><span class="fname">updatedBy<span class="badge-new">new</span></span></li>
+          <li><span class="fname">isNew / isOriginal / isUpdated<span class="badge-new">new</span></span></li>
+        </ul>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="card" style="margin-top:16px;">
+    <div class="card-head">
+      <span class="tag" style="background:var(--gray-bg); color:var(--gray);">Field mapping</span>
+      <h2>Where each vAPIstandard field comes from</h2>
+      <div class="sub">Same 11 fields, shown against both source formats — proof it's one selection rule, not two different ones.</div>
+    </div>
+    <div class="fields">
+      <table style="width:100%; border-collapse: collapse; font-family: var(--mono); font-size: 0.82rem;">
+        <thead>
+          <tr style="border-bottom: 1px solid var(--line);">
+            <th style="text-align:left; padding:6px 4px; color: var(--gray); font-weight:600;">vAPIstandard field</th>
+            <th style="text-align:left; padding:6px 4px; color: var(--gray); font-weight:600;">from APIdetail</th>
+            <th style="text-align:left; padding:6px 4px; color: var(--gray); font-weight:600;">from demo record</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td style="padding:5px 4px;">recordID</td><td style="padding:5px 4px;">Id</td><td style="padding:5px 4px;">eventId</td></tr>
+          <tr><td style="padding:5px 4px;">ranch</td><td style="padding:5px 4px;">RanchName</td><td style="padding:5px 4px;">ranch</td></tr>
+          <tr><td style="padding:5px 4px;">planting</td><td style="padding:5px 4px;">PlantingName</td><td style="padding:5px 4px;">planting</td></tr>
+          <tr><td style="padding:5px 4px;">scheduledDate</td><td style="padding:5px 4px;">EventDate (reformatted)</td><td style="padding:5px 4px;">scheduledDate</td></tr>
+          <tr><td style="padding:5px 4px;">hours</td><td style="padding:5px 4px;">RecommendedIrrigationTime</td><td style="padding:5px 4px;">hours</td></tr>
+          <tr><td style="padding:5px 4px;">interval</td><td style="padding:5px 4px;">RecommendedInterval</td><td style="padding:5px 4px;">interval</td></tr>
+          <tr><td style="padding:5px 4px;">mgrHours</td><td style="padding:5px 4px;">ManagerAmountRecommendationHours</td><td style="padding:5px 4px;">mgrHours</td></tr>
+          <tr><td style="padding:5px 4px;">appliedHours</td><td style="padding:5px 4px;">WaterApplied (converted)</td><td style="padding:5px 4px;">appliedHours</td></tr>
+          <tr><td style="padding:5px 4px;">ranchId</td><td style="padding:5px 4px;">RanchId</td><td style="padding:5px 4px;">ranchId</td></tr>
+          <tr><td style="padding:5px 4px;">plantingId</td><td style="padding:5px 4px;">PlantingId</td><td style="padding:5px 4px;">plantingId</td></tr>
+          <tr><td style="padding:5px 4px;">status</td><td style="padding:5px 4px;">fixed: 0 (already synced)</td><td style="padding:5px 4px;">status</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="flow-note">
+    <strong>Reading order:</strong> <code>APIdetail</code> and <code>Demo record</code> are the only two things actually stored, each in its own native format. <code>vAPIstandard</code> is a real shape — shown above — but it's built and consumed within a single pass of <code>loadDisplayRecords</code>, never its own persisted variable. That function adds six bookkeeping fields and produces the one real <code>DisplayRecords</code> array — deployed as copies into <code>vDOM</code> and <code>vAPI</code>. <code>vIRR</code> holds the untouched original, separately, for <code>create_next_irrigation</code> to work from.
+  </div>
+
+</div>
+</body>
+</html>

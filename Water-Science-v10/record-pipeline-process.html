@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CropClient — Record Pipeline Process</title>
+<style>
+  :root {
+    --ink: #1a2420;
+    --paper: #f6f7f4;
+    --card: #ffffff;
+    --line: #d8ddd6;
+    --green: #2e7d32;
+    --gray: #6b7280;
+    --gray-bg: #f0f1ef;
+    --teal: #0f766e;
+    --teal-bg: #e6f4f3;
+    --amber: #92400e;
+    --amber-bg: #fdf3e6;
+    --final: #1e40af;
+    --final-bg: #eaf0fb;
+    --mono: 'SF Mono', 'Courier New', monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: -apple-system, 'Segoe UI', sans-serif;
+    padding: 40px 24px 80px;
+  }
+  .wrap { max-width: 860px; margin: 0 auto; }
+  header { margin-bottom: 40px; }
+  header .eyebrow {
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--green);
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+  header h1 { font-size: 1.9rem; font-weight: 700; letter-spacing: -0.01em; }
+  header p { margin-top: 10px; color: var(--gray); line-height: 1.5; font-size: 0.95rem; }
+
+  .step {
+    display: grid;
+    grid-template-columns: 44px 1fr;
+    gap: 18px;
+    margin-bottom: 4px;
+  }
+  .num-col { display: flex; flex-direction: column; align-items: center; }
+  .num {
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    background: var(--card);
+    border: 2px solid var(--green);
+    color: var(--green);
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: 0.85rem;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .connector { width: 2px; flex: 1; background: var(--line); margin: 4px 0; }
+  .step:last-child .connector { display: none; }
+
+  .step-body { padding-bottom: 30px; }
+  .step-body h2 { font-size: 1.05rem; font-weight: 700; margin-bottom: 6px; }
+  .step-body p { font-size: 0.9rem; color: #3a4139; line-height: 1.55; margin-bottom: 10px; }
+  .step-body code {
+    font-family: var(--mono);
+    background: var(--gray-bg);
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 0.82rem;
+  }
+
+  .lane-pair {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 6px;
+  }
+  @media (max-width: 560px) { .lane-pair { grid-template-columns: 1fr; } }
+  .lane {
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 0.82rem;
+  }
+  .lane.api { background: var(--teal-bg); border-color: #b6e0dc; }
+  .lane.demo { background: var(--amber-bg); border-color: #f0dcb8; }
+  .lane .lane-label {
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 4px;
+  }
+  .lane.api .lane-label { color: var(--teal); }
+  .lane.demo .lane-label { color: var(--amber); }
+
+  .deploy-targets {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-top: 10px;
+  }
+  @media (max-width: 620px) { .deploy-targets { grid-template-columns: 1fr; } }
+  .target {
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 12px 14px;
+    background: var(--final-bg);
+  }
+  .target .t-name { font-family: var(--mono); font-weight: 700; font-size: 0.85rem; color: var(--final); }
+  .target .t-desc { font-size: 0.78rem; color: var(--gray); margin-top: 3px; line-height: 1.4; }
+  .target.original { background: var(--gray-bg); }
+  .target.original .t-name { color: var(--gray); }
+
+  .timing-note {
+    margin-top: 32px;
+    padding: 16px 20px;
+    background: #fff8e1;
+    border: 1px solid #f0dc9e;
+    border-left: 4px solid #b8860b;
+    border-radius: 8px;
+    font-size: 0.88rem;
+    line-height: 1.6;
+  }
+  .timing-note strong { color: #7a5c00; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">CropClient · MCP Water Science</div>
+    <h1>Record Pipeline Process</h1>
+    <p>How one irrigation record gets from its source to every screen that shows it. One shared process, run once per load — not once per destination.</p>
+  </header>
+
+  <div class="step">
+    <div class="num-col"><div class="num">1</div><div class="connector"></div></div>
+    <div class="step-body">
+      <h2>A source produces its own native data</h2>
+      <p>Two possible sources, two different native shapes. Neither is used as-is — both get trimmed before anything else happens.</p>
+      <div class="lane-pair">
+        <div class="lane api"><div class="lane-label">Live · CropManage</div><code>get_irrigation_detail</code> returns <code>APIdetail</code> — CropManage's native fields, mostly unused.</div>
+        <div class="lane demo"><div class="lane-label">Demo · seeded</div>Hardcoded demo record — already close to final shape, still gets trimmed the same way.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="num-col"><div class="num">2</div><div class="connector"></div></div>
+    <div class="step-body">
+      <h2>The source builds vAPIstandard — before loadDisplayRecords ever runs</h2>
+      <p>Only <code>vAPIstandard</code> ever flows into <code>loadDisplayRecords</code>. Each source knows its own native field names, so each source builds this shape itself: live data's own mapper reads <code>Id</code>/<code>RanchName</code>/... off <code>APIdetail</code>; demo's own mapper reads <code>eventId</code>/<code>ranch</code>/... off the demo record. Both produce the identical 11-field <code>vAPIstandard</code> shape. This build step is separate from step 3 — it finishes before loadDisplayRecords is ever called.</p>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="num-col"><div class="num">3</div><div class="connector"></div></div>
+    <div class="step-body">
+      <h2>loadDisplayRecords receives vAPIstandard, adds the bookkeeping fields</h2>
+      <p>One shared function, one call per load. Takes the <code>vAPIstandard</code> object step 2 just built, adds <code>id</code>, <code>source</code>, <code>lastUpdatedDate</code>, <code>updatedBy</code>, the three sync-state flags — produces the single real <code>DisplayRecords</code> array.</p>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="num-col"><div class="num">4</div></div>
+    <div class="step-body">
+      <h2>Deployed as copies</h2>
+      <p>The one <code>DisplayRecords</code> result gets copied out to everywhere that needs it. Each destination holds its own copy from this point on — no live link back to step 2/3.</p>
+      <div class="deploy-targets">
+        <div class="target"><div class="t-name">vDOM</div><div class="t-desc">The grid's own copy — what actually renders.</div></div>
+        <div class="target"><div class="t-name">vAPI</div><div class="t-desc">API's own copy, for its panel and for building the next request.</div></div>
+        <div class="target original"><div class="t-name">vIRR</div><div class="t-desc">Keeps the untouched original separately — what create_next_irrigation works from, not the deployed copy.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="timing-note">
+    <strong>Timing rule:</strong> the field selection (step 2) has to see a fully-loaded source record before it runs — a half-built source record produces an incomplete <code>DisplayRecords</code>. In MCP mode, fetch → select → add bookkeeping needs to run as one atomic server call, so nothing downstream can act on a half-built record.
+  </div>
+
+  <div class="step" style="margin-top:32px;">
+    <div class="num-col"><div class="num">5</div><div class="connector"></div></div>
+    <div class="step-body">
+      <h2>loadDisplayRecords runs every time, not once</h2>
+      <p>Not a one-time pipeline step. Called by each process on load, after <code>get_irrigation_detail</code>, and anywhere else data changes — same select → sync → propagate sequence every time, so whichever token runs next always sees current data, not stale. <code>vAPIstandard</code> travels as a parameter (or lives briefly inside <code>vIRR</code>) each time this runs.</p>
+      <p><strong>Sync direction:</strong> <code>vDOM ↔ vIRR</code> is bidirectional, already built. <code>vIRR → vAPI</code> is one-way — IRR is responsible for keeping vAPI synced, not the other way around, and vDOM never talks to vAPI directly. Every MCP token, in any process, reading from any of the three, sees the same current data after this runs.</p>
+    </div>
+  </div>
+
+  <div class="timing-note" style="background:#eef3fb; border-color:#c3d7f0; border-left-color:#1e40af;">
+    <strong>Note — source reference:</strong> "i gave you the code from 3.4.1 that was in the que app. it is only a harness and only offline works with cors. but it works. it does the get-irr, the post, the post que, and the loaddisplay object all as one tokens work and it knows how to handle the all ranch, and ranch all plantings. all of which needs to be handled. and it has all the old code to get thru. it some point i think it does a bare script post. and it does return the correct rccHRs on a post new record."
+  </div>
+
+  <div class="step" style="margin-top:32px;">
+    <div class="num-col"><div class="num">6</div></div>
+    <div class="step-body">
+      <h2>Post and update change the record — then save follows</h2>
+      <p>Three rules for <code>post_new_irrigation</code> / <code>update_irrigation</code>, not yet built:</p>
+      <p><strong>1. Post success updates recordID.</strong> A new record's <code>recordID</code> starts at <code>0</code> (queued, not yet synced). Once CropManage accepts it and returns a real event ID, that ID has to land in the record's <code>recordID</code> field — flips it from queued to synced, same rule as everywhere else: <code>recordID</code> presence means already synced, don't post again.</p>
+      <p><strong>2. hours (recHrs) must always be current.</strong> Any recalculation or update propagates through the same sync (step 5) so every copy — vIRR, vDOM, vAPI — shows the current value, never something stale from before the post/update.</p>
+      <p><strong>3. Save runs automatically right after a successful post.</strong> Not a separate manual step. The moment CropManage confirms the write, the local save file captures that state too — so the next onload/restore reflects what's actually on CropManage, not a locally-queued version that's since gone stale.</p>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
