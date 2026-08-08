@@ -16,13 +16,14 @@ without anyone explaining it.
 California made it illegal to keep over-pumping groundwater. Every grower in a
 high- or medium-priority basin is being moved onto a metered water budget, and someone has to
 prove — with numbers, every year, to a state agency — that they stayed inside it. CropManage
-(the UC Cooperative Extension irrigation science system) already computes what a field
-*should* use, based on real evapotranspiration data. CropClient is the layer that turns that
-science into an operational record a grower can actually run their farm on and hand to a
-regulator: budget vs. actual vs. billed, reconciled, per field, all season.
+(the UC Cooperative Extension irrigation science system) is the system of record: it computes
+what a field *should* use from real evapotranspiration data, and it holds what was actually
+applied. CropClient is the field-side layer that captures the real meter reading at the valve
+and writes it back into CropManage's Applied Hours — so the record is complete, current, and
+defensible instead of half-filled from memory at the end of the week.
 
-That is the whole thesis. The mandate creates the paperwork. CropManage has the science.
-CropClient closes the gap between them.
+That is the whole thesis. The mandate creates the paperwork. CropManage has the science and
+the system of record. CropClient makes sure the actuals actually get in there.
 
 ---
 
@@ -237,26 +238,66 @@ Endpoints in use in this repo:
 
 ## 6. Where CropClient fits
 
-### The gap
+### How the data actually flows
 
-CropManage tells a grower what a field *should* use. It does not, on its own, produce the
-artifact the mandate demands: a defensible, per-field, season-long reconciliation of
-**budget vs. actual vs. billed**, in the units and on the deadlines each agency wants.
+*(Corrected August 8, 2026 per the CropManage program manager, and confirmed against
+`irrigation-component.js` in this repo. An earlier draft of this doc got this wrong.)*
 
-Meanwhile the grower is standing in the field with a phone, and the compliance data is coming
-from three different places that have never agreed with each other.
+**CropManage already tracks actual water usage.** It is not recommendation-only. Growers record
+usage in the field and it goes into the **Applied Hours** field on CropManage's online data
+entry form. So CropManage holds *both* legs — what was recommended and what was applied.
 
-### The product: three-way reconciliation
+CropClient's job is **field-side capture and write-back**:
 
 ```
-CropManage budget    →  what the science says the field needed   (ET-driven, per planting)
-Grower actual usage  →  what was really applied                  (meter reads, run times)
-Water company bill   →  what was delivered and charged           (district / pump records)
+1. CropManage  →  recommendation           (ET/CIMIS-driven, per planting)
+2. CropClient  →  create_next_irrigation   (next event from last record + interval;
+                                            recommended hours land in Manager Hours)
+3. CropClient  →  read_meter               (finds the LAST record for the selected
+                                            ranch/planting, selects it, and prompts the
+                                            Applied Hours field — the person types the
+                                            number in; it does not read a device)
+4. CropClient  →  update_record            (writes mgrHours + appliedHours, status = -1)
+5. CropClient  →  sync                     (batch all status = -1 → POST new / PUT existing
+                                            into CropManage's Applied Hours via /v3/)
 ```
 
-Getting those three to agree, field by field, all season, *is* the compliance record. It's
-also how a grower catches a leaking valve, a miscalibrated meter, or a bill that's wrong —
-which is why it sells even to someone who doesn't care about the state.
+Our grid mirrors CropManage's data entry form field-for-field — `scheduledDate`, `interval`,
+`mgrHours`, `appliedHours` — which is why the sync is a straight write rather than a
+translation layer.
+
+### Where the value is
+
+The mandate needs a complete, current record of applied water. CropManage has the right field
+for it. The friction is **getting the number in there** — today that means someone remembers
+the meter reading and types it into a web form back at the office, later, from memory or a
+scrap of paper.
+
+CropClient's value is closing that loop at the point of work:
+
+- **Capture at the point of work**, on a phone, by the person who turned the water on —
+  `read_meter` puts the right record on screen with the Applied Hours field waiting, so
+  there's nothing to search for and nothing to remember later
+- **Manager Hours vs. Water Applied** side by side — planned vs. real, visible immediately
+- **Batch sync** so field entry is offline-tolerant and reconciles later
+- **Natural language** via ClientAI, so a field worker talks instead of navigating forms
+
+A record that's actually complete is what makes the compliance report possible. Incomplete
+Applied Hours is the difference between a defensible filing and a guess.
+
+### The third leg (Steve's additional layer)
+
+Beyond what CropManage holds, the **water company / district bill** is a third number:
+
+```
+Recommended (CropManage)  →  what the science said the field needed
+Applied     (CropManage)  →  what the meter says went on           ← CropClient puts it here
+Billed      (district)    →  what was delivered and charged        ← not in CropManage
+```
+
+Reconciling billed against applied is how a grower catches a leaking valve, a miscalibrated
+meter, or a wrong invoice. That leg lives outside CropManage and is CropClient's own
+differentiator — and its data source is still an open question (see §7).
 
 ### Architecture as built (see `OurCropClientState.md`)
 
@@ -297,8 +338,10 @@ owe. CropClient tells you what to do about it, and proves you did."
    may want different fields. Need to see actual required forms before designing output.
 4. **Where does water-company billing data come from?** Third leg of the reconciliation — API,
    CSV, PDF, or manual entry? This is unresolved and it gates the core value prop.
-5. **Does CropManage itself expose a water-budget/applied-water report?** Research didn't
-   confirm one. If it does, we integrate; if it doesn't, that absence is our product.
+5. **Does CropManage expose a water-budget / applied-water *report*?** It holds the data
+   (Applied Hours), but whether it produces a season-total, per-field, acre-feet output in a
+   form a GSA will accept is unconfirmed. If it does, we feed it. If it doesn't, that report
+   is ours to build — and it's the natural next thing after sync works.
 6. **Per-basin de minimis thresholds** — varies by order (see §2).
 
 ---
