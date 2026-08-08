@@ -25,6 +25,30 @@ defensible instead of half-filled from memory at the end of the week.
 That is the whole thesis. The mandate creates the paperwork. CropManage has the science and
 the system of record. CropClient makes sure the actuals actually get in there.
 
+### The vision (Steve, August 2026)
+
+> **CropClient is the grower's complete budget, actual, and reporting system — with history,
+> feedback, and follow-up.**
+
+Three things in that sentence, and the third is the one everybody else skips:
+
+| | | |
+|---|---|---|
+| **Budget** | what you're allocated and what the science says you need | forward-looking |
+| **Actual** | what you really applied, captured in the field | present tense |
+| **Reporting** | what the state and the GSA require, produced from the above | the obligation |
+
+Then the part that makes it a *system* rather than a form:
+
+- **History** — a season-over-season record. Not just this year's filing, but the trail that
+  shows a pattern, defends a number, and supports an appeal or a carryover claim.
+- **Feedback** — the grower sees budget vs. actual *while there's still time to act*, not in a
+  filing at the end of the year when it's too late to change anything.
+- **Follow-up** — the system chases the missing entry. An irrigation event with no Applied
+  Hours is a hole in the compliance record; the software should know it's there and ask.
+
+Everything below serves that. Section 3 is the requirement it has to satisfy.
+
 ---
 
 ## 2. The mandate — SGMA
@@ -129,7 +153,98 @@ checked per basin — do not hard-code 2 AF.**
 
 ---
 
-## 3. The rest of the compliance load
+## 3. The reporting — this is the product
+
+Everything else in this document is context. **This section is the requirement.** If CropClient
+produces these outputs correctly, from a record the grower trusts, the product works.
+
+Reporting comes in two tiers, and a grower can be subject to both at once.
+
+### Tier 1 — to your GSA (routine, every managed basin)
+
+This is the water-budget machinery, run locally at **parcel / farm-unit precision**:
+
+- An **allocation** is issued per parcel or farm unit
+- **Pumping is reported against it**
+- **Carryover credits** — SGMA expressly lets a GSA allow unused allocation to carry from one
+  year into the next
+- **Voluntary transfers** — allocation can be traded between growers where the GSA permits it
+- **Overdraft penalties** — example from South Fork Kings GSA: **$500 per acre-foot** over
+  allocation, *and* the following year's allocation is reduced by the exact amount of the
+  overage
+- Growers receive **annual statements** of their water account
+
+> Read that penalty structure twice. An acre-foot you can't account for costs $500 **and** is
+> subtracted from next year. Conversely, an acre-foot you *save and can prove* becomes a
+> carryover credit — an asset. Accurate records have value in both directions. That is the
+> economic argument for this product, and it doesn't depend on anyone caring about regulation
+> for its own sake.
+
+### Tier 2 — to the State Water Board, via GEARS
+
+Required for extractors in **probationary basins** and in **unmanaged areas**. Filed annually
+for the preceding water year through the **Groundwater Extraction Annual Reporting System
+(GEARS)** portal.
+
+The annual extraction report must identify:
+
+| Required field | Notes |
+|---|---|
+| **Well owner information** | registered account holder |
+| **Well location** | plotted and described |
+| **Well capacity** | maximum rate, **gallons per minute** |
+| **Monthly extraction volumes** | **per well, per month**, for the water year |
+| **Place(s) of use** | where the water went |
+| **Purpose(s) of use** | irrigation, domestic, etc. |
+
+**Measurement rules:**
+
+- Volumes must be measured by a device or method **satisfactory to the State Water Board**
+- In the Tule Subbasin: measurement required from **Jan 1, 2025**; extractors pumping
+  **>500 AF/yr** must use **certified flow meters** — or a Board-approved alternative — from
+  **March 1, 2025**
+- The Board has approved **evapotranspiration-based methods** as an alternative for tracking
+  some large extractions *(note: that is CropManage's native domain)*
+- Meter readouts in **acre-feet, cubic feet, or gallons**; meters must be installed,
+  maintained, operated, inspected and monitored for accuracy
+- **De minimis** (≤2 AF/yr, domestic only) are exempt — but should still notify the Board
+  through GEARS or they'll keep receiving compliance notices
+
+### ⚠️ The core engineering problem
+
+The two systems do not speak the same units:
+
+```
+The mandate's unit:     acre-feet   per WELL      per MONTH,  tied to a place of use
+CropManage's unit:      hours       per PLANTING  per EVENT,  tied to a field
+```
+
+**Bridging those is the central technical work of this project.** It requires, at minimum:
+
+1. **Hours → volume** — flow rate per irrigation system/block, applied to run time
+2. **Planting → well** — which well(s) served which planting; a many-to-many mapping that
+   CropManage may not hold at all
+3. **Event → month** — roll up by water year, not calendar year
+4. **Field → place of use** — parcel/APN mapping for the GEARS record
+
+Item 2 is the one to worry about. CropManage is organized around ranches and plantings;
+GEARS is organized around **wells**. If that mapping doesn't exist in CropManage, **CropClient
+has to own it** — and that is arguably the single most defensible piece of the product,
+because whoever holds the well↔planting map is the only one who can produce the report.
+
+### What a finished report needs to survive
+
+A filing is only as good as its defensibility. The record behind it should carry:
+
+- Who entered the number, and when (`updatedBy`, `lastUpdatedDate` — already in our records)
+- What the recommendation was vs. what was applied (`mgrHours` vs. `appliedHours`)
+- The measurement method used for each well
+- An audit trail of corrections, not silent overwrites
+- Gaps flagged rather than hidden — a missing Applied Hours entry is a known hole, not a zero
+
+---
+
+## 4. The rest of the compliance load
 
 SGMA is the headline, but a Central Coast or Central Valley grower is carrying more than one
 reporting obligation. Any of these is a hook for the same underlying field data.
@@ -169,7 +284,7 @@ channel: the district needs the data, the grower has to produce it.
 
 ---
 
-## 4. What it costs the industry (the market case)
+## 5. What it costs the industry (the market case)
 
 PPIC's analysis of the San Joaquin Valley:
 
@@ -187,7 +302,7 @@ is selling into a market that is being created by law.
 
 ---
 
-## 5. CropManage — the science layer we build on
+## 6. CropManage — the science layer we build on
 
 **What it is:** a free, web-based irrigation and nitrogen management decision support tool from
 **UC Cooperative Extension / UC ANR**, developed by **Michael Cahn**, funded by **CDFA's
@@ -236,7 +351,7 @@ Endpoints in use in this repo:
 
 ---
 
-## 6. Where CropClient fits
+## 7. Where CropClient fits
 
 ### How the data actually flows
 
@@ -297,7 +412,7 @@ Billed      (district)    →  what was delivered and charged        ← not in 
 
 Reconciling billed against applied is how a grower catches a leaking valve, a miscalibrated
 meter, or a wrong invoice. That leg lives outside CropManage and is CropClient's own
-differentiator — and its data source is still an open question (see §7).
+differentiator — and its data source is still an open question (see §8).
 
 ### Architecture as built (see `OurCropClientState.md`)
 
@@ -329,24 +444,46 @@ owe. CropClient tells you what to do about it, and proves you did."
 
 ---
 
-## 7. Open questions
+## 8. Open questions
 
-1. **Production API host** — dev vs. prod cutover for CropManage (see §5).
-2. **Which basin(s) do we target first?** Salinas Valley (CropManage's installed base, seawater
-   intrusion urgency) vs. Tulare Lake / Tule (probation, active state fees, maximum pain).
-3. **Does the compliance report have a standard format?** Each GSA and the SWRCB GEARS portal
-   may want different fields. Need to see actual required forms before designing output.
-4. **Where does water-company billing data come from?** Third leg of the reconciliation — API,
-   CSV, PDF, or manual entry? This is unresolved and it gates the core value prop.
-5. **Does CropManage expose a water-budget / applied-water *report*?** It holds the data
+**Blocking — these gate the reporting product:**
+
+1. **Does CropManage hold a well ↔ planting mapping?** GEARS reports **per well**; CropManage
+   is organized **per planting**. If that link doesn't exist upstream, CropClient must own it.
+   *This is the highest-value unknown in the project* — answer it first.
+2. **Where does hours → acre-feet conversion come from?** Flow rate per block / irrigation
+   system. Does CropManage store it, do we, or does the grower enter it? Without this there is
+   no report, because the state does not accept hours.
+3. **Does CropManage expose a water-budget / applied-water *report*?** It holds the data
    (Applied Hours), but whether it produces a season-total, per-field, acre-feet output in a
-   form a GSA will accept is unconfirmed. If it does, we feed it. If it doesn't, that report
-   is ours to build — and it's the natural next thing after sync works.
-6. **Per-basin de minimis thresholds** — varies by order (see §2).
+   form a GSA will accept is unconfirmed. If it does, we feed it. If it doesn't, that report is
+   ours to build.
+
+**Important — shape the product:**
+
+4. **What does the target GSA actually require?** Allocation basis, carryover rules, transfer
+   rules, penalty schedule, statement format, filing deadline. These vary by GSA and are the
+   real spec for Tier 1 output (§3).
+5. **Will a GSA accept a grower-generated report**, or must everything go through the agency's
+   own portal? Determines whether we produce a filing or a defensible worksheet behind one.
+6. **Which basin(s) do we target first?** Salinas Valley (CropManage's installed base, seawater
+   intrusion urgency, SVBGSA covers six subbasins) vs. Tulare Lake / Tule (probation, active
+   state fees and GEARS filing, maximum pain).
+7. **Where does water-company billing data come from?** Third leg of the reconciliation — API,
+   CSV, PDF, or manual entry?
+8. **Per-basin de minimis and exclusion thresholds** — vary by order (see §2).
+
+**Worth confirming:**
+
+9. **Production API host** — dev vs. prod cutover for CropManage (see §6).
+10. **Is CropManage's ET method itself a Board-approved measurement alternative?** The Board
+    has approved ET-based methods for some large extractions. If CropManage's ET modeling
+    qualifies, that is an extraordinarily strong position — the science tool becomes an
+    accepted *measurement device*. Needs verification with the Board and with UC ANR.
 
 ---
 
-## 8. Research limitations — read this before trusting a number
+## 9. Research limitations — read this before trusting a number
 
 This document was assembled under a restricted network. The environment's egress proxy
 **blocked direct page fetches** to `cropmanage.ucanr.edu`, `api.cropmanage.ucanr.edu`,
@@ -368,7 +505,7 @@ Consequences:
 
 ---
 
-## 9. Sources
+## 10. Sources
 
 CropManage / UC ANR:
 - [CropManage — UC ANR Irrigation and Nutrient Management](https://ucanr.edu/site/irrigation-and-nutrient-management/cropmanage)
@@ -394,6 +531,17 @@ SGMA:
 - [Kings County judge rules against state Water Board — Hanford Sentinel](https://hanfordsentinel.com/kings-county-judge-rules-against-state-water-board-in-high-stakes-groundwater-case/article_7e60c7b0-747a-11ef-9880-c38be57909a3.html)
 - [California Groundwater Portal Grinds to a Halt as Deadline Approaches — GV Wire](https://gvwire.com/2026/04/14/california-groundwater-portal-grinds-to-a-halt-as-deadline-for-farmers-approaches/)
 - [Groundwater Pumping Allocations under SGMA — EDF (PDF)](https://www.edf.org/sites/default/files/documents/edf_california_sgma_allocations.pdf)
+
+Reporting requirements (§3):
+- [GEARS — Groundwater Extraction Annual Reporting System portal](https://gears.waterboards.ca.gov/QuickReporting)
+- [GEARS User Guide (PDF)](https://www.waterboards.ca.gov/water_issues/programs/sgma/docs/gears-user-guide.pdf)
+- [GEARS Resources — State Water Board](https://waterboards.ca.gov/water_issues/programs/gmp/gears_resources.html)
+- [Measuring Groundwater — State Water Board (PDF)](https://waterboards.ca.gov/water_issues/programs/sgma/docs/reporting/measuring_gw.pdf)
+- [Notice of Groundwater Extraction Reporting — Tule Subbasin (PDF)](https://www.waterboards.ca.gov/sgma/docs/tule/tule-reporting-letter-en.pdf)
+- [New SGMA Reporting Requirements for Tule Subbasin Extractors — Maven's Notebook](https://mavensnotebook.com/2024/10/10/notice-new-sgma-reporting-requirements-for-groundwater-extractors-in-the-tule-subbasin/)
+- [SFKGSA Groundwater Allocation Policy FAQs — South Fork Kings GSA](https://southforkkings.org/sfkgsa-groundwater-allocation-policy-faqs/)
+- [Non-De Minimis Well Metering & Reporting Program — Santa Clarita Valley GSA](https://scvgsa.org/well-metering-reporting-program/non-de-minimis/)
+- [Salinas Valley Basin GSA — regulatory fee process](https://svbgsa.org/regulatory-fee-process/)
 
 Surface water / nitrogen:
 - [Water Measurement and Reporting Regulation — State Water Board](https://www.waterboards.ca.gov/waterrights/water_issues/programs/diversion_use/water_measurement.html)
