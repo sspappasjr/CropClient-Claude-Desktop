@@ -11,6 +11,45 @@ without anyone explaining it.
 
 ---
 
+## Prompt — reusable
+
+<details>
+<summary>The prompt that generates this document. Re-run it to refresh the research.</summary>
+
+```
+Research California's agricultural water mandate and CropManage (UC ANR), then write the
+standing project doc for CropClient. Write it to be read COLD -- someone with no context
+should understand the project from this file alone.
+
+Cover, in this order:
+  1. One-paragraph thesis, then the product vision.
+  2. The mandate. Frame it accurately: there is NO statewide blanket percentage cut for
+     farms. SGMA requires local agencies to bring basins into balance by 2040/2042, and
+     the GSA passes that down to the grower as an ALLOCATION. Use the words "water budget"
+     and "allocation," never "statewide water reduction mandate."
+  3. THE REPORTING -- this is the product, not a byproduct. Both tiers: what the GSA
+     requires (allocation, carryover, transfers, penalties) and what the State Water Board
+     requires via GEARS (per well, per month, acre-feet, water year). Include the required
+     fields.
+  4. Adjacent obligations that draw on the same records: nitrogen (INMP/TNA) and surface
+     water diversion (SB 88).
+  5. Market sizing and economics.
+  6. CropManage: what it is, who funds it, what it computes, and the API endpoints this
+     repo actually calls -- read them from the source, not from the vendor's docs.
+  7. Where CropClient fits, and the competitive landscape.
+  8. Open questions, ordered by what BLOCKS the reporting product.
+
+Rules:
+  · Read the repo first. Ground the API and data-flow sections in the actual code.
+  · Cite sources. Flag every number you could not verify against a primary source.
+  · Where sources disagree, show both figures and mark the conflict.
+  · Note research limitations honestly at the end.
+```
+
+</details>
+
+---
+
 ## 1. The one-paragraph version
 
 California made it illegal to keep over-pumping groundwater. Every grower in a

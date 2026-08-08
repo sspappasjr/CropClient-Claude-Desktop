@@ -1,0 +1,884 @@
+<title>A Water Year at Rancho Del Sol</title>
+<style>
+  :root {
+    --ground:      #F6F7F5;
+    --surface:     #FFFFFF;
+    --surface-2:   #EDF0EE;
+    --ink:         #101E1C;
+    --ink-2:       #3A4A47;
+    --ink-3:       #6B7A77;
+    --rule:        #D3DAD7;
+    --rule-2:      #E4E9E7;
+    --aquifer:     #0E6B5E;
+    --aquifer-dim: #DCEAE6;
+    --rust:        #A23E17;
+    --rust-dim:    #F5E2D9;
+    --wheat:       #8A671E;
+    --wheat-dim:   #F2EAD4;
+
+    --serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --mono: ui-monospace, "SF Mono", SFMono-Regular, "Cascadia Mono", Menlo, Consolas, monospace;
+
+    --measure: 68ch;
+    --wide: 1080px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground:      #0B1413;
+      --surface:     #121D1B;
+      --surface-2:   #182523;
+      --ink:         #E7EEEB;
+      --ink-2:       #B3C2BE;
+      --ink-3:       #7F918D;
+      --rule:        #2A3937;
+      --rule-2:      #1E2C2A;
+      --aquifer:     #4FB3A0;
+      --aquifer-dim: #14322D;
+      --rust:        #E08558;
+      --rust-dim:    #352016;
+      --wheat:       #D6AC55;
+      --wheat-dim:   #2F2716;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground:      #0B1413;
+    --surface:     #121D1B;
+    --surface-2:   #182523;
+    --ink:         #E7EEEB;
+    --ink-2:       #B3C2BE;
+    --ink-3:       #7F918D;
+    --rule:        #2A3937;
+    --rule-2:      #1E2C2A;
+    --aquifer:     #4FB3A0;
+    --aquifer-dim: #14322D;
+    --rust:        #E08558;
+    --rust-dim:    #352016;
+    --wheat:       #D6AC55;
+    --wheat-dim:   #2F2716;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 17px;
+    line-height: 1.65;
+    margin: 0;
+    padding: 0 24px 96px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .col { max-width: var(--measure); margin-inline: auto; }
+  .wide { max-width: var(--wide); margin-inline: auto; }
+
+  /* ---------- masthead ---------- */
+
+  header.masthead {
+    max-width: var(--wide);
+    margin: 0 auto;
+    padding: 72px 0 40px;
+    border-bottom: 2px solid var(--ink);
+  }
+
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--aquifer);
+    margin: 0 0 20px;
+  }
+
+  h1 {
+    font-family: var(--serif);
+    font-weight: 500;
+    font-size: clamp(2.4rem, 6vw, 4rem);
+    line-height: 1.05;
+    letter-spacing: -0.015em;
+    text-wrap: balance;
+    margin: 0 0 20px;
+  }
+
+  .dek {
+    font-family: var(--serif);
+    font-size: clamp(1.1rem, 2.2vw, 1.35rem);
+    line-height: 1.5;
+    color: var(--ink-2);
+    max-width: 60ch;
+    margin: 0;
+  }
+
+  .fiction {
+    margin: 32px 0 0;
+    padding: 14px 18px;
+    background: var(--wheat-dim);
+    border-left: 3px solid var(--wheat);
+    font-size: 14.5px;
+    line-height: 1.55;
+    color: var(--ink-2);
+    max-width: 72ch;
+  }
+  .fiction strong { color: var(--ink); }
+
+  .prompt-block {
+    max-width: var(--wide);
+    margin: 32px auto 0;
+    border: 1px solid var(--rule);
+    background: var(--surface);
+  }
+  .prompt-block summary {
+    font-family: var(--mono);
+    font-size: 11.5px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--aquifer);
+    padding: 14px 20px;
+    cursor: pointer;
+    list-style: none;
+  }
+  .prompt-block summary::-webkit-details-marker { display: none; }
+  .prompt-block summary::before { content: "▸ "; }
+  .prompt-block[open] summary::before { content: "▾ "; }
+  .prompt-block summary:focus-visible { outline: 2px solid var(--aquifer); outline-offset: -2px; }
+  .prompt-body {
+    padding: 4px 20px 20px;
+    border-top: 1px solid var(--rule-2);
+  }
+  .prompt-body p.note {
+    font-size: 13.5px;
+    color: var(--ink-3);
+    margin: 14px 0 0;
+    max-width: 76ch;
+  }
+  .prompt-text {
+    font-family: var(--mono);
+    font-size: 13.5px;
+    line-height: 1.75;
+    color: var(--ink-2);
+    background: var(--surface-2);
+    padding: 18px 20px;
+    margin: 16px 0 0;
+    white-space: pre-wrap;
+    overflow-x: auto;
+  }
+
+  /* ---------- stat strip ---------- */
+
+  .stats {
+    max-width: var(--wide);
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1px;
+    background: var(--rule);
+    border-bottom: 1px solid var(--rule);
+  }
+  .stat {
+    background: var(--ground);
+    padding: 22px 20px 24px;
+  }
+  .stat .k {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    display: block;
+    margin-bottom: 8px;
+  }
+  .stat .v {
+    font-family: var(--mono);
+    font-size: 1.6rem;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+    line-height: 1;
+    display: block;
+  }
+  .stat .v.credit { color: var(--aquifer); }
+  .stat .v.debit  { color: var(--rust); }
+  .stat .n {
+    font-size: 12.5px;
+    color: var(--ink-3);
+    display: block;
+    margin-top: 7px;
+    line-height: 1.4;
+  }
+
+  /* ---------- stages ---------- */
+
+  section.stage {
+    max-width: var(--wide);
+    margin: 0 auto;
+    padding: 64px 0 8px;
+  }
+  section.stage + section.stage { border-top: 1px solid var(--rule-2); }
+
+  .stage-head { display: flex; gap: 20px; align-items: baseline; margin-bottom: 8px; }
+  .stage-num {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--aquifer);
+    letter-spacing: 0.08em;
+    padding-top: 6px;
+    flex: none;
+  }
+  h2 {
+    font-family: var(--serif);
+    font-weight: 500;
+    font-size: clamp(1.7rem, 3.6vw, 2.4rem);
+    line-height: 1.15;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+    margin: 0;
+  }
+  .stage-sub {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    margin: 0 0 32px 53px;
+  }
+
+  h3 {
+    font-family: var(--sans);
+    font-size: 1.02rem;
+    font-weight: 650;
+    letter-spacing: 0.005em;
+    margin: 40px 0 12px;
+  }
+
+  p { margin: 0 0 18px; }
+  .col > p, .col > ul, .col > ol { max-width: var(--measure); }
+
+  ul, ol { margin: 0 0 18px; padding-left: 22px; }
+  li { margin-bottom: 8px; }
+
+  strong { font-weight: 650; }
+  em { font-style: italic; }
+
+  code {
+    font-family: var(--mono);
+    font-size: 0.88em;
+    background: var(--surface-2);
+    padding: 1px 5px;
+    border-radius: 2px;
+  }
+
+  /* ---------- tables ---------- */
+
+  .scroll { overflow-x: auto; margin: 24px 0 28px; border: 1px solid var(--rule); background: var(--surface); }
+  table { border-collapse: collapse; width: 100%; font-size: 14.5px; }
+  caption {
+    caption-side: top;
+    text-align: left;
+    font-family: var(--mono);
+    font-size: 11.5px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    padding: 14px 16px 12px;
+    border-bottom: 1px solid var(--rule-2);
+  }
+  th, td { padding: 10px 16px; text-align: left; border-bottom: 1px solid var(--rule-2); }
+  thead th {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    font-weight: 400;
+    white-space: nowrap;
+    border-bottom: 1px solid var(--rule);
+  }
+  td.num, th.num { text-align: right; font-family: var(--mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  tbody tr:last-child td { border-bottom: none; }
+  tr.total td { border-top: 2px solid var(--ink); font-weight: 650; background: var(--surface-2); }
+  tr.total td.num { font-weight: 650; }
+  .credit { color: var(--aquifer); }
+  .debit  { color: var(--rust); }
+  td.tight, th.tight { font-family: var(--mono); font-size: 13px; }
+
+  /* ---------- ledger ---------- */
+
+  .ledger { border: 1px solid var(--rule); background: var(--surface); margin: 24px 0 8px; }
+  .ledger-row {
+    display: flex; justify-content: space-between; gap: 24px;
+    padding: 13px 20px; border-bottom: 1px solid var(--rule-2);
+  }
+  .ledger-row:last-child { border-bottom: none; }
+  .ledger-row .lbl { color: var(--ink-2); }
+  .ledger-row .amt { font-family: var(--mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .ledger-row.rule-top { border-top: 2px solid var(--ink); background: var(--surface-2); }
+  .ledger-row.rule-top .lbl, .ledger-row.rule-top .amt { font-weight: 650; color: var(--ink); }
+  .ledger-row .sub { display: block; font-size: 13px; color: var(--ink-3); margin-top: 2px; }
+
+  /* ---------- callout ---------- */
+
+  .callout {
+    border-left: 3px solid var(--aquifer);
+    background: var(--aquifer-dim);
+    padding: 18px 22px;
+    margin: 28px 0;
+    max-width: 76ch;
+  }
+  .callout.warn { border-left-color: var(--rust); background: var(--rust-dim); }
+  .callout .ctitle {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--aquifer);
+    margin: 0 0 8px;
+  }
+  .callout.warn .ctitle { color: var(--rust); }
+  .callout p:last-child { margin-bottom: 0; }
+
+  /* ---------- two endings ---------- */
+
+  .endings { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin: 28px 0; }
+  .ending { border: 1px solid var(--rule); background: var(--surface); padding: 22px; }
+  .ending.good { border-top: 3px solid var(--aquifer); }
+  .ending.bad  { border-top: 3px solid var(--rust); }
+  .ending h4 {
+    font-family: var(--mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
+    margin: 0 0 14px; color: var(--ink-3);
+  }
+  .ending .big {
+    font-family: var(--mono); font-size: 1.5rem; font-variant-numeric: tabular-nums;
+    display: block; margin-bottom: 4px; letter-spacing: -0.02em;
+  }
+  .ending.good .big { color: var(--aquifer); }
+  .ending.bad .big  { color: var(--rust); }
+  .ending ul { margin: 14px 0 0; padding-left: 18px; font-size: 14.5px; color: var(--ink-2); }
+
+  /* ---------- conversion ---------- */
+
+  .conv {
+    font-family: var(--mono);
+    font-size: 14px;
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    padding: 20px 22px;
+    margin: 24px 0;
+    overflow-x: auto;
+    line-height: 1.9;
+  }
+  .conv .op { color: var(--ink-3); }
+  .conv .res { color: var(--aquifer); }
+
+  /* ---------- footer ---------- */
+
+  footer {
+    max-width: var(--wide);
+    margin: 72px auto 0;
+    padding-top: 28px;
+    border-top: 2px solid var(--ink);
+    font-size: 14px;
+    color: var(--ink-3);
+  }
+  footer p { max-width: 76ch; }
+
+  a { color: var(--aquifer); text-underline-offset: 2px; }
+  a:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--aquifer); outline-offset: 2px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+  }
+</style>
+
+<header class="masthead">
+  <p class="eyebrow">CropClient · Worked example</p>
+  <h1>A water year at Rancho&nbsp;Del&nbsp;Sol</h1>
+  <p class="dek">
+    One made-up grower, carried from allocation to filing — the budget they're given, the water
+    they actually apply, the money it becomes, and the reports the state expects at the end.
+  </p>
+  <p class="fiction">
+    <strong>Rancho Del Sol is fictional.</strong> The farm, its wells, and every figure below are
+    invented to illustrate the process. The <em>rules</em> are real and sourced, but rates and
+    thresholds vary by basin and by GSA — verify against your own agency before relying on any
+    number here.
+  </p>
+</header>
+
+<details class="prompt-block">
+  <summary>Prompt used to generate this document — reusable</summary>
+  <div class="prompt-body">
+    <p class="note">
+      Swap the grower, region, acreage, or basin and re-run to produce a different worked example.
+      Keep the requirement to make the arithmetic tie out — that constraint is what makes the
+      document usable as a spec.
+    </p>
+    <div class="prompt-text">Using the CropClient project doc as context, write a big-picture walkthrough of California's
+agricultural water requirements, carried through ONE fictional grower across ONE full water
+year (Oct 1 – Sep 30). Four stages, in this order:
+
+  1. BUDGET    — the allocation the GSA issues, plus carryover in, versus what the crop
+                 actually needs per CropManage's ET model. Show the gap between them.
+  2. ACTUAL    — irrigation events logged as recommended hours vs. applied hours, the
+                 conversion from hours to acre-feet via well flow rate, the field-to-well
+                 mapping, and a monthly-by-well rollup on the water year.
+  3. FINANCIAL — the allocation as a ledger: opening balance, carryover, debits, closing
+                 balance, overdraft penalty, next year's reduced allocation, and the
+                 separate state fees that apply if the basin is on probation.
+  4. REPORTS   — every filing owed and to whom: the GSA parcel accounting, the State Water
+                 Board GEARS annual extraction report with its required fields, and the
+                 adjacent nitrogen and surface-water obligations.
+
+Close with the data model this implies — what has to be held to produce the filings.
+
+Rules:
+  · Invent the grower and all figures, but make the arithmetic tie out across every table.
+  · Label the grower as fictional up front; keep the regulatory mechanics real and sourced.
+  · Mark any rate or threshold that varies by basin or agency as illustrative.
+  · Where CropManage may not hold something, say so plainly — CropClient fills the gap.</div>
+  </div>
+</details>
+
+<div class="stats">
+  <div class="stat"><span class="k">Irrigated</span><span class="v">320</span><span class="n">acres · 6 fields · 3 wells</span></div>
+  <div class="stat"><span class="k">Allocation</span><span class="v">640.0</span><span class="n">acre-feet, WY2026</span></div>
+  <div class="stat"><span class="k">Crop demand</span><span class="v">690.0</span><span class="n">acre-feet, per CropManage</span></div>
+  <div class="stat"><span class="k">Applied</span><span class="v">664.0</span><span class="n">acre-feet, metered</span></div>
+  <div class="stat"><span class="k">Closing</span><span class="v debit">−12.0</span><span class="n">acre-feet overdrawn</span></div>
+</div>
+
+<section class="stage">
+  <div class="stage-head">
+    <span class="stage-num">01</span>
+    <h2>The budget — and the second budget nobody talks about</h2>
+  </div>
+  <p class="stage-sub">October · start of the water year</p>
+
+  <div class="col">
+    <p>
+      Rancho Del Sol farms 320 irrigated acres of cool-season vegetables in the Salinas Valley,
+      inside the 180/400-Foot Aquifer subbasin — critically overdrafted since 2014, with seawater
+      intrusion more than five miles inland. Their Groundwater Sustainability Agency issues an
+      annual allocation per parcel.
+    </p>
+    <p>
+      For water year 2026 they're allocated <strong>2.0 acre-feet per acre</strong>, and they carry
+      in 12 acre-feet of unused credit from last year. That's the budget they're <em>allowed</em>.
+    </p>
+    <p>
+      But there's a second budget, and it's the one that governs whether the crop lives: what
+      CropManage says the planned rotation will actually <em>need</em>, computed from CIMIS
+      evapotranspiration data against their planting schedule. Those two numbers are set by
+      completely different authorities, and nothing forces them to agree.
+    </p>
+  </div>
+
+  <div class="ledger wide">
+    <div class="ledger-row">
+      <span class="lbl">Allocation issued by GSA<span class="sub">2.0 AF/acre × 320 acres</span></span>
+      <span class="amt">640.0 AF</span>
+    </div>
+    <div class="ledger-row">
+      <span class="lbl">Carryover credit from WY2025<span class="sub">unused allocation, carried forward under GSA accounting rules</span></span>
+      <span class="amt credit">+ 12.0 AF</span>
+    </div>
+    <div class="ledger-row rule-top">
+      <span class="lbl">Water available to farm</span>
+      <span class="amt">652.0 AF</span>
+    </div>
+    <div class="ledger-row">
+      <span class="lbl">Crop demand for the planned rotation<span class="sub">CropManage ET model · romaine, broccoli, spinach, double-cropped</span></span>
+      <span class="amt">690.0 AF</span>
+    </div>
+    <div class="ledger-row rule-top">
+      <span class="lbl">Gap between plan and allocation</span>
+      <span class="amt debit">− 38.0 AF</span>
+    </div>
+  </div>
+
+  <div class="col">
+    <div class="callout">
+      <p class="ctitle">This is the feedback moment</p>
+      <p>
+        The plan is over budget by 38 acre-feet before a single valve opens. A grower who learns
+        this in <strong>March</strong> can change a rotation, shift a planting, or buy a transfer.
+        A grower who learns it from a penalty notice in <strong>December</strong> can only pay.
+        Nothing about the current process surfaces this gap early — that's the opening.
+      </p>
+    </div>
+  </div>
+</section>
+
+<section class="stage">
+  <div class="stage-head">
+    <span class="stage-num">02</span>
+    <h2>The actual — hours in the field, acre-feet on the filing</h2>
+  </div>
+  <p class="stage-sub">All season · every irrigation event</p>
+
+  <div class="col">
+    <p>
+      Through the season, CropManage issues the <strong>recommended hours</strong> for each event —
+      that's its output, computed from ET. Those recommended hours land in the record as
+      <strong>Manager Hours</strong>, the plan. Against them sits <strong>Applied Hours</strong>,
+      what actually ran, entered by the irrigator on a phone standing at the valve.
+    </p>
+    <p>
+      Then comes the translation problem. The farm records <em>hours</em>. The state accepts only
+      <em>acre-feet</em>, and it wants them attributed to a <em>well</em>, not a field.
+    </p>
+  </div>
+
+  <div class="conv wide">
+    <span class="op">Well A ·</span> 1,200 GPM <span class="op">×</span> 60 min <span class="op">=</span> 72,000 gal/hr <span class="op">÷</span> 325,851 gal/AF <span class="op">=</span> <span class="res">0.2210 AF per hour</span><br>
+    <span class="op">Well B ·</span>&nbsp;&nbsp; 900 GPM <span class="op">×</span> 60 min <span class="op">=</span> 54,000 gal/hr <span class="op">÷</span> 325,851 gal/AF <span class="op">=</span> <span class="res">0.1657 AF per hour</span><br>
+    <span class="op">Well C ·</span> 1,500 GPM <span class="op">×</span> 60 min <span class="op">=</span> 90,000 gal/hr <span class="op">÷</span> 325,851 gal/AF <span class="op">=</span> <span class="res">0.2762 AF per hour</span><br><br>
+    <span class="op">Event · 14 May 2026 · Home field, romaine, Well A</span><br>
+    8.5 hours applied <span class="op">×</span> 0.2210 <span class="op">=</span> <span class="res">1.88 acre-feet</span>
+  </div>
+
+  <div class="col">
+    <h3>The mapping that decides who can produce the report</h3>
+    <p>
+      CropManage is organized around ranches and plantings. GEARS is organized around wells. Those
+      are not the same shape, and one field here is served by two wells at a split.
+    </p>
+  </div>
+
+  <div class="scroll wide">
+    <table>
+      <caption>Field-to-well service map · Rancho Del Sol</caption>
+      <thead>
+        <tr><th>Field</th><th class="num">Acres</th><th>Crop rotation</th><th>Served by</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Home</td><td class="num">60</td><td>Romaine → spinach</td><td class="tight">Well A · 100%</td></tr>
+        <tr><td>River</td><td class="num">55</td><td>Broccoli → romaine</td><td class="tight">Well A · 100%</td></tr>
+        <tr><td>Airport</td><td class="num">50</td><td>Spinach → broccoli</td><td class="tight">Well B · 100%</td></tr>
+        <tr><td>Gonzales</td><td class="num">45</td><td>Romaine → broccoli</td><td class="tight">Well B · 60% + Well C · 40%</td></tr>
+        <tr><td>Mesa</td><td class="num">60</td><td>Broccoli → spinach</td><td class="tight">Well C · 100%</td></tr>
+        <tr><td>Bluff</td><td class="num">50</td><td>Romaine → romaine</td><td class="tight">Well C · 100%</td></tr>
+        <tr class="total"><td>Total</td><td class="num">320</td><td colspan="2"></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="col">
+    <div class="callout warn">
+      <p class="ctitle">The Gonzales problem</p>
+      <p>
+        Gonzales draws from two wells. To file, every acre-foot applied there has to be split
+        between Well B and Well C — and that split has to be defensible. Whoever holds this
+        mapping is the only party who can produce a well-level report from field-level records.
+        <strong>If CropManage doesn't hold it, CropClient must.</strong>
+      </p>
+    </div>
+
+    <h3>Rolled up the way the state wants it</h3>
+    <p>
+      The filing is monthly, per well, for the <strong>water year</strong> — October 1 through
+      September 30. Not the calendar year, and not the crop season. Every rollup in the system has
+      to respect that boundary or the totals won't match the filing.
+    </p>
+  </div>
+
+  <div class="scroll wide">
+    <table>
+      <caption>Monthly extraction by well · Water Year 2026 · acre-feet</caption>
+      <thead>
+        <tr><th>Month</th><th class="num">Well A</th><th class="num">Well B</th><th class="num">Well C</th><th class="num">Total</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Oct 2025</td><td class="num">8</td><td class="num">5</td><td class="num">9</td><td class="num">22</td></tr>
+        <tr><td>Nov 2025</td><td class="num">3</td><td class="num">2</td><td class="num">3</td><td class="num">8</td></tr>
+        <tr><td>Dec 2025</td><td class="num">1</td><td class="num">1</td><td class="num">1</td><td class="num">3</td></tr>
+        <tr><td>Jan 2026</td><td class="num">1</td><td class="num">1</td><td class="num">1</td><td class="num">3</td></tr>
+        <tr><td>Feb 2026</td><td class="num">2</td><td class="num">1</td><td class="num">3</td><td class="num">6</td></tr>
+        <tr><td>Mar 2026</td><td class="num">10</td><td class="num">7</td><td class="num">11</td><td class="num">28</td></tr>
+        <tr><td>Apr 2026</td><td class="num">22</td><td class="num">15</td><td class="num">25</td><td class="num">62</td></tr>
+        <tr><td>May 2026</td><td class="num">35</td><td class="num">23</td><td class="num">38</td><td class="num">96</td></tr>
+        <tr><td>Jun 2026</td><td class="num">42</td><td class="num">28</td><td class="num">48</td><td class="num">118</td></tr>
+        <tr><td>Jul 2026</td><td class="num">48</td><td class="num">32</td><td class="num">52</td><td class="num">132</td></tr>
+        <tr><td>Aug 2026</td><td class="num">39</td><td class="num">26</td><td class="num">43</td><td class="num">108</td></tr>
+        <tr><td>Sep 2026</td><td class="num">28</td><td class="num">19</td><td class="num">31</td><td class="num">78</td></tr>
+        <tr class="total"><td>Water year</td><td class="num">239</td><td class="num">160</td><td class="num">265</td><td class="num">664</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="stage">
+  <div class="stage-head">
+    <span class="stage-num">03</span>
+    <h2>The financial — water keeps a balance sheet</h2>
+  </div>
+  <p class="stage-sub">September 30 · the books close</p>
+
+  <div class="col">
+    <p>
+      This is the part growers feel. An allocation is an opening balance. Every irrigation event is
+      a debit. Unused water is an asset that carries forward; overdrawn water is a liability priced
+      by the acre-foot. It is double-entry accounting with a crop attached.
+    </p>
+  </div>
+
+  <div class="ledger wide">
+    <div class="ledger-row">
+      <span class="lbl">Opening allocation</span>
+      <span class="amt">640.0 AF</span>
+    </div>
+    <div class="ledger-row">
+      <span class="lbl">Carryover credit brought forward</span>
+      <span class="amt credit">+ 12.0 AF</span>
+    </div>
+    <div class="ledger-row rule-top">
+      <span class="lbl">Available</span>
+      <span class="amt">652.0 AF</span>
+    </div>
+    <div class="ledger-row">
+      <span class="lbl">Applied during WY2026<span class="sub">sum of all metered irrigation events, all wells</span></span>
+      <span class="amt debit">− 664.0 AF</span>
+    </div>
+    <div class="ledger-row rule-top">
+      <span class="lbl">Closing balance</span>
+      <span class="amt debit">− 12.0 AF</span>
+    </div>
+  </div>
+
+  <div class="col">
+    <h3>What the overdraft costs</h3>
+  </div>
+
+  <div class="ledger wide">
+    <div class="ledger-row">
+      <span class="lbl">Overdraft penalty<span class="sub">12 AF over × $500/AF — South Fork Kings GSA schedule, shown as a representative example</span></span>
+      <span class="amt debit">$6,000</span>
+    </div>
+    <div class="ledger-row">
+      <span class="lbl">Next year's allocation reduced<span class="sub">reduced by the exact overage — the water is taken back too, not just charged for</span></span>
+      <span class="amt debit">− 12.0 AF</span>
+    </div>
+    <div class="ledger-row">
+      <span class="lbl">GSA groundwater sustainability fee<span class="sub">rate varies by agency — illustrative only, verify locally</span></span>
+      <span class="amt">rate × 664 AF</span>
+    </div>
+    <div class="ledger-row rule-top">
+      <span class="lbl">WY2027 opening allocation</span>
+      <span class="amt">628.0 AF</span>
+    </div>
+  </div>
+
+  <div class="col">
+    <h3>And if the basin goes on probation</h3>
+    <p>
+      Everything above is the <em>local</em> layer. If the State Water Board designates the
+      subbasin probationary, a second, separate bill arrives — paid directly to the state, on top
+      of whatever the GSA charges.
+    </p>
+  </div>
+
+  <div class="ledger wide">
+    <div class="ledger-row">
+      <span class="lbl">Well registration<span class="sub">3 wells × $300</span></span>
+      <span class="amt debit">$900</span>
+    </div>
+    <div class="ledger-row">
+      <span class="lbl">Volumetric charge<span class="sub">664 AF × $20/AF in a probationary basin</span></span>
+      <span class="amt debit">$13,280</span>
+    </div>
+    <div class="ledger-row rule-top">
+      <span class="lbl">Additional, to the State Water Board</span>
+      <span class="amt debit">$14,180</span>
+    </div>
+  </div>
+
+  <div class="col">
+    <h3>The same year, run two ways</h3>
+    <p>
+      Rancho Del Sol knew in March that the plan was 38 acre-feet long. Here is what that
+      information is worth, depending on whether anything acts on it.
+    </p>
+  </div>
+
+  <div class="endings wide">
+    <div class="ending bad">
+      <h4>No early warning</h4>
+      <span class="big">−12.0 AF</span>
+      <span>closing balance · overdrawn</span>
+      <ul>
+        <li>$6,000 overdraft penalty</li>
+        <li>12 AF clawed back from next year</li>
+        <li>WY2027 opens at 628 AF</li>
+        <li>Filing assembled from memory in October</li>
+      </ul>
+    </div>
+    <div class="ending good">
+      <h4>Gap caught in March, rotation trimmed</h4>
+      <span class="big">+6.0 AF</span>
+      <span>closing balance · credit carried</span>
+      <ul>
+        <li>No penalty</li>
+        <li>6 AF carried forward as an asset</li>
+        <li>WY2027 opens at 646 AF</li>
+        <li>Filing already assembled, event by event</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="col">
+    <div class="callout">
+      <p class="ctitle">The swing</p>
+      <p>
+        <strong>$6,000 in cash and 18 acre-feet of allocation</strong>, on a 320-acre farm, in one
+        year — decided entirely by whether anyone noticed the gap in time. That argument works on a
+        grower who doesn't care about regulators at all, which is most of them.
+      </p>
+    </div>
+  </div>
+</section>
+
+<section class="stage">
+  <div class="stage-head">
+    <span class="stage-num">04</span>
+    <h2>The reports — what actually has to be filed</h2>
+  </div>
+  <p class="stage-sub">October onward · the obligation</p>
+
+  <div class="col">
+    <p>
+      There is no single form. A grower can owe all of the following in the same year, to different
+      agencies, on different deadlines, in different units — assembled from the same underlying
+      irrigation records.
+    </p>
+
+    <h3>To the GSA — every managed basin</h3>
+    <p>
+      The routine, local obligation. Parcel-level accounting of what was allocated against what was
+      pumped, plus the credit machinery: carryover balances, voluntary transfers between growers,
+      and penalties. GSAs track this at parcel precision and issue growers an annual statement.
+    </p>
+
+    <h3>To the State Water Board via GEARS — probationary basins and unmanaged areas</h3>
+    <p>
+      Filed annually for the preceding water year through the Groundwater Extraction Annual
+      Reporting System. This is the one with hard field requirements:
+    </p>
+  </div>
+
+  <div class="scroll wide">
+    <table>
+      <caption>GEARS annual extraction report · required fields, shown for Well A</caption>
+      <thead>
+        <tr><th>Required field</th><th>Rancho Del Sol, Well A</th><th>Where it comes from</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Well owner information</td><td>Rancho Del Sol LLC</td><td>Grower profile</td></tr>
+        <tr><td>Well location</td><td>Plotted · Home field, NE corner</td><td>CropClient fills</td></tr>
+        <tr><td>Well capacity</td><td class="tight">1,200 GPM maximum rate</td><td>CropClient fills</td></tr>
+        <tr><td>Monthly extraction volumes</td><td class="tight">12 monthly figures · 239 AF total</td><td>Derived from Applied Hours</td></tr>
+        <tr><td>Place(s) of use</td><td>Home field, River field</td><td>Field records + APN</td></tr>
+        <tr><td>Purpose(s) of use</td><td>Irrigation — commercial vegetable</td><td>Grower profile</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="col">
+    <p>
+      Volumes must be measured by a method satisfactory to the State Water Board. In probationary
+      basins, extractors above the volume threshold need <strong>certified flow meters</strong> —
+      or a Board-approved alternative — and meters must be installed, maintained, inspected and
+      monitored for accuracy, reading in acre-feet, cubic feet, or gallons.
+    </p>
+
+    <div class="callout">
+      <p class="ctitle">Worth chasing down</p>
+      <p>
+        The Board has approved <strong>evapotranspiration-based methods</strong> as an accepted
+        measurement alternative for some large extractions. ET is precisely what CropManage
+        computes. If that modeling qualifies, the science tool becomes an accepted measurement
+        method — and CropClient sits directly on top of it. Unverified, and worth a call to the
+        Board and to UC ANR.
+      </p>
+    </div>
+
+    <h3>Also owed, from the same records</h3>
+    <p>
+      Two more filings draw on the identical dataset, which is why one well-kept record serves
+      several obligations:
+    </p>
+    <ul>
+      <li>
+        <strong>Nitrogen — Total Nitrogen Applied and INMP summary</strong>, to the Regional Water
+        Quality Control Board. Nitrogen delivered <em>in irrigation water</em> is a reportable line
+        item, so water records and nitrogen records are the same records. In high-vulnerability
+        areas the plan must be certified.
+      </li>
+      <li>
+        <strong>Surface water diversions</strong>, if Rancho Del Sol takes more than 10 acre-feet a
+        year from the Salinas River. Monthly recording, annual electronic filing, measurement
+        accurate to within ±10–15%.
+      </li>
+    </ul>
+  </div>
+</section>
+
+<section class="stage">
+  <div class="stage-head">
+    <span class="stage-num">05</span>
+    <h2>What CropClient has to hold</h2>
+  </div>
+  <p class="stage-sub">The data model this walkthrough implies</p>
+
+  <div class="col">
+    <p>
+      Reading the year end to end, the gaps between what CropManage stores and what a filing
+      requires are specific and short. This is the build list.
+    </p>
+  </div>
+
+  <div class="scroll wide">
+    <table>
+      <caption>Required to produce the filings above</caption>
+      <thead>
+        <tr><th>What's needed</th><th>Why</th><th>Status</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Recommended hours per event</td><td>The plan side of the ledger</td><td class="credit">CropManage provides</td></tr>
+        <tr><td>Applied hours per event</td><td>The actual side; written back to CropManage</td><td class="credit">CropManage field, CropClient captures</td></tr>
+        <tr><td>Well registry — location, capacity in GPM, measurement method</td><td>Every GEARS field is per-well</td><td>CropClient fills</td></tr>
+        <tr><td>Field ↔ well map, with split percentages</td><td>The Gonzales problem</td><td>CropClient fills</td></tr>
+        <tr><td>Flow rate per block or irrigation system</td><td>Hours → acre-feet; no report without it</td><td>CropClient fills</td></tr>
+        <tr><td>Water-year rollup, Oct 1 – Sep 30</td><td>Filing boundary, not calendar year</td><td>CropClient builds</td></tr>
+        <tr><td>Parcel / APN per field</td><td>Place of use; GSA parcel accounting</td><td>CropClient fills</td></tr>
+        <tr><td>Allocation ledger — opening, carryover, transfers, closing</td><td>The financial layer</td><td>CropClient builds</td></tr>
+        <tr><td>Gap alerting against allocation, mid-season</td><td>The $6,000 swing</td><td>CropClient builds</td></tr>
+        <tr><td>Audit trail — who entered, when, what changed</td><td>Defensibility of the filing</td><td>Partly present already</td></tr>
+        <tr><td>Missing-entry detection</td><td>An event with no Applied Hours is a hole, not a zero</td><td>CropClient builds</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="col">
+    <div class="callout">
+      <p class="ctitle">The shape of the product</p>
+      <p>
+        Budget, actual, financial, filing — with history behind it, feedback during the season, and
+        follow-up on what's missing. CropManage holds the science and the system of record.
+        CropClient is what turns a year of irrigation events into a number a grower can defend.
+      </p>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <p>
+    Rancho Del Sol, its fields, wells, and figures are invented for illustration. Regulatory
+    mechanics are drawn from SGMA, the State Water Board's GEARS reporting requirements, published
+    GSA allocation policies, and the Irrigated Lands Regulatory Program. Fee and penalty rates are
+    representative examples and vary by basin and agency — verify with the relevant GSA and the
+    State Water Resources Control Board before relying on them.
+  </p>
+  <p>Prepared for CropClient · August 2026</p>
+</footer>
