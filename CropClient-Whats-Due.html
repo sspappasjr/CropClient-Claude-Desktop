@@ -16,6 +16,13 @@
     --alarm:    #A23E17;
     --alarm-dim:#F5E3DA;
 
+    --crop-1:   #4E8C3A;
+    --crop-2:   #6BA84B;
+    --crop-3:   #8CC163;
+    --crop-4:   #3B6E30;
+    --soil:     #7A6248;
+    --sky:      #CFE0D4;
+
     --serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
     --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     --mono: ui-monospace, "SF Mono", SFMono-Regular, "Cascadia Mono", Menlo, Consolas, monospace;
@@ -37,6 +44,12 @@
       --sun-dim:  #2E2716;
       --alarm:    #E08558;
       --alarm-dim:#352016;
+      --crop-1:   #3E7330;
+      --crop-2:   #56913F;
+      --crop-3:   #6FA854;
+      --crop-4:   #2C5624;
+      --soil:     #3A2E22;
+      --sky:      #1B2C25;
     }
   }
   :root[data-theme="dark"] {
@@ -54,6 +67,12 @@
     --sun-dim:  #2E2716;
     --alarm:    #E08558;
     --alarm-dim:#352016;
+    --crop-1:   #3E7330;
+    --crop-2:   #56913F;
+    --crop-3:   #6FA854;
+    --crop-4:   #2C5624;
+    --soil:     #3A2E22;
+    --sky:      #1B2C25;
   }
 
   * { box-sizing: border-box; }
@@ -62,314 +81,993 @@
     background: var(--ground);
     color: var(--ink);
     font-family: var(--serif);
-    font-size: 19px;
+    font-size: 18px;
     line-height: 1.6;
     margin: 0;
-    padding: 0 22px 90px;
+    padding: 0;
     -webkit-font-smoothing: antialiased;
   }
 
-  .wrap { max-width: 40rem; margin-inline: auto; }
+  /* ============ PAGE MECHANICS ============ */
 
-  /* ---- internal note ---- */
-  .internal {
-    max-width: 40rem; margin: 22px auto 0;
-    border: 1px dashed var(--sun);
-    background: var(--sun-dim);
-    padding: 16px 18px;
-    font-family: var(--sans); font-size: 14px; line-height: 1.5; color: var(--ink-2);
-  }
-  .internal .tag {
-    font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.14em;
-    text-transform: uppercase; color: var(--sun); display: block; margin-bottom: 8px;
-  }
-  .internal strong { color: var(--ink); }
-  .internal p { margin: 0 0 8px; }
-  .internal p:last-child { margin: 0; }
+  .page { display: none; }
+  .page.on { display: block; }
 
-  /* ---- cover ---- */
-  .cover {
-    max-width: 40rem; margin-inline: auto;
-    padding: clamp(52px, 12vh, 104px) 0 clamp(40px, 7vh, 72px);
-    border-bottom: 2px solid var(--ink);
+  .sheet {
+    max-width: 41rem;
+    margin-inline: auto;
+    padding: 0 26px;
+    min-height: 100svh;
+    display: flex;
+    flex-direction: column;
+  }
+  .sheet > .body { flex: 1; }
+
+  /* running head */
+  .rh {
+    display: flex; justify-content: space-between; align-items: baseline; gap: 16px;
+    padding: 18px 0 14px;
+    border-bottom: 1px solid var(--rule);
+    font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.13em; text-transform: uppercase;
+    color: var(--ink-3);
+  }
+  .rh .rt { color: var(--aquifer); }
+
+  /* foot nav */
+  .fn {
+    display: flex; justify-content: space-between; align-items: center; gap: 12px;
+    padding: 20px 0 30px; margin-top: 44px;
+    border-top: 1px solid var(--rule);
+  }
+  .fn button {
+    font-family: var(--mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
+    background: none; border: 1px solid var(--rule); color: var(--ink-2);
+    padding: 11px 16px; cursor: pointer;
+  }
+  .fn button:hover:not(:disabled) { border-color: var(--aquifer); color: var(--aquifer); }
+  .fn button:disabled { opacity: 0.32; cursor: default; }
+  .fn button.mid { border-color: transparent; color: var(--ink-3); }
+  .fn button:focus-visible { outline: 2px solid var(--aquifer); outline-offset: 2px; }
+
+  /* ============ COVER ============ */
+
+  #cover .body {
+    display: flex; flex-direction: column; justify-content: center;
+    padding: 3vh 0 6vh;
+  }
+  #rows {
+    display: block; width: 100%;
+    height: clamp(150px, 26vh, 260px);
+    margin: 0 0 34px;
+    border: 1px solid var(--rule);
+  }
+  .teasers { list-style: none; padding: 0; margin: 6px 0 30px; }
+  .teasers li {
+    display: grid; grid-template-columns: 26px 1fr; gap: 0 12px; align-items: start;
+    padding: 13px 0; border-top: 1px solid var(--rule-2);
+    font-family: var(--sans); font-size: 15.5px; line-height: 1.45;
+  }
+  .teasers li:last-child { border-bottom: 1px solid var(--rule-2); }
+  .teasers svg { width: 17px; height: 17px; margin-top: 2px; }
+  .teasers .lead-in { font-weight: 650; }
+  .teasers em { font-style: normal; color: var(--ink-3); }
+
+  .almanac {
+    border: 1px solid var(--crop-1);
+    background: var(--aq-dim);
+    padding: 18px 20px;
+    margin: 0 0 34px;
+  }
+  .almanac .ak {
+    font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.13em; text-transform: uppercase;
+    color: var(--crop-1); display: block; margin-bottom: 8px;
+  }
+  .almanac h3 {
+    font-family: var(--sans); font-size: 1.02rem; font-weight: 650; margin: 0 0 7px;
+  }
+  .almanac p {
+    font-family: var(--sans); font-size: 14.5px; color: var(--ink-2); margin: 0; line-height: 1.5;
   }
   .kicker {
     font-family: var(--mono); font-size: 11.5px; letter-spacing: 0.14em;
-    text-transform: uppercase; color: var(--aquifer); margin: 0 0 22px;
+    text-transform: uppercase; color: var(--aquifer); margin: 0 0 24px;
   }
   h1 {
     font-weight: 500;
-    font-size: clamp(2.6rem, 11vw, 4.4rem);
-    line-height: 1.02;
-    letter-spacing: -0.025em;
+    font-size: clamp(2.7rem, 12vw, 4.6rem);
+    line-height: 1.0;
+    letter-spacing: -0.028em;
     text-wrap: balance;
-    margin: 0 0 28px;
-  }
-  .cover .sub {
-    font-size: clamp(1.1rem, 3.4vw, 1.4rem);
-    line-height: 1.45;
-    color: var(--ink-2);
     margin: 0 0 30px;
-    max-width: 34ch;
   }
-  .cover .who {
-    font-family: var(--sans); font-size: 14.5px; color: var(--ink-3);
-    line-height: 1.5; margin: 0;
-    padding-top: 22px; border-top: 1px solid var(--rule);
+  .cover-sub {
+    font-size: clamp(1.1rem, 3.6vw, 1.4rem);
+    line-height: 1.45; color: var(--ink-2); margin: 0 0 40px; max-width: 32ch;
+  }
+  .cover-who {
+    font-family: var(--sans); font-size: 14.5px; color: var(--ink-3); line-height: 1.5;
+    margin: 0 0 40px; padding-top: 24px; border-top: 1px solid var(--rule); max-width: 46ch;
+  }
+  .opener {
+    font-family: var(--mono); font-size: 11.5px; letter-spacing: 0.12em; text-transform: uppercase;
+    background: var(--aquifer); color: var(--ground); border: none;
+    padding: 16px 26px; cursor: pointer; align-self: flex-start;
+  }
+  .opener:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
+
+  /* ============ CONTENTS ============ */
+
+  h2.pagetitle {
+    font-weight: 500; font-size: clamp(1.9rem, 6vw, 2.7rem); line-height: 1.1;
+    letter-spacing: -0.018em; margin: 34px 0 10px; text-wrap: balance;
+  }
+  .standfirst {
+    font-family: var(--sans); font-size: 15px; color: var(--ink-3);
+    line-height: 1.5; margin: 0 0 32px; max-width: 52ch;
   }
 
-  /* ---- the setup ---- */
-  .setup { max-width: 40rem; margin-inline: auto; padding: clamp(44px, 8vh, 76px) 0 0; }
-  .split {
-    display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 1px; background: var(--rule); border: 1px solid var(--rule); margin: 30px 0 0;
-  }
-  .half { background: var(--surface); padding: 24px 22px; }
-  .half .hk {
+  .grp { margin: 0 0 26px; }
+  .grp-label {
     font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.13em; text-transform: uppercase;
-    display: block; margin-bottom: 12px;
+    color: var(--ink-3); margin: 0 0 2px;
   }
-  .half.known .hk { color: var(--aquifer); }
-  .half.unknown .hk { color: var(--alarm); }
-  .half h3 {
-    font-family: var(--sans); font-size: 1.05rem; font-weight: 650;
-    margin: 0 0 10px; line-height: 1.3;
-  }
-  .half p { font-size: 0.92em; color: var(--ink-2); margin: 0; }
-  .half.unknown { background: var(--alarm-dim); }
+  .grp.core .grp-label { color: var(--alarm); }
+  .grp-note { font-family: var(--sans); font-size: 13.5px; color: var(--ink-3); margin: 0 0 10px; }
 
-  /* ---- roadmap ---- */
-  .roadmap { max-width: 40rem; margin-inline: auto; padding: clamp(48px, 9vh, 84px) 0 0; }
-  h2.secmark {
-    font-family: var(--mono); font-size: 11.5px; letter-spacing: 0.14em; text-transform: uppercase;
-    color: var(--aquifer); font-weight: 400; margin: 0 0 28px;
+  .toc-row {
+    display: grid; grid-template-columns: 38px 1fr; gap: 0 15px; align-items: baseline;
+    width: 100%; text-align: left;
+    padding: 13px 0; border-top: 1px solid var(--rule-2);
+    background: none; border-left: none; border-right: none; border-bottom: none;
+    font: inherit; color: inherit; cursor: pointer;
+  }
+  .grp .toc-row:last-child { border-bottom: 1px solid var(--rule-2); }
+  .toc-row:hover .tt { color: var(--aquifer); }
+  .toc-row:focus-visible { outline: 2px solid var(--aquifer); outline-offset: 2px; }
+  .toc-row .tn {
+    font-family: var(--mono); font-size: 12px; color: var(--aquifer); font-variant-numeric: tabular-nums;
+  }
+  .grp.core .toc-row .tn { color: var(--alarm); }
+  .toc-row .tt {
+    font-family: var(--sans); font-size: 0.97rem; font-weight: 650; line-height: 1.3;
+    display: block; margin-bottom: 3px;
+  }
+  .toc-row .td {
+    font-family: var(--sans); font-size: 13.5px; color: var(--ink-3); line-height: 1.45; display: block;
   }
 
-  .part { margin-bottom: 38px; }
-  .part-label {
-    font-family: var(--sans); font-size: 13px; font-weight: 650;
-    letter-spacing: 0.02em; color: var(--ink-3);
-    margin: 0 0 4px;
-  }
-  .part-note {
-    font-family: var(--sans); font-size: 14px; color: var(--ink-3);
-    margin: 0 0 14px; line-height: 1.45;
-  }
-  .part.core .part-label { color: var(--alarm); }
+  /* ============ SUBJECT PAGES ============ */
 
-  .entry {
-    display: grid; grid-template-columns: 40px 1fr; gap: 0 16px; align-items: baseline;
-    padding: 15px 0; border-top: 1px solid var(--rule-2);
+  .subj-num {
+    font-family: var(--mono); font-size: 12px; letter-spacing: 0.12em;
+    color: var(--aquifer); margin: 34px 0 0;
   }
-  .entry:last-child { border-bottom: 1px solid var(--rule-2); }
-  .entry .no {
-    font-family: var(--mono); font-size: 12.5px; color: var(--aquifer);
-    font-variant-numeric: tabular-nums;
-  }
-  .part.core .entry .no { color: var(--alarm); }
-  .entry .t {
+  .page.core .subj-num { color: var(--alarm); }
+
+  p { margin: 0 0 18px; }
+  .body p, .body ul, .body ol { max-width: 62ch; }
+  ul, ol { margin: 0 0 18px; padding-left: 22px; }
+  li { margin-bottom: 9px; }
+  strong { font-weight: 600; }
+  em { font-style: italic; }
+
+  h3 {
     font-family: var(--sans); font-size: 1rem; font-weight: 650;
-    display: block; margin-bottom: 4px; line-height: 1.35;
-  }
-  .entry .d {
-    font-family: var(--sans); font-size: 14.5px; color: var(--ink-3);
-    display: block; line-height: 1.5;
+    margin: 30px 0 10px;
   }
 
-  /* ---- promise ---- */
-  .promise {
-    max-width: 40rem; margin: clamp(48px, 9vh, 84px) auto 0;
-    border-left: 3px solid var(--aquifer);
-    background: var(--aq-dim);
-    padding: 24px 24px;
+  .box {
+    border-left: 3px solid var(--aquifer); background: var(--aq-dim);
+    padding: 17px 20px; margin: 24px 0; max-width: 62ch;
   }
-  .promise .pk {
-    font-family: var(--mono); font-size: 11px; letter-spacing: 0.13em; text-transform: uppercase;
-    color: var(--aquifer); display: block; margin-bottom: 12px;
+  .box.warn  { border-left-color: var(--alarm); background: var(--alarm-dim); }
+  .box.check { border-left-color: var(--sun);   background: var(--sun-dim); }
+  .box .bk {
+    font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--aquifer); display: block; margin-bottom: 7px;
   }
-  .promise p { margin: 0 0 16px; font-size: 1.02em; }
-  .promise p:last-child { margin: 0; }
+  .box.warn .bk  { color: var(--alarm); }
+  .box.check .bk { color: var(--sun); }
+  .box p { margin: 0 0 12px; font-size: 0.95em; }
+  .box p:last-child { margin: 0; }
 
-  footer {
-    max-width: 40rem; margin: 64px auto 0; padding-top: 22px;
-    border-top: 1px solid var(--rule);
-    font-family: var(--sans); font-size: 14px; color: var(--ink-3); line-height: 1.55;
+  .tbl { overflow-x: auto; margin: 22px 0; border: 1px solid var(--rule); background: var(--surface); }
+  table { border-collapse: collapse; width: 100%; font-family: var(--sans); font-size: 14px; }
+  th, td { padding: 10px 14px; text-align: left; border-bottom: 1px solid var(--rule-2); vertical-align: top; }
+  thead th {
+    font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--ink-3); font-weight: 400; border-bottom: 1px solid var(--rule);
   }
+  tbody tr:last-child td { border-bottom: none; }
+  td.mono { font-family: var(--mono); font-size: 13px; white-space: nowrap; }
 
+  .calc {
+    font-family: var(--mono); font-size: 13.5px; line-height: 1.85;
+    background: var(--surface); border: 1px solid var(--rule);
+    padding: 16px 18px; margin: 22px 0; overflow-x: auto;
+  }
+  .calc .r { color: var(--aquifer); }
+  .calc .o { color: var(--ink-3); }
+
+  .checklist { list-style: none; padding: 0; margin: 22px 0; }
+  .checklist li {
+    display: grid; grid-template-columns: 30px 1fr; gap: 0 12px; align-items: baseline;
+    padding: 12px 0; border-bottom: 1px solid var(--rule-2);
+  }
+  .checklist li:first-child { border-top: 1px solid var(--rule-2); }
+  .checklist .cn { font-family: var(--mono); font-size: 12px; color: var(--aquifer); }
+  .checklist .ct { font-family: var(--sans); font-size: 15px; }
+  .checklist .cs { display: block; font-size: 13.5px; color: var(--ink-3); margin-top: 3px; }
+
+  /* ============ INTERNAL ============ */
+  .internal {
+    max-width: 41rem; margin: 0 auto; padding: 14px 18px;
+    border: 1px dashed var(--sun); background: var(--sun-dim);
+    font-family: var(--sans); font-size: 13.5px; line-height: 1.5; color: var(--ink-2);
+  }
+  .internal .tag {
+    font-family: var(--mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--sun); display: block; margin-bottom: 6px;
+  }
+  .internal strong { color: var(--ink); }
+
+  @media print {
+    .page { display: block !important; page-break-after: always; }
+    .fn, .opener, .internal { display: none !important; }
+    .sheet { min-height: auto; }
+  }
   @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
 </style>
 
 <div class="internal">
   <span class="tag">Internal — remove before this goes live</span>
-  <p>
-    <strong>Cover and index only.</strong> This is the shape of the document, not the content —
-    so the structure can be argued about before anything gets written.
-  </p>
-  <p>
-    <strong>The premise, corrected:</strong> the budget and the actual are <em>already handled</em>.
-    CropManage gives the recommendation; the crew knows what went on the ground. Do not spend the
-    document explaining those. The entire unknown — and the entire anxiety — is
-    <strong>reporting and deadlines</strong>. Part 2 carries the weight; everything else is short.
-  </p>
-  <p>
-    <strong>Audience:</strong> grower, grower manager, field lead. One language. Plain words. No
-    regulatory vocabulary until section 10, where it belongs.
-  </p>
+  <strong>Paged document, not a scrolling page.</strong> Cover → contents → one subject per page.
+  Arrow keys turn pages; Contents returns to the index. Premise: budget and actual are already
+  handled — the unknown is reporting and deadlines, so Part 2 carries the weight.
 </div>
 
-<div class="cover">
-  <p class="kicker">CropClient · For growers</p>
-  <h1>What's due, and when.</h1>
-  <p class="sub">
-    You know your water budget. You know what went on the ground. Nobody has told you what has to be
-    reported, who wants it, or by what date.
-  </p>
-  <p class="who">
-    Written for the grower, the ranch manager, and the field lead — the three people who have to
-    keep the plants alive and have the numbers ready when someone upstairs asks for them.
-  </p>
-</div>
-
-<div class="setup">
-  <h2 class="secmark">Where this starts</h2>
-  <p>
-    Most of what gets sold to growers explains things you already know. This document skips that
-    part.
-  </p>
-
-  <div class="split">
-    <div class="half known">
-      <span class="hk">You already have this</span>
-      <h3>The budget and the actual</h3>
-      <p>
-        CropManage tells you what the crop needs. Your crew knows what ran and for how long. The
-        water side of this is not broken and we are not going to lecture you about it.
+<!-- ==================== COVER ==================== -->
+<section class="page on" id="cover">
+  <div class="sheet">
+    <div class="body">
+      <canvas id="rows" aria-hidden="true"></canvas>
+      <p class="kicker">CropClient · For growers</p>
+      <h1>What's due,<br>and when.</h1>
+      <p class="cover-sub">
+        You know your water budget. You know what went on the ground. Nobody has told you what has
+        to be reported, who wants it, or by what date.
       </p>
-    </div>
-    <div class="half unknown">
-      <span class="hk">Nobody has told you this</span>
-      <h3>The reporting and the deadlines</h3>
-      <p>
-        What has to be filed, which agency wants it, in what units, by what date — and what it costs
-        if it's late or short. That's the gap, and that's the whole document.
+
+      <ul class="teasers">
+        <li>
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 20c0-8 6-14 16-16 1 11-5 16-12 16-2 0-4 0-4 0z" fill="var(--crop-2)"/><path d="M4 20C7 14 12 9 18 6" stroke="var(--crop-4)" stroke-width="1.4" stroke-linecap="round"/></svg>
+          <span><span class="lead-in">Your reporting year ends September 30.</span> <em>Not December 31. Add it up wrong and your totals won't match your filing.</em></span>
+        </li>
+        <li>
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 20c0-8 6-14 16-16 1 11-5 16-12 16-2 0-4 0-4 0z" fill="var(--crop-2)"/><path d="M4 20C7 14 12 9 18 6" stroke="var(--crop-4)" stroke-width="1.4" stroke-linecap="round"/></svg>
+          <span><span class="lead-in">They want it per well, per month, in acre-feet.</span> <em>Your records are by block and by hour. Something has to connect those.</em></span>
+        </li>
+        <li>
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 20c0-8 6-14 16-16 1 11-5 16-12 16-2 0-4 0-4 0z" fill="var(--crop-2)"/><path d="M4 20C7 14 12 9 18 6" stroke="var(--crop-4)" stroke-width="1.4" stroke-linecap="round"/></svg>
+          <span><span class="lead-in">Going over costs you twice.</span> <em>Once at the penalty rate, and again out of next year's allocation.</em></span>
+        </li>
+        <li>
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 20c0-8 6-14 16-16 1 11-5 16-12 16-2 0-4 0-4 0z" fill="var(--crop-2)"/><path d="M4 20C7 14 12 9 18 6" stroke="var(--crop-4)" stroke-width="1.4" stroke-linecap="round"/></svg>
+          <span><span class="lead-in">Water you save can carry into next year.</span> <em>If — and only if — you can prove it.</em></span>
+        </li>
+      </ul>
+
+      <div class="almanac">
+        <span class="ak">Coming</span>
+        <h3>The Grower Almanac</h3>
+        <p>
+          Pick a planting and see its whole season on one page — what it needs, what it's had, where
+          it stands against budget, and every date that matters between now and harvest.
+        </p>
+      </div>
+
+      <p class="cover-who">
+        For the grower, the ranch manager, and the field lead — the three people who have to keep
+        the plants alive and have the numbers ready when someone asks for them.
       </p>
+      <button class="opener" type="button" data-go="contents">Open the contents →</button>
     </div>
   </div>
-</div>
+</section>
 
-<div class="roadmap">
-  <h2 class="secmark">Where we're going</h2>
+<!-- ==================== CONTENTS ==================== -->
+<section class="page" id="contents">
+  <div class="sheet">
+    <div class="rh"><span class="rt">What's due, and when</span><span>Contents</span></div>
+    <div class="body">
+      <h2 class="pagetitle">Contents</h2>
+      <p class="standfirst">
+        Ten subjects. One page each. Most of what gets sold to growers explains the part you already
+        know — this skips that and goes at the part nobody hands you.
+      </p>
 
-  <div class="part">
-    <p class="part-label">Part 1 — Short</p>
-    <p class="part-note">Two minutes. Establishing what we're not going to spend your time on.</p>
+      <div class="grp">
+        <p class="grp-label">Part 1 — Short</p>
+        <p class="grp-note">Establishing what we won't spend your time on.</p>
+        <button class="toc-row" type="button" data-go="p01">
+          <span class="tn">01</span>
+          <span><span class="tt">What you already have</span>
+          <span class="td">The recommendation and the applied water. Why that part is solid.</span></span>
+        </button>
+      </div>
 
-    <div class="entry">
-      <span class="no">01</span>
-      <span>
-        <span class="t">What you already have</span>
-        <span class="d">The recommendation and the applied water. Where they live today, and why that part is solid.</span>
-      </span>
+      <div class="grp core">
+        <p class="grp-label">Part 2 — The part nobody explains</p>
+        <p class="grp-note">The reason this document exists.</p>
+        <button class="toc-row" type="button" data-go="p02">
+          <span class="tn">02</span>
+          <span><span class="tt">Does this even land on you?</span>
+          <span class="td">Some ranches owe nothing. Find out which one you are first.</span></span>
+        </button>
+        <button class="toc-row" type="button" data-go="p03">
+          <span class="tn">03</span>
+          <span><span class="tt">Who wants what</span>
+          <span class="td">Your agency, the state, and the nitrogen program want different things.</span></span>
+        </button>
+        <button class="toc-row" type="button" data-go="p04">
+          <span class="tn">04</span>
+          <span><span class="tt">What's actually on the form</span>
+          <span class="td">Field by field. Per well, per month, in acre-feet.</span></span>
+        </button>
+        <button class="toc-row" type="button" data-go="p05">
+          <span class="tn">05</span>
+          <span><span class="tt">The calendar</span>
+          <span class="td">Including the one that catches everybody — the year ends September 30.</span></span>
+        </button>
+        <button class="toc-row" type="button" data-go="p06">
+          <span class="tn">06</span>
+          <span><span class="tt">Hours don't count</span>
+          <span class="td">Two things most ranches have never written down.</span></span>
+        </button>
+        <button class="toc-row" type="button" data-go="p07">
+          <span class="tn">07</span>
+          <span><span class="tt">What it costs to be late, short, or wrong</span>
+          <span class="td">Going over doesn't only cost money — it costs next year's water.</span></span>
+        </button>
+      </div>
+
+      <div class="grp">
+        <p class="grp-label">Part 3 — What to do about it</p>
+        <p class="grp-note">Things that can start this week.</p>
+        <button class="toc-row" type="button" data-go="p08">
+          <span class="tn">08</span>
+          <span><span class="tt">Gather these six things</span>
+          <span class="td">Most of it is in someone's head or on a whiteboard already.</span></span>
+        </button>
+        <button class="toc-row" type="button" data-go="p09">
+          <span class="tn">09</span>
+          <span><span class="tt">What good looks like at year end</span>
+          <span class="td">So you can tell whether you have it before somebody asks.</span></span>
+        </button>
+      </div>
+
+      <div class="grp">
+        <p class="grp-label">Part 4 — Straight talk</p>
+        <p class="grp-note">The section other vendors leave out.</p>
+        <button class="toc-row" type="button" data-go="p10">
+          <span class="tn">10</span>
+          <span><span class="tt">What we know, what we don't, and what we'll find out</span>
+          <span class="td">Named, not buried.</span></span>
+        </button>
+      </div>
+    </div>
+    <div class="fn">
+      <button type="button" data-go="cover">← Cover</button>
+      <button type="button" class="mid" disabled>Contents</button>
+      <button type="button" data-go="p01">Begin →</button>
     </div>
   </div>
+</section>
 
-  <div class="part core">
-    <p class="part-label">Part 2 — The part nobody explains</p>
-    <p class="part-note">The reason this document exists. Read this part twice.</p>
-
-    <div class="entry">
-      <span class="no">02</span>
-      <span>
-        <span class="t">Does this even land on you?</span>
-        <span class="d">Whether you have to report at all depends on your basin, your agency, and how much you pump. Some ranches owe nothing. Find out which one you are before you do anything else.</span>
-      </span>
+<!-- ==================== 01 ==================== -->
+<section class="page" id="p01">
+  <div class="sheet">
+    <div class="rh"><span class="rt">Part 1</span><span>01 of 10</span></div>
+    <div class="body">
+      <p class="subj-num">01</p>
+      <h2 class="pagetitle">What you already have</h2>
+      <div>
+        <p>
+          Two numbers matter, and your operation already produces both of them.
+        </p>
+        <p>
+          <strong>The recommendation.</strong> CropManage takes evapotranspiration data from the
+          state's CIMIS weather stations, runs it against your crop, your soil and your planting
+          date, and tells you how long to run. That's University of California research, and it's
+          the same science the state respects.
+        </p>
+        <p>
+          <strong>The applied.</strong> What actually ran. Your crew knows this — the hours, the
+          block, the date. It goes into CropManage's Applied Hours field.
+        </p>
+        <p>
+          That's the whole water side, and it isn't broken. Every report described in this document
+          is built out of those two numbers. Nothing needs to be replaced.
+        </p>
+        <div class="box warn">
+          <span class="bk">The one soft spot</span>
+          <p>
+            The applied number only helps if it actually gets recorded. An irrigation event with no
+            hours against it isn't a zero — it's a hole, and at year end it becomes a number
+            somebody has to invent. That's the single most common failure, and it's not a
+            technology problem.
+          </p>
+        </div>
+      </div>
     </div>
-    <div class="entry">
-      <span class="no">03</span>
-      <span>
-        <span class="t">Who wants what</span>
-        <span class="d">Your local agency and the state want different things, on different forms. The nitrogen program wants a third. Laid out side by side so you can see which ones are yours.</span>
-      </span>
-    </div>
-    <div class="entry">
-      <span class="no">04</span>
-      <span>
-        <span class="t">What's actually on the form</span>
-        <span class="d">Field by field. Per well, per month, and in acre-feet — not per field, not per season, not in hours.</span>
-      </span>
-    </div>
-    <div class="entry">
-      <span class="no">05</span>
-      <span>
-        <span class="t">The calendar</span>
-        <span class="d">Every date in the year on one page, and which ones apply to you. Including the one that catches everybody: the reporting year ends September 30, not December 31.</span>
-      </span>
-    </div>
-    <div class="entry">
-      <span class="no">06</span>
-      <span>
-        <span class="t">Hours don't count</span>
-        <span class="d">Your crew records hours. No agency accepts hours. What has to happen in between, and the two pieces of information most ranches don't have written down anywhere.</span>
-      </span>
-    </div>
-    <div class="entry">
-      <span class="no">07</span>
-      <span>
-        <span class="t">What it costs to be late, short, or wrong</span>
-        <span class="d">Fees, penalties, and the part people miss — that going over doesn't just cost money this year, it comes out of next year's water.</span>
-      </span>
+    <div class="fn">
+      <button type="button" data-go="contents">← Contents</button>
+      <button type="button" class="mid" disabled>01 / 10</button>
+      <button type="button" data-go="p02">Next →</button>
     </div>
   </div>
+</section>
 
-  <div class="part">
-    <p class="part-label">Part 3 — What to do about it</p>
-    <p class="part-note">Practical. Things that can start this week.</p>
-
-    <div class="entry">
-      <span class="no">08</span>
-      <span>
-        <span class="t">Gather these six things</span>
-        <span class="d">The short list. Most of it is already in someone's head or on a whiteboard — it just isn't written down where a report can reach it.</span>
-      </span>
+<!-- ==================== 02 ==================== -->
+<section class="page core" id="p02">
+  <div class="sheet">
+    <div class="rh"><span class="rt">Part 2</span><span>02 of 10</span></div>
+    <div class="body">
+      <p class="subj-num">02</p>
+      <h2 class="pagetitle">Does this even land on you?</h2>
+      <div>
+        <p>
+          Before anything else — find out whether you have a state filing obligation at all. Plenty
+          of ranches don't, and the ones that do often don't know it.
+        </p>
+        <p>Three things decide it:</p>
+        <ul>
+          <li><strong>Your basin's priority.</strong> High and medium priority basins are managed under the groundwater law. Low and very low are not.</li>
+          <li><strong>Whether your basin is in good standing.</strong> If your local agency's plan is accepted, you report to <em>them</em>. If your basin has been put on probation, or has no local agency at all, you also report <em>directly to the State Water Board</em>.</li>
+          <li><strong>How much you pump.</strong> Volume thresholds decide whether you need a certified meter, and in some basins whether you're excluded entirely.</li>
+        </ul>
+        <div class="box">
+          <span class="bk">The exemption, and why it probably isn't you</span>
+          <p>
+            Someone pumping <strong>two acre-feet a year or less, for household use only</strong>,
+            is exempt from reporting and fees. That's a house well. A commercial ranch is not going
+            to qualify.
+          </p>
+        </div>
+        <div class="box check">
+          <span class="bk">To confirm for your ranch</span>
+          <p>
+            Which subbasin you sit in, which agency covers it, and that agency's current standing
+            with the state. That's one phone call, and it determines everything on the following
+            pages.
+          </p>
+        </div>
+      </div>
     </div>
-    <div class="entry">
-      <span class="no">09</span>
-      <span>
-        <span class="t">What good looks like at year end</span>
-        <span class="d">What a finished, defensible record contains — so you can tell whether you have one before somebody asks.</span>
-      </span>
+    <div class="fn">
+      <button type="button" data-go="contents">← Contents</button>
+      <button type="button" class="mid" disabled>02 / 10</button>
+      <button type="button" data-go="p03">Next →</button>
     </div>
   </div>
+</section>
 
-  <div class="part">
-    <p class="part-label">Part 4 — Straight talk</p>
-    <p class="part-note">The section other vendors don't include.</p>
-
-    <div class="entry">
-      <span class="no">10</span>
-      <span>
-        <span class="t">What we know, what we don't, and what we'll find out for you</span>
-        <span class="d">Which rules are settled statewide, which change from agency to agency, and the specific things we have not confirmed yet — named, not buried.</span>
-      </span>
+<!-- ==================== 03 ==================== -->
+<section class="page core" id="p03">
+  <div class="sheet">
+    <div class="rh"><span class="rt">Part 2</span><span>03 of 10</span></div>
+    <div class="body">
+      <p class="subj-num">03</p>
+      <h2 class="pagetitle">Who wants what</h2>
+      <div>
+        <p>
+          There isn't one form. Depending on your ranch you may owe several, to different agencies,
+          on different dates, in different units — all built from the same irrigation records.
+        </p>
+        <div class="tbl">
+          <table>
+            <thead>
+              <tr><th>Who</th><th>Wants</th><th>Applies to</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Your local groundwater agency</strong></td>
+                <td>What you were allocated against what you pumped, by parcel. Carryover, transfers, penalties.</td>
+                <td>Most ranches in a managed basin</td>
+              </tr>
+              <tr>
+                <td><strong>State Water Board</strong><br><span style="color:var(--ink-3)">groundwater</span></td>
+                <td>Extraction by well, by month, in acre-feet, filed through their online system</td>
+                <td>Probationary basins and unmanaged areas only</td>
+              </tr>
+              <tr>
+                <td><strong>Regional Water Board</strong><br><span style="color:var(--ink-3)">nitrogen</span></td>
+                <td>Total nitrogen applied and your management plan summary — including nitrogen delivered <em>in irrigation water</em></td>
+                <td>Irrigated commercial acreage</td>
+              </tr>
+              <tr>
+                <td><strong>State Water Board</strong><br><span style="color:var(--ink-3)">surface water</span></td>
+                <td>Timing, rate and volume of diversions, measured and filed</td>
+                <td>Anyone diverting more than 10 acre-feet a year</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="box">
+          <span class="bk">Worth noticing</span>
+          <p>
+            The nitrogen filing counts fertilizer that arrives <em>through the water</em>. Your
+            water records and your nitrogen records are the same records. Keep one well and you've
+            served two agencies.
+          </p>
+        </div>
+      </div>
+    </div>
+    <div class="fn">
+      <button type="button" data-go="contents">← Contents</button>
+      <button type="button" class="mid" disabled>03 / 10</button>
+      <button type="button" data-go="p04">Next →</button>
     </div>
   </div>
-</div>
+</section>
 
-<div class="promise">
-  <span class="pk">Before you read any further</span>
-  <p>
-    Every number in this document either has a source or is marked as something we still have to
-    confirm. Where the rules differ by agency — and they do, a lot — we say so instead of picking
-    the version that sounds best.
-  </p>
-  <p>
-    You've been sold enough dry holes. If we don't know something about your basin yet, you'll read
-    that in plain words.
-  </p>
-</div>
+<!-- ==================== 04 ==================== -->
+<section class="page core" id="p04">
+  <div class="sheet">
+    <div class="rh"><span class="rt">Part 2</span><span>04 of 10</span></div>
+    <div class="body">
+      <p class="subj-num">04</p>
+      <h2 class="pagetitle">What's actually on the form</h2>
+      <div>
+        <p>
+          For the state groundwater filing, six things. Read them with your own ranch in mind and
+          notice which ones you'd struggle to answer today.
+        </p>
+        <div class="tbl">
+          <table>
+            <thead><tr><th>They ask for</th><th>Which means</th></tr></thead>
+            <tbody>
+              <tr><td>Well owner</td><td>Straightforward</td></tr>
+              <tr><td>Well location</td><td>Plotted and described — per well</td></tr>
+              <tr><td>Well capacity</td><td class="mono">maximum rate, gallons per minute</td></tr>
+              <tr><td>Monthly extraction volumes</td><td><strong>Per well. Per month. Acre-feet.</strong></td></tr>
+              <tr><td>Place of use</td><td>Where that water went</td></tr>
+              <tr><td>Purpose of use</td><td>Irrigation, domestic, and so on</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="box warn">
+          <span class="bk">Read the fourth row again</span>
+          <p>
+            <strong>Per well.</strong> Not per field, not per ranch. Your irrigation records are
+            organized by block and planting. The form is organized by well. Somebody has to connect
+            those, and that's page 06.
+          </p>
+        </div>
+        <div class="box check">
+          <span class="bk">Our confidence on this page</span>
+          <p>
+            This field list is consistent across every source we've checked, but we have not yet
+            put eyes on the form itself. Before you build anything around it, we'll confirm it
+            field by field.
+          </p>
+        </div>
+      </div>
+    </div>
+    <div class="fn">
+      <button type="button" data-go="contents">← Contents</button>
+      <button type="button" class="mid" disabled>04 / 10</button>
+      <button type="button" data-go="p05">Next →</button>
+    </div>
+  </div>
+</section>
 
-<footer>
-  <p>
-    CropClient — built on CropManage, the University of California's irrigation research system.
-  </p>
-</footer>
+<!-- ==================== 05 ==================== -->
+<section class="page core" id="p05">
+  <div class="sheet">
+    <div class="rh"><span class="rt">Part 2</span><span>05 of 10</span></div>
+    <div class="body">
+      <p class="subj-num">05</p>
+      <h2 class="pagetitle">The calendar</h2>
+      <div>
+        <div class="box warn">
+          <span class="bk">The one that catches everybody</span>
+          <p>
+            The reporting year is the <strong>water year — October 1 through September 30</strong>.
+            Not the calendar year. Not your crop season. If your totals are added up January to
+            December they will not match what you file, and the mismatch is the kind of thing that
+            draws a second look.
+          </p>
+        </div>
+        <p>
+          Beyond that, the dates split into two kinds, and only one of them is the same for
+          everybody.
+        </p>
+        <h3>Fixed</h3>
+        <ul>
+          <li>The water year boundary — September 30</li>
+          <li>State filings cover the <em>preceding</em> water year</li>
+        </ul>
+        <h3>Varies by agency</h3>
+        <ul>
+          <li>When your local agency wants its report</li>
+          <li>When allocation statements are issued, and when a carryover claim has to be made</li>
+          <li>Metering deadlines, which have been set basin by basin</li>
+        </ul>
+        <div class="box check">
+          <span class="bk">To confirm for your ranch</span>
+          <p>
+            Your agency's filing date and its allocation-statement date. We'll put your actual dates
+            on this page rather than a general calendar — a deadline that isn't yours is worse than
+            no deadline at all.
+          </p>
+        </div>
+      </div>
+    </div>
+    <div class="fn">
+      <button type="button" data-go="contents">← Contents</button>
+      <button type="button" class="mid" disabled>05 / 10</button>
+      <button type="button" data-go="p06">Next →</button>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== 06 ==================== -->
+<section class="page core" id="p06">
+  <div class="sheet">
+    <div class="rh"><span class="rt">Part 2</span><span>06 of 10</span></div>
+    <div class="body">
+      <p class="subj-num">06</p>
+      <h2 class="pagetitle">Hours don't count</h2>
+      <div>
+        <p>
+          Your crew records hours. No agency accepts hours. Everything has to arrive in acre-feet,
+          attributed to a well.
+        </p>
+        <p>The arithmetic is simple:</p>
+        <div class="calc">
+          1,200 GPM <span class="o">×</span> 60 min <span class="o">=</span> 72,000 gal/hr<br>
+          72,000 <span class="o">÷</span> 325,851 gal per acre-foot <span class="o">=</span> <span class="r">0.221 acre-feet per hour</span><br><br>
+          <span class="o">8.5 hours on that well</span> <span class="o">=</span> <span class="r">1.88 acre-feet</span>
+        </div>
+        <p>
+          The arithmetic isn't the problem. The problem is the two inputs, because most ranches have
+          never written either one down:
+        </p>
+        <ul>
+          <li><strong>The flow rate of each well or block.</strong> Somebody knows it. It's rarely on paper.</li>
+          <li><strong>Which wells serve which fields</strong> — including fields fed by two wells, and how that gets split.</li>
+        </ul>
+        <div class="box">
+          <span class="bk">Why this one matters more than it looks</span>
+          <p>
+            Whoever holds the well-to-field map is the only one who can turn field records into a
+            well-level filing. Without it, no amount of good irrigation data produces a report. With
+            it, the report is arithmetic.
+          </p>
+        </div>
+      </div>
+    </div>
+    <div class="fn">
+      <button type="button" data-go="contents">← Contents</button>
+      <button type="button" class="mid" disabled>06 / 10</button>
+      <button type="button" data-go="p07">Next →</button>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== 07 ==================== -->
+<section class="page core" id="p07">
+  <div class="sheet">
+    <div class="rh"><span class="rt">Part 2</span><span>07 of 10</span></div>
+    <div class="body">
+      <p class="subj-num">07</p>
+      <h2 class="pagetitle">What it costs to be late, short, or wrong</h2>
+      <div>
+        <h3>If your basin is on probation</h3>
+        <p>
+          Fees go directly to the state: <strong>$300 per well</strong>, plus roughly
+          <strong>$20 per acre-foot</strong> pumped in a probationary basin — about
+          <strong>$25</strong> in an area with no local agency at all.
+        </p>
+        <h3>If you go over your allocation</h3>
+        <p>
+          This is set by your local agency and it varies a great deal. Allocations are usually
+          <strong>tiered</strong> — a base amount at no charge, more at a fee, and a penalty band
+          above that. One valley agency's penalty pumping runs in the range of
+          <strong>$310 to $500 an acre-foot</strong>. Yours may be structured completely differently.
+        </p>
+        <div class="box warn">
+          <span class="bk">The part people miss</span>
+          <p>
+            Going over doesn't only cost cash. In many agencies the overage is
+            <strong>subtracted from next year's allocation</strong>. You pay for it twice — once at
+            the penalty rate, and again in water you won't have.
+          </p>
+        </div>
+        <div class="box">
+          <span class="bk">It runs the other way too</strong>
+          <p>
+            Water you don't use can often be <strong>carried into next year as credit</strong>, and
+            in some places traded. A documented acre-foot you saved is an asset. That only works if
+            the record is complete enough to prove it.
+          </p>
+        </div>
+        <div class="box check">
+          <span class="bk">To confirm for your ranch</span>
+          <p>
+            Your agency's tier structure, rates, cap, and penalty schedule. These numbers are real
+            examples from real agencies — they are not a forecast of your bill.
+          </p>
+        </div>
+      </div>
+    </div>
+    <div class="fn">
+      <button type="button" data-go="contents">← Contents</button>
+      <button type="button" class="mid" disabled>07 / 10</button>
+      <button type="button" data-go="p08">Next →</button>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== 08 ==================== -->
+<section class="page" id="p08">
+  <div class="sheet">
+    <div class="rh"><span class="rt">Part 3</span><span>08 of 10</span></div>
+    <div class="body">
+      <p class="subj-num">08</p>
+      <h2 class="pagetitle">Gather these six things</h2>
+      <div>
+        <p>
+          None of this requires a decision or a purchase. Most of it already exists — in somebody's
+          head, in a drawer, or on a whiteboard in the shop.
+        </p>
+        <ul class="checklist">
+          <li><span class="cn">01</span><span class="ct">Which subbasin and which agency
+            <span class="cs">One line. Everything else keys off it.</span></span></li>
+          <li><span class="cn">02</span><span class="ct">Last year's filing or allocation statement
+            <span class="cs">Whatever was actually submitted or received — it shows the real format and the real dates.</span></span></li>
+          <li><span class="cn">03</span><span class="ct">Your wells
+            <span class="cs">Count, capacity in gallons per minute, metered or not, and how extraction is measured today.</span></span></li>
+          <li><span class="cn">04</span><span class="ct">Your fields
+            <span class="cs">Names, acres, and parcel numbers.</span></span></li>
+          <li><span class="cn">05</span><span class="ct">Which wells serve which fields
+            <span class="cs">Including splits. A photo of the whiteboard is fine.</span></span></li>
+          <li><span class="cn">06</span><span class="ct">Flow rate per block or irrigation system
+            <span class="cs">However it's recorded. Without this, hours never become acre-feet.</span></span></li>
+        </ul>
+        <div class="box">
+          <span class="bk">Items 1 and 2 do most of the work</span>
+          <p>
+            One allocation statement tells us your tier structure, your rates, your cap, your
+            carryover rule and your deadline. It answers more than a month of research.
+          </p>
+        </div>
+      </div>
+    </div>
+    <div class="fn">
+      <button type="button" data-go="contents">← Contents</button>
+      <button type="button" class="mid" disabled>08 / 10</button>
+      <button type="button" data-go="p09">Next →</button>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== 09 ==================== -->
+<section class="page" id="p09">
+  <div class="sheet">
+    <div class="rh"><span class="rt">Part 3</span><span>09 of 10</span></div>
+    <div class="body">
+      <p class="subj-num">09</p>
+      <h2 class="pagetitle">What good looks like at year end</h2>
+      <div>
+        <p>
+          You can judge your own records against this list without buying anything. If you can tick
+          all six, you're in good shape whoever asks.
+        </p>
+        <ul>
+          <li><strong>Every irrigation event has an applied number.</strong> No blanks, no "about."</li>
+          <li><strong>Every event is tied to a well</strong>, not only to a block.</li>
+          <li><strong>Totals roll up in acre-feet, by month, on the water year</strong> — October through September.</li>
+          <li><strong>You can see who entered what, and when</strong>, and corrections are visible rather than overwritten.</li>
+          <li><strong>Gaps are flagged, not filled in silently.</strong> A missing reading should be visible as missing.</li>
+          <li><strong>The totals you file match the records behind them</strong> — and you can show the working if asked.</li>
+        </ul>
+        <div class="box">
+          <span class="bk">Why the fourth one matters</span>
+          <p>
+            A number is only worth what you can defend. If a filing is questioned a year later, the
+            answer that ends the conversation is a record showing who entered it, when, and what it
+            replaced.
+          </p>
+        </div>
+      </div>
+    </div>
+    <div class="fn">
+      <button type="button" data-go="contents">← Contents</button>
+      <button type="button" class="mid" disabled>09 / 10</button>
+      <button type="button" data-go="p10">Next →</button>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== 10 ==================== -->
+<section class="page" id="p10">
+  <div class="sheet">
+    <div class="rh"><span class="rt">Part 4</span><span>10 of 10</span></div>
+    <div class="body">
+      <p class="subj-num">10</p>
+      <h2 class="pagetitle">What we know, what we don't</h2>
+      <div>
+        <h3>Settled, and the same everywhere</h3>
+        <ul>
+          <li>Basins must reach balance by <strong>2040</strong>, or 2042 depending on how overdrafted they are.</li>
+          <li>The exemption is <strong>2 acre-feet a year, household use only</strong>.</li>
+          <li>State fees in a probationary basin: <strong>$300 per well</strong> plus a per-acre-foot charge.</li>
+          <li>The reporting year runs <strong>October 1 to September 30</strong>.</li>
+          <li>Surface water diversions above <strong>10 acre-feet a year</strong> must be measured and reported.</li>
+        </ul>
+        <h3>Changes from agency to agency</h3>
+        <ul>
+          <li>Your allocation, its tiers, and whether there's a hard cap</li>
+          <li>The penalty rate for going over</li>
+          <li>Carryover and transfer rules</li>
+          <li>Filing dates and formats</li>
+          <li>Metering thresholds</li>
+        </ul>
+        <div class="box warn">
+          <span class="bk">Not yet confirmed — and we're telling you rather than guessing</span>
+          <p>
+            The exact fields on the state form. The current-year filing dates. Your agency's
+            allocation and penalty schedule. We have consistent information on all three, but we
+            have not yet read them off the source documents.
+          </p>
+        </div>
+        <div class="box">
+          <span class="bk">Our rule</span>
+          <p>
+            Nothing goes to you as fact unless it's confirmed, or it's marked as something we still
+            have to check. You've been sold enough that promised everything and turned out to be a
+            dry hole. "We don't know yet, and here's how we'll find out" is the honest answer, and
+            it's the one you'll get.
+          </p>
+        </div>
+      </div>
+    </div>
+    <div class="fn">
+      <button type="button" data-go="contents">← Contents</button>
+      <button type="button" class="mid" disabled>10 / 10</button>
+      <button type="button" data-go="cover">Cover →</button>
+    </div>
+  </div>
+</section>
+
+<script>
+(function () {
+  var order = ['cover','contents','p01','p02','p03','p04','p05','p06','p07','p08','p09','p10'];
+
+  function go(id) {
+    if (order.indexOf(id) === -1) id = 'cover';
+    var pages = document.querySelectorAll('.page');
+    for (var i = 0; i < pages.length; i++) pages[i].classList.remove('on');
+    var el = document.getElementById(id);
+    if (el) el.classList.add('on');
+    if (window.location.hash.slice(1) !== id) {
+      history.replaceState(null, '', '#' + id);
+    }
+    window.scrollTo(0, 0);
+  }
+
+  document.addEventListener('click', function (e) {
+    var t = e.target.closest('[data-go]');
+    if (!t) return;
+    go(t.getAttribute('data-go'));
+  });
+
+  document.addEventListener('keydown', function (e) {
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    var tag = (e.target.tagName || '').toLowerCase();
+    if (tag === 'input' || tag === 'textarea') return;
+    var cur = document.querySelector('.page.on');
+    if (!cur) return;
+    var i = order.indexOf(cur.id);
+    if (e.key === 'ArrowRight' && i < order.length - 1) { e.preventDefault(); go(order[i + 1]); }
+    if (e.key === 'ArrowLeft'  && i > 0)                { e.preventDefault(); go(order[i - 1]); }
+  });
+
+  window.addEventListener('hashchange', function () {
+    go(window.location.hash.slice(1) || 'cover');
+  });
+
+  go(window.location.hash.slice(1) || 'cover');
+})();
+
+/* Cover field: drone view of planted rows across three blocks. */
+(function () {
+  var cv = document.getElementById('rows');
+  if (!cv || !cv.getContext) return;
+
+  function v(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+
+  function draw() {
+    var w = cv.clientWidth, h = cv.clientHeight;
+    if (!w || !h) return;
+    var dpr = window.devicePixelRatio || 1;
+    cv.width = Math.round(w * dpr);
+    cv.height = Math.round(h * dpr);
+    var x = cv.getContext('2d');
+    x.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    var soil = v('--soil');
+    var blocks = [
+      { a: 0.00, b: 0.36, c: v('--crop-1') },
+      { a: 0.38, b: 0.66, c: v('--crop-3') },
+      { a: 0.68, b: 1.00, c: v('--crop-2') }
+    ];
+
+    x.fillStyle = soil;
+    x.fillRect(0, 0, w, h);
+
+    var step = Math.max(7, h / 24);
+    var rowW = step * 0.58;
+
+    for (var i = 0; step * i < h + step; i++) {
+      var baseY = i * step + step * 0.5;
+      var amp = 3 + (i % 4) * 0.7;
+      var freq = 0.006 + (i % 3) * 0.0012;
+      var phase = i * 0.45;
+
+      for (var bi = 0; bi < blocks.length; bi++) {
+        var bl = blocks[bi];
+        var x0 = Math.round(w * bl.a) + (bl.a > 0 ? 6 : 0);
+        var x1 = Math.round(w * bl.b) - (bl.b < 1 ? 6 : 0);
+        if (x1 <= x0) continue;
+
+        x.beginPath();
+        x.strokeStyle = bl.c;
+        x.lineWidth = rowW;
+        x.lineCap = 'round';
+        x.globalAlpha = 0.82 + ((i % 3) * 0.06);
+
+        for (var px = x0; px <= x1; px += 4) {
+          var py = baseY + Math.sin(px * freq + phase) * amp;
+          if (px === x0) x.moveTo(px, py); else x.lineTo(px, py);
+        }
+        x.stroke();
+      }
+    }
+
+    x.globalAlpha = 1;
+
+    // Soil roads between blocks.
+    x.fillStyle = soil;
+    x.fillRect(Math.round(w * 0.36), 0, Math.round(w * 0.02) + 2, h);
+    x.fillRect(Math.round(w * 0.66), 0, Math.round(w * 0.02) + 2, h);
+
+    // Sky-toned haze at the top edge, so the band reads as a field, not a pattern.
+    var g = x.createLinearGradient(0, 0, 0, h * 0.34);
+    g.addColorStop(0, v('--sky'));
+    g.addColorStop(1, 'rgba(0,0,0,0)');
+    x.globalAlpha = 0.5;
+    x.fillStyle = g;
+    x.fillRect(0, 0, w, h * 0.34);
+    x.globalAlpha = 1;
+  }
+
+  draw();
+
+  var t;
+  window.addEventListener('resize', function () { clearTimeout(t); t = setTimeout(draw, 120); });
+
+  if (window.matchMedia) {
+    var mq = window.matchMedia('(prefers-color-scheme: dark)');
+    if (mq.addEventListener) mq.addEventListener('change', draw);
+    else if (mq.addListener) mq.addListener(draw);
+  }
+  if (window.MutationObserver) {
+    new MutationObserver(draw).observe(document.documentElement, {
+      attributes: true, attributeFilter: ['data-theme']
+    });
+  }
+})();
+</script>

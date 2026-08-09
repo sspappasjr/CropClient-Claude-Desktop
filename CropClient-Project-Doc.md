@@ -467,6 +467,28 @@ differentiator — and its data source is still an open question (see §8).
 Note that `budget_status` is already an output field of the crown jewel tool. **That field is
 where the mandate lives in the product.** It is the thing worth building out.
 
+### Product concept — the Grower Almanac
+
+*(Steve, August 2026)*
+
+An online almanac scoped to **the grower's selected planting**. Pick a planting, get its whole
+season on one page: what the crop needs, what it has had, where it stands against budget, and
+every date that matters between now and harvest.
+
+Why it fits: it takes the same data the compliance record is built from and turns it into
+something a grower actually *wants* to open. Compliance is a thing you must do; an almanac is a
+thing you check. The almanac is the daily habit that keeps the record complete — which is
+exactly what the filing needs.
+
+Candidate contents for a planting almanac:
+- Crop stage and days since planting
+- ET demand to date vs. water applied to date
+- Position against allocation, and which tier that puts the planting in
+- Next recommended irrigation, and the last one recorded
+- Any irrigation event still missing an Applied Hours entry
+- Nitrogen applied to date against the plan
+- The dates ahead: next filing, allocation statement, expected harvest window
+
 ### Competitive landscape
 
 - **Groundwater Accounting Platform** — state-supported, open-source, built with DWR and the
