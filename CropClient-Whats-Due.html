@@ -1,0 +1,375 @@
+<title>What's Due, and When</title>
+<style>
+  :root {
+    --ground:   #F7F6F2;
+    --surface:  #FFFFFF;
+    --surface2: #EDEFEA;
+    --ink:      #14201E;
+    --ink-2:    #3E4E4A;
+    --ink-3:    #6F7F7B;
+    --rule:     #D8DCD7;
+    --rule-2:   #E6E9E4;
+    --aquifer:  #0E6B5E;
+    --aq-dim:   #E1EDE9;
+    --sun:      #9A6B12;
+    --sun-dim:  #F4EBD8;
+    --alarm:    #A23E17;
+    --alarm-dim:#F5E3DA;
+
+    --serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --mono: ui-monospace, "SF Mono", SFMono-Regular, "Cascadia Mono", Menlo, Consolas, monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground:   #0C1413;
+      --surface:  #131E1C;
+      --surface2: #1A2624;
+      --ink:      #E9EEEB;
+      --ink-2:    #B6C4C0;
+      --ink-3:    #7F918D;
+      --rule:     #2A3735;
+      --rule-2:   #1F2C2A;
+      --aquifer:  #55B7A4;
+      --aq-dim:   #14312C;
+      --sun:      #D8AE55;
+      --sun-dim:  #2E2716;
+      --alarm:    #E08558;
+      --alarm-dim:#352016;
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground:   #0C1413;
+    --surface:  #131E1C;
+    --surface2: #1A2624;
+    --ink:      #E9EEEB;
+    --ink-2:    #B6C4C0;
+    --ink-3:    #7F918D;
+    --rule:     #2A3735;
+    --rule-2:   #1F2C2A;
+    --aquifer:  #55B7A4;
+    --aq-dim:   #14312C;
+    --sun:      #D8AE55;
+    --sun-dim:  #2E2716;
+    --alarm:    #E08558;
+    --alarm-dim:#352016;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--serif);
+    font-size: 19px;
+    line-height: 1.6;
+    margin: 0;
+    padding: 0 22px 90px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap { max-width: 40rem; margin-inline: auto; }
+
+  /* ---- internal note ---- */
+  .internal {
+    max-width: 40rem; margin: 22px auto 0;
+    border: 1px dashed var(--sun);
+    background: var(--sun-dim);
+    padding: 16px 18px;
+    font-family: var(--sans); font-size: 14px; line-height: 1.5; color: var(--ink-2);
+  }
+  .internal .tag {
+    font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.14em;
+    text-transform: uppercase; color: var(--sun); display: block; margin-bottom: 8px;
+  }
+  .internal strong { color: var(--ink); }
+  .internal p { margin: 0 0 8px; }
+  .internal p:last-child { margin: 0; }
+
+  /* ---- cover ---- */
+  .cover {
+    max-width: 40rem; margin-inline: auto;
+    padding: clamp(52px, 12vh, 104px) 0 clamp(40px, 7vh, 72px);
+    border-bottom: 2px solid var(--ink);
+  }
+  .kicker {
+    font-family: var(--mono); font-size: 11.5px; letter-spacing: 0.14em;
+    text-transform: uppercase; color: var(--aquifer); margin: 0 0 22px;
+  }
+  h1 {
+    font-weight: 500;
+    font-size: clamp(2.6rem, 11vw, 4.4rem);
+    line-height: 1.02;
+    letter-spacing: -0.025em;
+    text-wrap: balance;
+    margin: 0 0 28px;
+  }
+  .cover .sub {
+    font-size: clamp(1.1rem, 3.4vw, 1.4rem);
+    line-height: 1.45;
+    color: var(--ink-2);
+    margin: 0 0 30px;
+    max-width: 34ch;
+  }
+  .cover .who {
+    font-family: var(--sans); font-size: 14.5px; color: var(--ink-3);
+    line-height: 1.5; margin: 0;
+    padding-top: 22px; border-top: 1px solid var(--rule);
+  }
+
+  /* ---- the setup ---- */
+  .setup { max-width: 40rem; margin-inline: auto; padding: clamp(44px, 8vh, 76px) 0 0; }
+  .split {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1px; background: var(--rule); border: 1px solid var(--rule); margin: 30px 0 0;
+  }
+  .half { background: var(--surface); padding: 24px 22px; }
+  .half .hk {
+    font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.13em; text-transform: uppercase;
+    display: block; margin-bottom: 12px;
+  }
+  .half.known .hk { color: var(--aquifer); }
+  .half.unknown .hk { color: var(--alarm); }
+  .half h3 {
+    font-family: var(--sans); font-size: 1.05rem; font-weight: 650;
+    margin: 0 0 10px; line-height: 1.3;
+  }
+  .half p { font-size: 0.92em; color: var(--ink-2); margin: 0; }
+  .half.unknown { background: var(--alarm-dim); }
+
+  /* ---- roadmap ---- */
+  .roadmap { max-width: 40rem; margin-inline: auto; padding: clamp(48px, 9vh, 84px) 0 0; }
+  h2.secmark {
+    font-family: var(--mono); font-size: 11.5px; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--aquifer); font-weight: 400; margin: 0 0 28px;
+  }
+
+  .part { margin-bottom: 38px; }
+  .part-label {
+    font-family: var(--sans); font-size: 13px; font-weight: 650;
+    letter-spacing: 0.02em; color: var(--ink-3);
+    margin: 0 0 4px;
+  }
+  .part-note {
+    font-family: var(--sans); font-size: 14px; color: var(--ink-3);
+    margin: 0 0 14px; line-height: 1.45;
+  }
+  .part.core .part-label { color: var(--alarm); }
+
+  .entry {
+    display: grid; grid-template-columns: 40px 1fr; gap: 0 16px; align-items: baseline;
+    padding: 15px 0; border-top: 1px solid var(--rule-2);
+  }
+  .entry:last-child { border-bottom: 1px solid var(--rule-2); }
+  .entry .no {
+    font-family: var(--mono); font-size: 12.5px; color: var(--aquifer);
+    font-variant-numeric: tabular-nums;
+  }
+  .part.core .entry .no { color: var(--alarm); }
+  .entry .t {
+    font-family: var(--sans); font-size: 1rem; font-weight: 650;
+    display: block; margin-bottom: 4px; line-height: 1.35;
+  }
+  .entry .d {
+    font-family: var(--sans); font-size: 14.5px; color: var(--ink-3);
+    display: block; line-height: 1.5;
+  }
+
+  /* ---- promise ---- */
+  .promise {
+    max-width: 40rem; margin: clamp(48px, 9vh, 84px) auto 0;
+    border-left: 3px solid var(--aquifer);
+    background: var(--aq-dim);
+    padding: 24px 24px;
+  }
+  .promise .pk {
+    font-family: var(--mono); font-size: 11px; letter-spacing: 0.13em; text-transform: uppercase;
+    color: var(--aquifer); display: block; margin-bottom: 12px;
+  }
+  .promise p { margin: 0 0 16px; font-size: 1.02em; }
+  .promise p:last-child { margin: 0; }
+
+  footer {
+    max-width: 40rem; margin: 64px auto 0; padding-top: 22px;
+    border-top: 1px solid var(--rule);
+    font-family: var(--sans); font-size: 14px; color: var(--ink-3); line-height: 1.55;
+  }
+
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
+
+<div class="internal">
+  <span class="tag">Internal — remove before this goes live</span>
+  <p>
+    <strong>Cover and index only.</strong> This is the shape of the document, not the content —
+    so the structure can be argued about before anything gets written.
+  </p>
+  <p>
+    <strong>The premise, corrected:</strong> the budget and the actual are <em>already handled</em>.
+    CropManage gives the recommendation; the crew knows what went on the ground. Do not spend the
+    document explaining those. The entire unknown — and the entire anxiety — is
+    <strong>reporting and deadlines</strong>. Part 2 carries the weight; everything else is short.
+  </p>
+  <p>
+    <strong>Audience:</strong> grower, grower manager, field lead. One language. Plain words. No
+    regulatory vocabulary until section 10, where it belongs.
+  </p>
+</div>
+
+<div class="cover">
+  <p class="kicker">CropClient · For growers</p>
+  <h1>What's due, and when.</h1>
+  <p class="sub">
+    You know your water budget. You know what went on the ground. Nobody has told you what has to be
+    reported, who wants it, or by what date.
+  </p>
+  <p class="who">
+    Written for the grower, the ranch manager, and the field lead — the three people who have to
+    keep the plants alive and have the numbers ready when someone upstairs asks for them.
+  </p>
+</div>
+
+<div class="setup">
+  <h2 class="secmark">Where this starts</h2>
+  <p>
+    Most of what gets sold to growers explains things you already know. This document skips that
+    part.
+  </p>
+
+  <div class="split">
+    <div class="half known">
+      <span class="hk">You already have this</span>
+      <h3>The budget and the actual</h3>
+      <p>
+        CropManage tells you what the crop needs. Your crew knows what ran and for how long. The
+        water side of this is not broken and we are not going to lecture you about it.
+      </p>
+    </div>
+    <div class="half unknown">
+      <span class="hk">Nobody has told you this</span>
+      <h3>The reporting and the deadlines</h3>
+      <p>
+        What has to be filed, which agency wants it, in what units, by what date — and what it costs
+        if it's late or short. That's the gap, and that's the whole document.
+      </p>
+    </div>
+  </div>
+</div>
+
+<div class="roadmap">
+  <h2 class="secmark">Where we're going</h2>
+
+  <div class="part">
+    <p class="part-label">Part 1 — Short</p>
+    <p class="part-note">Two minutes. Establishing what we're not going to spend your time on.</p>
+
+    <div class="entry">
+      <span class="no">01</span>
+      <span>
+        <span class="t">What you already have</span>
+        <span class="d">The recommendation and the applied water. Where they live today, and why that part is solid.</span>
+      </span>
+    </div>
+  </div>
+
+  <div class="part core">
+    <p class="part-label">Part 2 — The part nobody explains</p>
+    <p class="part-note">The reason this document exists. Read this part twice.</p>
+
+    <div class="entry">
+      <span class="no">02</span>
+      <span>
+        <span class="t">Does this even land on you?</span>
+        <span class="d">Whether you have to report at all depends on your basin, your agency, and how much you pump. Some ranches owe nothing. Find out which one you are before you do anything else.</span>
+      </span>
+    </div>
+    <div class="entry">
+      <span class="no">03</span>
+      <span>
+        <span class="t">Who wants what</span>
+        <span class="d">Your local agency and the state want different things, on different forms. The nitrogen program wants a third. Laid out side by side so you can see which ones are yours.</span>
+      </span>
+    </div>
+    <div class="entry">
+      <span class="no">04</span>
+      <span>
+        <span class="t">What's actually on the form</span>
+        <span class="d">Field by field. Per well, per month, and in acre-feet — not per field, not per season, not in hours.</span>
+      </span>
+    </div>
+    <div class="entry">
+      <span class="no">05</span>
+      <span>
+        <span class="t">The calendar</span>
+        <span class="d">Every date in the year on one page, and which ones apply to you. Including the one that catches everybody: the reporting year ends September 30, not December 31.</span>
+      </span>
+    </div>
+    <div class="entry">
+      <span class="no">06</span>
+      <span>
+        <span class="t">Hours don't count</span>
+        <span class="d">Your crew records hours. No agency accepts hours. What has to happen in between, and the two pieces of information most ranches don't have written down anywhere.</span>
+      </span>
+    </div>
+    <div class="entry">
+      <span class="no">07</span>
+      <span>
+        <span class="t">What it costs to be late, short, or wrong</span>
+        <span class="d">Fees, penalties, and the part people miss — that going over doesn't just cost money this year, it comes out of next year's water.</span>
+      </span>
+    </div>
+  </div>
+
+  <div class="part">
+    <p class="part-label">Part 3 — What to do about it</p>
+    <p class="part-note">Practical. Things that can start this week.</p>
+
+    <div class="entry">
+      <span class="no">08</span>
+      <span>
+        <span class="t">Gather these six things</span>
+        <span class="d">The short list. Most of it is already in someone's head or on a whiteboard — it just isn't written down where a report can reach it.</span>
+      </span>
+    </div>
+    <div class="entry">
+      <span class="no">09</span>
+      <span>
+        <span class="t">What good looks like at year end</span>
+        <span class="d">What a finished, defensible record contains — so you can tell whether you have one before somebody asks.</span>
+      </span>
+    </div>
+  </div>
+
+  <div class="part">
+    <p class="part-label">Part 4 — Straight talk</p>
+    <p class="part-note">The section other vendors don't include.</p>
+
+    <div class="entry">
+      <span class="no">10</span>
+      <span>
+        <span class="t">What we know, what we don't, and what we'll find out for you</span>
+        <span class="d">Which rules are settled statewide, which change from agency to agency, and the specific things we have not confirmed yet — named, not buried.</span>
+      </span>
+    </div>
+  </div>
+</div>
+
+<div class="promise">
+  <span class="pk">Before you read any further</span>
+  <p>
+    Every number in this document either has a source or is marked as something we still have to
+    confirm. Where the rules differ by agency — and they do, a lot — we say so instead of picking
+    the version that sounds best.
+  </p>
+  <p>
+    You've been sold enough dry holes. If we don't know something about your basin yet, you'll read
+    that in plain words.
+  </p>
+</div>
+
+<footer>
+  <p>
+    CropClient — built on CropManage, the University of California's irrigation research system.
+  </p>
+</footer>
