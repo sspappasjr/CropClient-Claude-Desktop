@@ -1,0 +1,31 @@
+vDOM CHANGE LIST
+File: DOM-water-objects.html
+
+STRUCT
+add scheduledDate, mgrHours, appliedHours to vDOM and vIRR and vAPI
+add them to Record-Formats-Meta
+
+TASK 0
+set all variables that match the Standard-Record to the fence
+i.e. displayRecords = vDOM.displayRecords
+
+TASK 1
+comment out both JSON.parse copy lines in domRender
+
+TASK 2
+comment out read()
+
+TASK 3
+update button clicked set the 3 fields to DOM(state) and DOM run
+
+TASK 4
+delete the IRR_setSelection() line
+
+TASK 6
+delete the read_meter block in domRender
+delete the reset_table line in DOMrunToken
+token returns the focus field name in Result
+DOM focuses it
+
+CHECK
+no bare displayRecords, irrigationData, selectedRecord left in the file

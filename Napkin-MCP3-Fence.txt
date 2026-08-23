@@ -1,0 +1,41 @@
+NAPKIN - MCP 3 FENCE - 2026-08-23
+
+=== vIRR TODO - state fields ===
+scheduledDate - NEW - DOM typed date
+mgrHours - NEW - DOM typed manager hours
+appliedHours - NEW - DOM typed water applied
+SelectedRecord - which record to act on
+displayRecords - the grid it edits
+originalRecords - for reset
+recordCount - must set
+queueCount - must set
+Result - must set
+
+=== vAPI TODO - state fields ===
+Token - owns it
+Ranches - sets
+Plantings - sets
+Ranch - sets
+Planting - sets
+originalRecords - sets on load
+displayRecords - builds it
+recordCount - must set
+queueCount - must set
+Result - must set, Value = source word
+scheduledDate - carries, does not use
+mgrHours - carries, does not use
+appliedHours - carries, does not use
+
+=== vDOM WRONG LIST ===
+1 - grid data exists twice, screen draws from the loose copy
+2 - read() changes the grid behind vDOM back
+3 - no state fields for the 3 input boxes, values smuggled inside SelectedRecord
+4 - vDOM calls into vIRR directly (IRR_setSelection)
+5 - vAPI tool descriptions stored in vDOM
+6 - vDOM knows 2 tokens by name (read_meter, reset_table)
+7 - data source hardcoded into the fence (26 records)
+8 - get_event_recommendation unreachable, runs get_irrigation_detail
+
+=== NOTES ===
+id assignment max+1 - seam, two fences can collide
+Token rides in every fence state, vIRR does not need it
