@@ -1,0 +1,1666 @@
+<title>SLM RunBook</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;600&display=swap">
+
+<style>
+/* ── tokens ──────────────────────────────────────────── */
+:root {
+  --bg:       #f5f3fb;
+  --fg:       #1c1a2e;
+  --card:     #ffffff;
+  --line:     #e2dff0;
+  --gray:     #6b6890;
+  --gray-bg:  #f0eef8;
+  --muted:    #9490b0;
+  --purple:   #6d28d9;
+  --purple-lt:#ede9fe;
+  --purple-dk:#5b21b6;
+  --teal:     #0f766e;
+  --teal-bg:  #e6f4f3;
+  --green:    #15803d;
+  --green-bg: #dcfce7;
+  --red:      #b91c1c;
+  --red-bg:   #fee2e2;
+  --amber:    #92400e;
+  --amber-bg: #fef3c7;
+  --topbar:   #13101f;
+  --topbar-fg:#e8e4f8;
+  --mono:     'IBM Plex Mono','Courier New',monospace;
+  --sans:     'IBM Plex Sans',system-ui,sans-serif;
+  --sw:       242px;
+  --th:       48px;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg:       #0f0d1a;
+    --fg:       #e4e0f8;
+    --card:     #1a1730;
+    --line:     #2e2a48;
+    --gray:     #9490b0;
+    --gray-bg:  #1e1b35;
+    --muted:    #6b6890;
+    --purple:   #a78bfa;
+    --purple-lt:#2e2060;
+    --purple-dk:#c4b5fd;
+    --teal:     #2dd4bf;
+    --teal-bg:  #0f2e2a;
+    --green:    #4ade80;
+    --green-bg: #0a2e18;
+    --red:      #f87171;
+    --red-bg:   #2e0a0a;
+    --amber:    #fbbf24;
+    --amber-bg: #2e1f00;
+    --topbar:   #0a0815;
+    --topbar-fg:#c8c0f0;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg:       #0f0d1a;
+  --fg:       #e4e0f8;
+  --card:     #1a1730;
+  --line:     #2e2a48;
+  --gray:     #9490b0;
+  --gray-bg:  #1e1b35;
+  --muted:    #6b6890;
+  --purple:   #a78bfa;
+  --purple-lt:#2e2060;
+  --purple-dk:#c4b5fd;
+  --teal:     #2dd4bf;
+  --teal-bg:  #0f2e2a;
+  --green:    #4ade80;
+  --green-bg: #0a2e18;
+  --red:      #f87171;
+  --red-bg:   #2e0a0a;
+  --amber:    #fbbf24;
+  --amber-bg: #2e1f00;
+  --topbar:   #0a0815;
+  --topbar-fg:#c8c0f0;
+  color-scheme: dark;
+}
+
+/* ── reset + base ─────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; overflow: hidden; }
+body {
+  font-family: var(--sans);
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--fg);
+  background: var(--bg);
+}
+
+/* ── shell ────────────────────────────────────────────── */
+#app { display: flex; flex-direction: column; height: 100%; }
+
+/* topbar */
+#topbar {
+  display: flex;
+  align-items: center;
+  height: var(--th);
+  background: var(--topbar);
+  color: var(--topbar-fg);
+  padding: 0 12px;
+  gap: 10px;
+  flex-shrink: 0;
+  z-index: 100;
+}
+#tb-toggle {
+  background: none;
+  border: none;
+  color: var(--topbar-fg);
+  cursor: pointer;
+  font-size: 18px;
+  padding: 4px 6px;
+  border-radius: 4px;
+  line-height: 1;
+  display: flex; align-items: center;
+}
+#tb-toggle:hover { background: rgba(255,255,255,.1); }
+#tb-title {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: .02em;
+  color: #fff;
+  flex: 1;
+}
+#tb-ver {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+  background: rgba(255,255,255,.06);
+  padding: 2px 8px;
+  border-radius: 20px;
+}
+#tb-theme {
+  background: none;
+  border: 1px solid rgba(255,255,255,.15);
+  color: var(--topbar-fg);
+  cursor: pointer;
+  font-size: 15px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  line-height: 1.4;
+}
+#tb-theme:hover { background: rgba(255,255,255,.1); }
+
+/* body row */
+#body-row { display: flex; flex: 1; overflow: hidden; }
+
+/* sidebar */
+#sb {
+  width: var(--sw);
+  background: var(--card);
+  border-right: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  flex-shrink: 0;
+  transition: width .22s ease, opacity .22s ease;
+}
+#sb.off {
+  width: 0;
+  opacity: 0;
+  overflow: hidden;
+}
+.sb-hd {
+  padding: 14px 14px 6px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.toc-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  padding: 9px 14px;
+  background: none;
+  border: none;
+  color: var(--fg);
+  font-family: var(--sans);
+  font-size: 13.5px;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: left;
+  border-radius: 0;
+  transition: background .12s;
+}
+.toc-item:hover { background: var(--gray-bg); }
+.toc-item.active {
+  background: var(--purple-lt);
+  color: var(--purple);
+  font-weight: 600;
+}
+.toc-item .ti-icon {
+  width: 20px;
+  text-align: center;
+  font-size: 15px;
+  flex-shrink: 0;
+}
+.sb-divider {
+  height: 1px;
+  background: var(--line);
+  margin: 6px 0;
+}
+
+/* main */
+#main {
+  flex: 1;
+  overflow-y: auto;
+  padding: 28px 32px 48px;
+}
+
+/* pages */
+.page { display: none; }
+.page.active { display: block; }
+
+/* ── typography ──────────────────────────────────────── */
+.pg-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--fg);
+  margin-bottom: 4px;
+  text-wrap: balance;
+}
+.pg-sub {
+  font-size: 14px;
+  color: var(--gray);
+  margin-bottom: 24px;
+}
+h2.sec {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--fg);
+  margin: 28px 0 12px;
+  padding-bottom: 6px;
+  border-bottom: 2px solid var(--purple-lt);
+}
+h3.card-title {
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  color: var(--purple);
+  margin-bottom: 8px;
+}
+
+/* ── hero ─────────────────────────────────────────────── */
+.hero {
+  background: linear-gradient(135deg, var(--purple-lt) 0%, var(--card) 70%);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 28px 32px 22px;
+  margin-bottom: 28px;
+}
+.hero-title {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--fg);
+  letter-spacing: -.01em;
+}
+.hero-sub {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--purple);
+  margin-top: 2px;
+  margin-bottom: 10px;
+}
+.hero-mission {
+  font-size: 13.5px;
+  color: var(--gray);
+  max-width: 600px;
+  line-height: 1.6;
+}
+.hero-map {
+  margin-top: 20px;
+  overflow-x: auto;
+}
+.hero-map svg { max-width: 100%; height: auto; }
+
+/* SVG theme classes */
+.svg-box   { fill: var(--purple-lt); stroke: var(--purple); stroke-width: 1.5; }
+.svg-txt   { fill: var(--fg); font-family: 'IBM Plex Sans',sans-serif; font-size: 10px; font-weight: 600; }
+.svg-eye   { fill: var(--purple); font-family: 'IBM Plex Mono',monospace; font-size: 9px; }
+.svg-arr   { fill: var(--purple); }
+.svg-line  { stroke: var(--purple); fill: none; stroke-width: 1.5; }
+.svg-live  { fill: var(--green-bg); stroke: var(--green); stroke-width: 1.5; }
+.svg-live-t{ fill: var(--green); font-family: 'IBM Plex Sans',sans-serif; font-size: 10px; font-weight: 600; }
+
+/* ── status cards ─────────────────────────────────────── */
+.status-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 14px;
+  margin-bottom: 24px;
+}
+.status-card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 14px 16px;
+}
+.sc-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+.sc-value {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--fg);
+  min-height: 20px;
+}
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 2px 10px;
+  border-radius: 20px;
+  letter-spacing: .02em;
+}
+.badge-up   { background: var(--green-bg);  color: var(--green); }
+.badge-down { background: var(--red-bg);    color: var(--red); }
+.badge-gray { background: var(--gray-bg);   color: var(--gray); }
+.badge-chk  { background: var(--amber-bg);  color: var(--amber); }
+.dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; display: inline-block; }
+.sc-models {
+  font-size: 12px;
+  color: var(--gray);
+  margin-top: 4px;
+  font-family: var(--mono);
+}
+
+/* ── controls panel ──────────────────────────────────── */
+.ctrl-panel {
+  background: var(--teal-bg);
+  border: 1px solid var(--teal);
+  border-radius: 10px;
+  padding: 18px 20px;
+  margin-bottom: 20px;
+}
+.ctrl-panel h3 {
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--teal);
+  margin-bottom: 14px;
+}
+.ctrl-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.ctrl-row:last-child { margin-bottom: 0; }
+.ctrl-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--gray);
+  min-width: 96px;
+}
+.ctrl-input {
+  font-family: var(--mono);
+  font-size: 13px;
+  padding: 6px 10px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--card);
+  color: var(--fg);
+  width: 180px;
+}
+.ctrl-input:focus { outline: 2px solid var(--purple); border-color: transparent; }
+.ctrl-msg {
+  font-size: 12px;
+  color: var(--red);
+  display: none;
+}
+.ctrl-msg.show { display: inline; }
+
+/* ── buttons ─────────────────────────────────────────── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 16px;
+  border-radius: 6px;
+  font-family: var(--sans);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: opacity .15s, background .15s;
+  white-space: nowrap;
+}
+.btn:hover { opacity: .88; }
+.btn-purple { background: var(--purple); color: #fff; }
+.btn-teal   { background: var(--teal);   color: #fff; }
+.btn-outline {
+  background: none;
+  border: 1px solid var(--line);
+  color: var(--fg);
+}
+.btn-outline:hover { background: var(--gray-bg); }
+.btn-sm { padding: 4px 10px; font-size: 12px; }
+.btn-green  { background: var(--green);  color: #fff; }
+.btn-red    { background: var(--red);    color: #fff; }
+.copy-btn { font-family: var(--mono); font-size: 11px; }
+.copy-btn.ok { background: var(--green-bg); color: var(--green); border-color: var(--green); }
+
+/* ── operation cards ─────────────────────────────────── */
+.op-cards { display: flex; flex-direction: column; gap: 16px; }
+.op-card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 18px 20px;
+}
+.op-card-hd {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.op-badge {
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 600;
+  background: var(--purple-lt);
+  color: var(--purple);
+  padding: 2px 8px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+.op-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--fg);
+}
+.op-desc {
+  font-size: 13px;
+  color: var(--gray);
+  margin-bottom: 12px;
+  line-height: 1.6;
+}
+.op-steps {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.op-steps li {
+  font-size: 13px;
+  color: var(--fg);
+  padding-left: 20px;
+  position: relative;
+}
+.op-steps li::before {
+  content: '›';
+  position: absolute;
+  left: 4px;
+  color: var(--purple);
+  font-weight: 700;
+}
+
+/* ── cmd blocks ──────────────────────────────────────── */
+.cmd-block {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--gray-bg);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 8px 12px;
+  margin: 8px 0;
+  flex-wrap: wrap;
+}
+.cmd-text {
+  font-family: var(--mono);
+  font-size: 12.5px;
+  color: var(--fg);
+  flex: 1;
+  word-break: break-all;
+}
+.cmd-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+}
+
+/* ── code fold ───────────────────────────────────────── */
+details.code-fold {
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  margin: 10px 0;
+  overflow: hidden;
+}
+details.code-fold summary {
+  padding: 8px 14px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--gray);
+  background: var(--gray-bg);
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  user-select: none;
+}
+details.code-fold summary::before {
+  content: '▶';
+  font-size: 9px;
+  color: var(--muted);
+  transition: transform .15s;
+}
+details.code-fold[open] summary::before { transform: rotate(90deg); }
+details.code-fold pre {
+  padding: 14px 16px;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--fg);
+  background: var(--card);
+  overflow-x: auto;
+  line-height: 1.7;
+  margin: 0;
+}
+
+/* ── result badge ─────────────────────────────────────── */
+.result-badge {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 20px;
+  display: inline-block;
+  font-family: var(--mono);
+}
+.rb-ok   { background: var(--green-bg);  color: var(--green); }
+.rb-err  { background: var(--red-bg);    color: var(--red); }
+.rb-chk  { background: var(--amber-bg);  color: var(--amber); }
+.rb-gray { background: var(--gray-bg);   color: var(--muted); }
+
+/* ── inline check result ─────────────────────────────── */
+.check-result {
+  font-family: var(--mono);
+  font-size: 12px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  margin-top: 8px;
+  display: none;
+  word-break: break-all;
+}
+.check-result.show { display: block; }
+.check-result.ok  { background: var(--green-bg);  color: var(--green); border: 1px solid var(--green); }
+.check-result.err { background: var(--red-bg);    color: var(--red);   border: 1px solid var(--red); }
+
+/* ── health check table ──────────────────────────────── */
+.hc-table { width: 100%; border-collapse: collapse; }
+.hc-table th {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--muted);
+  text-align: left;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--line);
+  background: var(--gray-bg);
+}
+.hc-table td {
+  padding: 10px 12px;
+  font-size: 13px;
+  border-bottom: 1px solid var(--line);
+  vertical-align: middle;
+}
+.hc-table tr:last-child td { border-bottom: none; }
+.hc-url {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  color: var(--gray);
+}
+
+/* ── model table ─────────────────────────────────────── */
+.model-table { width: 100%; border-collapse: collapse; }
+.model-table th {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--muted);
+  text-align: left;
+  padding: 8px 12px;
+  border-bottom: 2px solid var(--line);
+  background: var(--gray-bg);
+}
+.model-table td {
+  padding: 9px 12px;
+  font-size: 13px;
+  border-bottom: 1px solid var(--line);
+  vertical-align: middle;
+}
+.model-table tr:last-child td { border-bottom: none; }
+.model-table tr:hover td { background: var(--gray-bg); }
+.model-name { font-family: var(--mono); font-size: 12.5px; font-weight: 600; }
+.tag-local { background: var(--purple-lt); color: var(--purple); font-size: 10px; font-weight: 700; padding: 1px 7px; border-radius: 10px; letter-spacing: .04em; }
+.tag-cloud { background: var(--teal-bg);   color: var(--teal);   font-size: 10px; font-weight: 700; padding: 1px 7px; border-radius: 10px; letter-spacing: .04em; }
+
+/* ── info note ───────────────────────────────────────── */
+.info-note {
+  background: var(--purple-lt);
+  border-left: 3px solid var(--purple);
+  border-radius: 0 6px 6px 0;
+  padding: 10px 14px;
+  font-size: 13px;
+  color: var(--fg);
+  margin: 12px 0;
+}
+
+/* ── responsive ──────────────────────────────────────── */
+@media (max-width: 600px) {
+  #main { padding: 16px 16px 40px; }
+  #sb { width: 220px; }
+  .status-row { grid-template-columns: 1fr 1fr; }
+  .ctrl-input { width: 140px; }
+  .hero { padding: 18px 16px; }
+  .hero-title { font-size: 20px; }
+}
+</style>
+
+<!-- ─────────────── APP ─────────────── -->
+<div id="app">
+
+  <!-- TOPBAR -->
+  <div id="topbar">
+    <button id="tb-toggle" onclick="toggleSB()" title="Toggle sidebar">☰</button>
+    <span id="tb-title">SLM RunBook</span>
+    <span id="tb-ver">v1.0</span>
+    <button id="tb-theme" onclick="toggleTheme()" title="Toggle theme">◑</button>
+  </div>
+
+  <!-- BODY ROW -->
+  <div id="body-row">
+
+    <!-- SIDEBAR -->
+    <nav id="sb">
+      <div class="sb-hd">Navigation</div>
+      <button class="toc-item active" data-pg="overview"    onclick="nav('overview')">
+        <span class="ti-icon">⊙</span>Overview
+      </button>
+      <div class="sb-divider"></div>
+      <button class="toc-item" data-pg="nodeserver" onclick="nav('nodeserver')">
+        <span class="ti-icon">⬡</span>Node Server
+      </button>
+      <button class="toc-item" data-pg="ollama"     onclick="nav('ollama')">
+        <span class="ti-icon">◎</span>Ollama Setup
+      </button>
+      <button class="toc-item" data-pg="opencode"   onclick="nav('opencode')">
+        <span class="ti-icon">✦</span>OpenCode Desktop
+      </button>
+      <button class="toc-item" data-pg="models"     onclick="nav('models')">
+        <span class="ti-icon">⊞</span>Model Management
+      </button>
+      <div class="sb-divider"></div>
+      <button class="toc-item" data-pg="health"     onclick="nav('health')">
+        <span class="ti-icon">♥</span>Health Checks
+      </button>
+    </nav>
+
+    <!-- MAIN PANEL -->
+    <main id="main">
+
+      <!-- ══════════════ OVERVIEW ══════════════ -->
+      <section class="page active" id="pg-overview">
+
+        <!-- Hero -->
+        <div class="hero">
+          <div class="hero-title">SLM RunBook</div>
+          <div class="hero-sub">Local AI Operations — OpenCode · Ollama · Node Server</div>
+          <div class="hero-mission">Your field guide for running AI models locally, managing your Node server, and connecting OpenCode Desktop to every model you need — all from a single dashboard.</div>
+          <div class="hero-map">
+            <figure>
+              <svg viewBox="0 0 750 84" role="img" aria-label="Module map: Node Server → Ollama → OpenCode Desktop → Model Management → Health Checks"
+                   style="max-width:100%; height:auto; display:block;">
+                <defs>
+                  <marker id="arr" markerWidth="7" markerHeight="6" refX="6" refY="3" orient="auto">
+                    <polygon points="0 0, 7 3, 0 6" class="svg-arr"/>
+                  </marker>
+                </defs>
+                <!-- Node 1: Node Server -->
+                <rect x="4"  y="22" width="110" height="40" rx="8" class="svg-box"/>
+                <text x="59"  y="38" text-anchor="middle" class="svg-eye">⬡</text>
+                <text x="59"  y="53" text-anchor="middle" class="svg-txt">Node Server</text>
+                <!-- Arrow -->
+                <line x1="114" y1="42" x2="140" y2="42" class="svg-line" marker-end="url(#arr)"/>
+                <!-- Node 2: Ollama -->
+                <rect x="141" y="22" width="100" height="40" rx="8" class="svg-box"/>
+                <text x="191" y="38" text-anchor="middle" class="svg-eye">◎</text>
+                <text x="191" y="53" text-anchor="middle" class="svg-txt">Ollama</text>
+                <!-- Arrow -->
+                <line x1="241" y1="42" x2="267" y2="42" class="svg-line" marker-end="url(#arr)"/>
+                <!-- Node 3: OpenCode -->
+                <rect x="268" y="22" width="130" height="40" rx="8" class="svg-box"/>
+                <text x="333" y="38" text-anchor="middle" class="svg-eye">✦</text>
+                <text x="333" y="53" text-anchor="middle" class="svg-txt">OpenCode Desktop</text>
+                <!-- Arrow -->
+                <line x1="398" y1="42" x2="424" y2="42" class="svg-line" marker-end="url(#arr)"/>
+                <!-- Node 4: Models -->
+                <rect x="425" y="22" width="120" height="40" rx="8" class="svg-box"/>
+                <text x="485" y="38" text-anchor="middle" class="svg-eye">⊞</text>
+                <text x="485" y="53" text-anchor="middle" class="svg-txt">Model Mgmt</text>
+                <!-- Arrow dashed -->
+                <line x1="545" y1="42" x2="571" y2="42" class="svg-line" stroke-dasharray="4 3" marker-end="url(#arr)"/>
+                <!-- Node 5: Health (green) -->
+                <rect x="572" y="22" width="110" height="40" rx="8" class="svg-live"/>
+                <text x="627" y="38" text-anchor="middle" class="svg-live-t" style="font-size:10px;">♥</text>
+                <text x="627" y="53" text-anchor="middle" class="svg-live-t">Health Checks</text>
+              </svg>
+              <figcaption style="font-size:11px; color:var(--muted); margin-top:4px; text-align:center;">
+                Local AI stack — Node Server feeds Ollama models into OpenCode Desktop
+              </figcaption>
+            </figure>
+          </div>
+        </div>
+
+        <!-- Live Status Cards -->
+        <h2 class="sec">Live Status</h2>
+        <div class="status-row">
+          <div class="status-card">
+            <div class="sc-label">Ollama Server</div>
+            <div class="sc-value"><span id="s-ollama" class="badge badge-gray"><span class="dot"></span>Not checked</span></div>
+            <div id="s-ollama-ver" class="sc-models" style="margin-top:6px;"></div>
+          </div>
+          <div class="status-card">
+            <div class="sc-label">Loaded Models</div>
+            <div class="sc-value"><span id="s-models" class="badge badge-gray"><span class="dot"></span>Not checked</span></div>
+            <div id="s-models-list" class="sc-models"></div>
+          </div>
+          <div class="status-card">
+            <div class="sc-label">Node Server</div>
+            <div class="sc-value"><span id="s-node" class="badge badge-gray"><span class="dot"></span>Not checked</span></div>
+            <div id="s-node-url" class="sc-models" style="margin-top:6px;"></div>
+          </div>
+          <div class="status-card">
+            <div class="sc-label">OpenCode</div>
+            <div class="sc-value">
+              <a href="https://opencode.ai" style="color:var(--purple); font-size:13px; font-weight:600; text-decoration:none;" target="_blank">opencode.ai ↗</a>
+            </div>
+            <div class="sc-models" style="margin-top:6px;">Launch manually from desktop</div>
+          </div>
+        </div>
+
+        <!-- Server Controls -->
+        <div class="ctrl-panel">
+          <h3>⚙ Server Controls</h3>
+          <div class="ctrl-row">
+            <span class="ctrl-label">Server Name</span>
+            <input id="svrName" class="ctrl-input" type="text" placeholder="mcpserver" value="">
+            <span id="svrNameMsg" class="ctrl-msg">Enter a server name</span>
+          </div>
+          <div class="ctrl-row">
+            <span class="ctrl-label">Port</span>
+            <input id="svrPort" class="ctrl-input" type="text" placeholder="3101" value="" style="width:90px;">
+          </div>
+          <div class="ctrl-row" style="margin-top:6px;">
+            <button class="btn btn-teal" onclick="goLive(this)">▶ Go Live</button>
+            <button class="btn btn-outline" onclick="pollAll()">↺ Refresh Status</button>
+          </div>
+        </div>
+
+        <!-- Start / Stop commands -->
+        <h2 class="sec">Start / Stop Commands</h2>
+        <div class="cmd-label">Start Node Server</div>
+        <div class="cmd-block">
+          <span class="cmd-text" id="cmdStart">node mcpserver.js</span>
+          <button class="btn btn-outline btn-sm copy-btn" onclick="copyEl('cmdStart',this)">Copy</button>
+        </div>
+        <div class="cmd-label">Stop Node Server</div>
+        <div class="cmd-block">
+          <span class="cmd-text" id="cmdStop">pkill -f mcpserver.js</span>
+          <button class="btn btn-outline btn-sm copy-btn" onclick="copyEl('cmdStop',this)">Copy</button>
+        </div>
+
+      </section><!-- /overview -->
+
+      <!-- ══════════════ NODE SERVER ══════════════ -->
+      <section class="page" id="pg-nodeserver">
+        <div class="pg-title">⬡ Node Server</div>
+        <div class="pg-sub">Chapter 0 — Project location, server controls, and ping verification</div>
+
+        <!-- Project Location -->
+        <h2 class="sec">Project Location</h2>
+        <div class="ctrl-panel">
+          <h3>📁 Location Manager</h3>
+          <div class="ctrl-row">
+            <span class="ctrl-label">Current Path</span>
+            <input id="curPath" class="ctrl-input" type="text" placeholder="C:\MyOllama\project" value="" style="width:280px;">
+          </div>
+          <div class="ctrl-row">
+            <span class="ctrl-label">New Location</span>
+            <input id="newPath" class="ctrl-input" type="text" placeholder="C:\AICode\Projects\MyOllama\" value="" style="width:280px;">
+          </div>
+          <div class="ctrl-row" style="margin-top:6px;">
+            <button class="btn btn-purple" onclick="buildDeployCmd()">⚡ Define &amp; Deploy</button>
+            <span id="deployMsg" class="ctrl-msg">Fill in both paths first</span>
+          </div>
+        </div>
+
+        <!-- Deploy commands output -->
+        <div id="deployOut" style="display:none;">
+          <div class="cmd-label">Windows — Move &amp; Start</div>
+          <div class="cmd-block">
+            <span class="cmd-text" id="deployWin"></span>
+            <button class="btn btn-outline btn-sm copy-btn" onclick="copyEl('deployWin',this)">Copy</button>
+          </div>
+          <div class="cmd-label">Mac / Linux — Move &amp; Start</div>
+          <div class="cmd-block">
+            <span class="cmd-text" id="deployMac"></span>
+            <button class="btn btn-outline btn-sm copy-btn" onclick="copyEl('deployMac',this)">Copy</button>
+          </div>
+          <div class="info-note">Copy the command for your OS and run it in a terminal. The server will start at the new location automatically.</div>
+        </div>
+
+        <!-- Server Controls (duplicate for this page) -->
+        <h2 class="sec">Server Controls</h2>
+        <div class="ctrl-panel">
+          <h3>⚙ Runtime Controls</h3>
+          <div class="ctrl-row">
+            <span class="ctrl-label">Server Name</span>
+            <input id="svrName2" class="ctrl-input" type="text" placeholder="mcpserver" value="">
+          </div>
+          <div class="ctrl-row">
+            <span class="ctrl-label">Port</span>
+            <input id="svrPort2" class="ctrl-input" type="text" placeholder="3101" value="" style="width:90px;">
+          </div>
+          <div class="ctrl-row" style="margin-top:6px;">
+            <button class="btn btn-teal" onclick="goLive2(this)">▶ Go Live</button>
+          </div>
+        </div>
+
+        <div class="cmd-label">Start</div>
+        <div class="cmd-block">
+          <span class="cmd-text" id="cmdStart2">node mcpserver.js</span>
+          <button class="btn btn-outline btn-sm copy-btn" onclick="copyEl('cmdStart2',this)">Copy</button>
+        </div>
+        <div class="cmd-label">Stop</div>
+        <div class="cmd-block">
+          <span class="cmd-text" id="cmdStop2">pkill -f mcpserver.js</span>
+          <button class="btn btn-outline btn-sm copy-btn" onclick="copyEl('cmdStop2',this)">Copy</button>
+        </div>
+
+        <!-- Ping -->
+        <h2 class="sec">Ping Server</h2>
+        <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+          <span class="hc-url" id="nodePingUrl">localhost:3101/ping</span>
+          <button class="btn btn-outline" onclick="runCheck('node-ping','nodeCheckResult')">Run Ping</button>
+          <span id="nodeCheckBadge" class="result-badge rb-gray">—</span>
+        </div>
+        <div id="nodeCheckResult" class="check-result"></div>
+
+        <details class="code-fold" style="margin-top:20px;">
+          <summary>Code reference — starting a named Node server</summary>
+          <pre>// File: mcpserver.js  (or whatever name you chose)
+const express = require('express');
+const app = express();
+app.get('/ping', (req, res) => res.json({ ok: true, ts: Date.now() }));
+app.get('/tools', (req, res) => res.json({ tools: [] })); // fill in your tools
+app.listen(3101, () => console.log('mcpserver listening on 3101'));</pre>
+        </details>
+
+      </section><!-- /nodeserver -->
+
+      <!-- ══════════════ OLLAMA ══════════════ -->
+      <section class="page" id="pg-ollama">
+        <div class="pg-title">◎ Ollama Setup</div>
+        <div class="pg-sub">Chapter 1 — Install, pull a model, and verify the server</div>
+
+        <!-- Ollama flow SVG -->
+        <figure style="margin-bottom:20px;">
+          <svg viewBox="0 0 520 66" role="img" aria-label="Ollama flow: Install → Pull → Verify → Live"
+               style="max-width:100%; height:auto; display:block;">
+            <defs>
+              <marker id="arr2" markerWidth="7" markerHeight="6" refX="6" refY="3" orient="auto">
+                <polygon points="0 0, 7 3, 0 6" class="svg-arr"/>
+              </marker>
+            </defs>
+            <rect x="4"   y="13" width="100" height="40" rx="8" class="svg-box"/>
+            <text x="54"  y="29" text-anchor="middle" class="svg-eye">A</text>
+            <text x="54"  y="44" text-anchor="middle" class="svg-txt">Install Ollama</text>
+            <line x1="104" y1="33" x2="126" y2="33" class="svg-line" marker-end="url(#arr2)"/>
+            <rect x="127" y="13" width="100" height="40" rx="8" class="svg-box"/>
+            <text x="177" y="29" text-anchor="middle" class="svg-eye">B</text>
+            <text x="177" y="44" text-anchor="middle" class="svg-txt">Pull a Model</text>
+            <line x1="227" y1="33" x2="249" y2="33" class="svg-line" marker-end="url(#arr2)"/>
+            <rect x="250" y="13" width="100" height="40" rx="8" class="svg-box"/>
+            <text x="300" y="29" text-anchor="middle" class="svg-eye">C</text>
+            <text x="300" y="44" text-anchor="middle" class="svg-txt">Start / Verify</text>
+            <line x1="350" y1="33" x2="372" y2="33" class="svg-line" stroke-dasharray="4 3" marker-end="url(#arr2)"/>
+            <rect x="373" y="13" width="100" height="40" rx="8" class="svg-live"/>
+            <text x="423" y="29" text-anchor="middle" class="svg-live-t" style="font-size:10px;">♥</text>
+            <text x="423" y="44" text-anchor="middle" class="svg-live-t">LIVE</text>
+          </svg>
+        </figure>
+
+        <div class="op-cards">
+
+          <!-- Card A: Install -->
+          <div class="op-card">
+            <div class="op-card-hd">
+              <span class="op-badge">A</span>
+              <span class="op-title">Install Ollama</span>
+            </div>
+            <div class="op-desc">Download and run the Ollama installer for your operating system. Ollama installs as a system service and starts automatically.</div>
+            <ul class="op-steps">
+              <li>Go to <strong>ollama.com</strong> and click Download</li>
+              <li>macOS: run the .dmg, drag Ollama to Applications</li>
+              <li>Windows: run OllamaSetup.exe, follow installer</li>
+              <li>Linux: <code style="font-family:var(--mono); background:var(--gray-bg); padding:1px 5px; border-radius:3px;">curl -fsSL https://ollama.com/install.sh | sh</code></li>
+              <li>After install, Ollama runs on <strong>localhost:11434</strong> automatically</li>
+            </ul>
+            <details class="code-fold" style="margin-top:12px;">
+              <summary>Verify install — terminal commands</summary>
+              <pre>ollama --version           # prints version number
+curl localhost:11434       # should return "Ollama is running"</pre>
+            </details>
+          </div>
+
+          <!-- Card B: Pull -->
+          <div class="op-card">
+            <div class="op-card-hd">
+              <span class="op-badge">B</span>
+              <span class="op-title">Pull a Model</span>
+            </div>
+            <div class="op-desc">Use <code style="font-family:var(--mono); background:var(--gray-bg); padding:1px 5px; border-radius:3px;">ollama pull</code> to download a model locally. The download runs once and caches the model on disk.</div>
+            <div class="cmd-label">Recommended starter model</div>
+            <div class="cmd-block">
+              <span class="cmd-text">ollama pull qwen2.5-coder</span>
+              <button class="btn btn-outline btn-sm copy-btn" onclick="copyRaw('ollama pull qwen2.5-coder',this)">Copy</button>
+            </div>
+            <div class="cmd-label">Other good choices</div>
+            <div class="cmd-block">
+              <span class="cmd-text">ollama pull llama3.2</span>
+              <button class="btn btn-outline btn-sm copy-btn" onclick="copyRaw('ollama pull llama3.2',this)">Copy</button>
+            </div>
+            <div class="cmd-block">
+              <span class="cmd-text">ollama pull codellama</span>
+              <button class="btn btn-outline btn-sm copy-btn" onclick="copyRaw('ollama pull codellama',this)">Copy</button>
+            </div>
+            <details class="code-fold">
+              <summary>See all available models</summary>
+              <pre>ollama list              # models you have downloaded
+# Browse all at: https://ollama.com/library</pre>
+            </details>
+          </div>
+
+          <!-- Card C: Start / Verify -->
+          <div class="op-card">
+            <div class="op-card-hd">
+              <span class="op-badge">C</span>
+              <span class="op-title">Start &amp; Verify Ollama</span>
+            </div>
+            <div class="op-desc">Ollama starts automatically after install. If it's not running, start it manually. Then verify with a live ping below.</div>
+            <div class="cmd-label">Start Ollama server (if not auto-started)</div>
+            <div class="cmd-block">
+              <span class="cmd-text">ollama serve</span>
+              <button class="btn btn-outline btn-sm copy-btn" onclick="copyRaw('ollama serve',this)">Copy</button>
+            </div>
+            <div class="cmd-label">List downloaded models</div>
+            <div class="cmd-block">
+              <span class="cmd-text">ollama list</span>
+              <button class="btn btn-outline btn-sm copy-btn" onclick="copyRaw('ollama list',this)">Copy</button>
+            </div>
+            <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-top:14px;">
+              <button class="btn btn-teal" onclick="runCheck('ollama','ollamaCheckResult')">▶ Check Ollama</button>
+              <span id="ollamaCheckBadge" class="result-badge rb-gray">—</span>
+            </div>
+            <div id="ollamaCheckResult" class="check-result"></div>
+          </div>
+
+        </div>
+      </section><!-- /ollama -->
+
+      <!-- ══════════════ OPENCODE ══════════════ -->
+      <section class="page" id="pg-opencode">
+        <div class="pg-title">✦ OpenCode Desktop</div>
+        <div class="pg-sub">Chapter 2 — Install, connect to Ollama, add models, and switch providers</div>
+
+        <div class="op-cards">
+
+          <!-- Card D: Install OpenCode -->
+          <div class="op-card">
+            <div class="op-card-hd">
+              <span class="op-badge">D</span>
+              <span class="op-title">Install OpenCode Desktop</span>
+            </div>
+            <div class="op-desc">OpenCode Desktop is an AI-native coding environment that connects to local Ollama models and cloud API providers from a single interface.</div>
+            <ul class="op-steps">
+              <li>Go to <strong>opencode.ai</strong> and download the installer for your OS</li>
+              <li>macOS: open the .dmg, drag to Applications, launch from Spotlight</li>
+              <li>Windows: run the .exe installer, launch from Start Menu</li>
+              <li>First launch opens onboarding — you can configure providers right away</li>
+            </ul>
+            <div class="info-note">OpenCode natively supports Ollama as a backend — no extra plugins required.</div>
+          </div>
+
+          <!-- Card E: Connect to Ollama -->
+          <div class="op-card">
+            <div class="op-card-hd">
+              <span class="op-badge">E</span>
+              <span class="op-title">Connect OpenCode to Ollama</span>
+            </div>
+            <div class="op-desc">Add Ollama as a provider in OpenCode's settings. OpenCode auto-discovers models running at localhost:11434.</div>
+            <ul class="op-steps">
+              <li>Open OpenCode → <strong>Settings</strong> (gear icon or ⌘,)</li>
+              <li>Go to <strong>Providers</strong> → click <strong>+ Add Provider</strong></li>
+              <li>Select <strong>Ollama</strong> from the provider list</li>
+              <li>Base URL is pre-filled as <code style="font-family:var(--mono); background:var(--gray-bg); padding:1px 5px; border-radius:3px;">http://localhost:11434</code></li>
+              <li>Click <strong>Test Connection</strong> — it should return your model list</li>
+              <li>Select your default model and click <strong>Save</strong></li>
+            </ul>
+          </div>
+
+          <!-- Card F: Add Ollama Models -->
+          <div class="op-card">
+            <div class="op-card-hd">
+              <span class="op-badge">F</span>
+              <span class="op-title">Add More Ollama Models via OpenCode</span>
+            </div>
+            <div class="op-desc">OpenCode lets you browse and pull Ollama models without leaving the app — it runs the <code style="font-family:var(--mono); background:var(--gray-bg); padding:1px 5px; border-radius:3px;">ollama pull</code> command in the background.</div>
+            <ul class="op-steps">
+              <li>In OpenCode → Settings → Providers → Ollama</li>
+              <li>Click <strong>Browse Models</strong> to open the Ollama model library</li>
+              <li>Find the model you want and click <strong>Pull</strong></li>
+              <li>OpenCode shows download progress; model is ready when bar completes</li>
+              <li>New model appears in your model picker immediately</li>
+            </ul>
+            <details class="code-fold">
+              <summary>Pull from terminal instead</summary>
+              <pre>ollama pull mistral          # fast 7B model
+ollama pull deepseek-coder   # coding-optimized
+ollama pull phi3             # small, runs on CPU</pre>
+            </details>
+          </div>
+
+          <!-- Card G: Add Vendor API Models -->
+          <div class="op-card">
+            <div class="op-card-hd">
+              <span class="op-badge">G</span>
+              <span class="op-title">Add Vendor API Models</span>
+            </div>
+            <div class="op-desc">Connect Anthropic, OpenAI, or other cloud providers alongside Ollama. Each provider requires an API key from their dashboard.</div>
+            <ul class="op-steps">
+              <li>OpenCode → Settings → Providers → <strong>+ Add Provider</strong></li>
+              <li>Select <strong>Anthropic</strong> (or OpenAI, Gemini, etc.)</li>
+              <li>Paste your API key from <strong>console.anthropic.com</strong> or <strong>platform.openai.com</strong></li>
+              <li>Click <strong>Test Connection</strong> — model list loads if the key is valid</li>
+              <li>Click <strong>Save</strong> — vendor models now appear in your model picker</li>
+            </ul>
+            <div class="info-note">API keys are stored locally in OpenCode's config — they never leave your machine except in requests to that provider's API.</div>
+          </div>
+
+          <!-- Card H: Switch Model -->
+          <div class="op-card">
+            <div class="op-card-hd">
+              <span class="op-badge">H</span>
+              <span class="op-title">Switch Active Model</span>
+            </div>
+            <div class="op-desc">Switch between Ollama and vendor models in any conversation — each session can use a different model.</div>
+            <ul class="op-steps">
+              <li>Press <strong>⌘K</strong> (Mac) or <strong>Ctrl+K</strong> (Win) to open Command Palette</li>
+              <li>Type "Switch Model" or click the model name in the status bar</li>
+              <li>Browse by provider: Ollama (local), Anthropic, OpenAI, etc.</li>
+              <li>Select the model — it takes effect for the current session</li>
+              <li>Set a default in Settings → Providers → choose default model</li>
+            </ul>
+          </div>
+
+        </div>
+      </section><!-- /opencode -->
+
+      <!-- ══════════════ MODELS ══════════════ -->
+      <section class="page" id="pg-models">
+        <div class="pg-title">⊞ Model Management</div>
+        <div class="pg-sub">Chapter 3 — Inventory, pull commands, and vendor key status</div>
+
+        <h2 class="sec">Model Inventory</h2>
+        <div style="overflow-x:auto;">
+          <table class="model-table">
+            <thead>
+              <tr>
+                <th>Model</th>
+                <th>Provider</th>
+                <th>Type</th>
+                <th>Status</th>
+                <th>Commands</th>
+              </tr>
+            </thead>
+            <tbody id="modelTableBody">
+              <tr>
+                <td><span class="model-name">qwen2.5-coder</span></td>
+                <td>Ollama</td>
+                <td><span class="tag-local">LOCAL</span></td>
+                <td><span class="badge badge-gray"><span class="dot"></span>Unknown</span></td>
+                <td style="display:flex; gap:6px; flex-wrap:wrap;">
+                  <button class="btn btn-outline btn-sm copy-btn" onclick="copyRaw('ollama pull qwen2.5-coder',this)">Pull</button>
+                  <button class="btn btn-outline btn-sm copy-btn" onclick="copyRaw('ollama rm qwen2.5-coder',this)">Remove</button>
+                </td>
+              </tr>
+              <tr>
+                <td><span class="model-name">llama3.2</span></td>
+                <td>Ollama</td>
+                <td><span class="tag-local">LOCAL</span></td>
+                <td><span class="badge badge-gray"><span class="dot"></span>Unknown</span></td>
+                <td style="display:flex; gap:6px; flex-wrap:wrap;">
+                  <button class="btn btn-outline btn-sm copy-btn" onclick="copyRaw('ollama pull llama3.2',this)">Pull</button>
+                  <button class="btn btn-outline btn-sm copy-btn" onclick="copyRaw('ollama rm llama3.2',this)">Remove</button>
+                </td>
+              </tr>
+              <tr>
+                <td><span class="model-name">codellama</span></td>
+                <td>Ollama</td>
+                <td><span class="tag-local">LOCAL</span></td>
+                <td><span class="badge badge-gray"><span class="dot"></span>Unknown</span></td>
+                <td style="display:flex; gap:6px; flex-wrap:wrap;">
+                  <button class="btn btn-outline btn-sm copy-btn" onclick="copyRaw('ollama pull codellama',this)">Pull</button>
+                  <button class="btn btn-outline btn-sm copy-btn" onclick="copyRaw('ollama rm codellama',this)">Remove</button>
+                </td>
+              </tr>
+              <tr>
+                <td><span class="model-name">claude-sonnet</span></td>
+                <td>Anthropic</td>
+                <td><span class="tag-cloud">CLOUD</span></td>
+                <td><span class="badge badge-gray"><span class="dot"></span>API key needed</span></td>
+                <td><span style="font-size:12px; color:var(--gray);">Via OpenCode Settings</span></td>
+              </tr>
+              <tr>
+                <td><span class="model-name">gpt-4o</span></td>
+                <td>OpenAI</td>
+                <td><span class="tag-cloud">CLOUD</span></td>
+                <td><span class="badge badge-gray"><span class="dot"></span>API key needed</span></td>
+                <td><span style="font-size:12px; color:var(--gray);">Via OpenCode Settings</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Refresh from Ollama -->
+        <div style="margin-top:14px; display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+          <button class="btn btn-outline" onclick="refreshModelTable()">↺ Refresh from Ollama</button>
+          <span id="modelTableMsg" style="font-size:12px; color:var(--gray);"></span>
+        </div>
+
+        <!-- Custom Pull -->
+        <h2 class="sec">Pull a Custom Model</h2>
+        <div class="ctrl-panel">
+          <h3>⬇ Pull Model</h3>
+          <div class="ctrl-row">
+            <span class="ctrl-label">Model Name</span>
+            <input id="pullModelName" class="ctrl-input" type="text" placeholder="e.g. mistral or phi3:latest" style="width:260px;">
+          </div>
+          <div class="ctrl-row" style="margin-top:6px;">
+            <button class="btn btn-purple" onclick="showPullCmd()">Generate Pull Command</button>
+          </div>
+        </div>
+        <div id="pullCmdOut" style="display:none;">
+          <div class="cmd-block">
+            <span class="cmd-text" id="pullCmdText"></span>
+            <button class="btn btn-outline btn-sm copy-btn" onclick="copyEl('pullCmdText',this)">Copy</button>
+          </div>
+        </div>
+
+        <!-- Vendor Keys -->
+        <h2 class="sec">Vendor API Key Status</h2>
+        <div class="info-note">API keys are configured inside OpenCode Desktop — Settings → Providers → select provider → enter key. They are stored locally in OpenCode's config file.</div>
+        <div style="overflow-x:auto; margin-top:12px;">
+          <table class="model-table">
+            <thead>
+              <tr><th>Provider</th><th>Key Status</th><th>Where to Get</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Anthropic</td>
+                <td><span class="badge badge-gray"><span class="dot"></span>Configured in OpenCode</span></td>
+                <td><span style="font-size:12px; color:var(--gray);">console.anthropic.com → API Keys</span></td>
+              </tr>
+              <tr>
+                <td>OpenAI</td>
+                <td><span class="badge badge-gray"><span class="dot"></span>Configured in OpenCode</span></td>
+                <td><span style="font-size:12px; color:var(--gray);">platform.openai.com → API Keys</span></td>
+              </tr>
+              <tr>
+                <td>Ollama</td>
+                <td><span class="badge badge-up"><span class="dot"></span>No key needed</span></td>
+                <td><span style="font-size:12px; color:var(--gray);">Local — free</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+      </section><!-- /models -->
+
+      <!-- ══════════════ HEALTH ══════════════ -->
+      <section class="page" id="pg-health">
+        <div class="pg-title">♥ Health Checks</div>
+        <div class="pg-sub">Verify all services are responding correctly</div>
+
+        <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:20px;">
+          <button class="btn btn-purple" onclick="runAllChecks()">▶ Run All Checks</button>
+          <span id="allCheckStatus" style="font-size:13px; color:var(--gray);">Press "Run All Checks" to verify all services</span>
+        </div>
+
+        <div style="overflow-x:auto;">
+          <table class="hc-table">
+            <thead>
+              <tr>
+                <th>Service</th>
+                <th>Endpoint</th>
+                <th>Action</th>
+                <th>Result</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Ollama Ping</strong></td>
+                <td><span class="hc-url">localhost:11434</span></td>
+                <td><button class="btn btn-outline btn-sm" onclick="runCheck('ollama','hcOllamaBadge')">Run</button></td>
+                <td><span id="hcOllamaBadge" class="result-badge rb-gray">—</span></td>
+              </tr>
+              <tr>
+                <td><strong>Ollama Models</strong></td>
+                <td><span class="hc-url">localhost:11434/api/tags</span></td>
+                <td><button class="btn btn-outline btn-sm" onclick="runCheck('ollama-tags','hcTagsBadge')">Run</button></td>
+                <td><span id="hcTagsBadge" class="result-badge rb-gray">—</span></td>
+              </tr>
+              <tr>
+                <td><strong>Node Server Ping</strong></td>
+                <td><span class="hc-url" id="hcNodeUrl">localhost:3101/ping</span></td>
+                <td><button class="btn btn-outline btn-sm" onclick="runCheck('node-ping','hcNodeBadge')">Run</button></td>
+                <td><span id="hcNodeBadge" class="result-badge rb-gray">—</span></td>
+              </tr>
+              <tr>
+                <td><strong>Node Tools List</strong></td>
+                <td><span class="hc-url" id="hcToolsUrl">localhost:3101/tools</span></td>
+                <td><button class="btn btn-outline btn-sm" onclick="runCheck('node-tools','hcToolsBadge')">Run</button></td>
+                <td><span id="hcToolsBadge" class="result-badge rb-gray">—</span></td>
+              </tr>
+              <tr>
+                <td><strong>OpenCode</strong></td>
+                <td><span class="hc-url">opencode.ai</span></td>
+                <td><a href="https://opencode.ai" target="_blank" class="btn btn-outline btn-sm" style="text-decoration:none;">Open ↗</a></td>
+                <td><span class="result-badge rb-gray">Manual</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div id="hcDetail" style="margin-top:16px; font-family:var(--mono); font-size:12px; color:var(--gray); white-space:pre-wrap; background:var(--gray-bg); border-radius:6px; padding:12px; display:none;"></div>
+
+      </section><!-- /health -->
+
+    </main><!-- /main -->
+  </div><!-- /body-row -->
+</div><!-- /app -->
+
+<script>
+/* ── config ──────────────────────────────────────────── */
+var cfg = { svrName: 'mcpserver', svrPort: '3101', curPath: '', newPath: '' };
+
+function loadCfg() {
+  try {
+    var s = localStorage.getItem('slm-cfg');
+    if (s) cfg = Object.assign({}, cfg, JSON.parse(s));
+  } catch(e) {}
+}
+
+function saveCfg() {
+  try { localStorage.setItem('slm-cfg', JSON.stringify(cfg)); } catch(e) {}
+}
+
+/* ── nav ─────────────────────────────────────────────── */
+function toggleSB() {
+  document.getElementById('sb').classList.toggle('off');
+}
+
+function nav(id) {
+  document.querySelectorAll('.page').forEach(function(p) {
+    p.classList.toggle('active', p.id === 'pg-' + id);
+  });
+  document.querySelectorAll('.toc-item').forEach(function(b) {
+    b.classList.toggle('active', b.dataset.pg === id);
+  });
+  document.getElementById('main').scrollTop = 0;
+}
+
+/* ── theme ───────────────────────────────────────────── */
+function toggleTheme() {
+  var r = document.documentElement;
+  var cur = r.getAttribute('data-theme');
+  if (cur === 'dark') {
+    r.setAttribute('data-theme', 'light');
+  } else if (cur === 'light') {
+    r.removeAttribute('data-theme');
+  } else {
+    r.setAttribute('data-theme', 'dark');
+  }
+}
+
+/* ── update commands ─────────────────────────────────── */
+function setText(id, val) {
+  var el = document.getElementById(id);
+  if (el) el.textContent = val;
+}
+
+function updateCmds(n, p) {
+  setText('cmdStart',    'node ' + n + '.js');
+  setText('cmdStop',     'pkill -f ' + n + '.js');
+  setText('cmdStart2',   'node ' + n + '.js');
+  setText('cmdStop2',    'pkill -f ' + n + '.js');
+  setText('nodePingUrl', 'localhost:' + p + '/ping');
+  setText('hcNodeUrl',   'localhost:' + p + '/ping');
+  setText('hcToolsUrl',  'localhost:' + p + '/tools');
+  setText('s-node-url',  'localhost:' + p + '/ping');
+}
+
+function goLive(btn) {
+  var n = document.getElementById('svrName').value.trim();
+  var p = document.getElementById('svrPort').value.trim();
+  var msg = document.getElementById('svrNameMsg');
+  if (!n) { msg.classList.add('show'); return; }
+  msg.classList.remove('show');
+  cfg.svrName = n;
+  cfg.svrPort = p || '3101';
+  // sync secondary inputs
+  var n2 = document.getElementById('svrName2');
+  var p2 = document.getElementById('svrPort2');
+  if (n2) n2.value = cfg.svrName;
+  if (p2) p2.value = cfg.svrPort;
+  saveCfg();
+  updateCmds(cfg.svrName, cfg.svrPort);
+  flashBtn(btn, '✓ Live');
+}
+
+function goLive2(btn) {
+  var n = document.getElementById('svrName2').value.trim();
+  var p = document.getElementById('svrPort2').value.trim();
+  if (!n) return;
+  cfg.svrName = n;
+  cfg.svrPort = p || '3101';
+  var n1 = document.getElementById('svrName');
+  var p1 = document.getElementById('svrPort');
+  if (n1) n1.value = cfg.svrName;
+  if (p1) p1.value = cfg.svrPort;
+  saveCfg();
+  updateCmds(cfg.svrName, cfg.svrPort);
+  flashBtn(btn, '✓ Live');
+}
+
+/* ── deploy cmd ──────────────────────────────────────── */
+function buildDeployCmd() {
+  var from = document.getElementById('curPath').value.trim();
+  var to   = document.getElementById('newPath').value.trim();
+  var msg  = document.getElementById('deployMsg');
+  var out  = document.getElementById('deployOut');
+  if (!from || !to) {
+    msg.classList.add('show');
+    out.style.display = 'none';
+    return;
+  }
+  msg.classList.remove('show');
+  cfg.curPath = from;
+  cfg.newPath  = to;
+  saveCfg();
+  var n = cfg.svrName || 'mcpserver';
+  // Windows: xcopy /E /I /Y
+  var win = 'xcopy /E /I /Y "' + from + '" "' + to + '" && cd /d "' + to + '" && node ' + n + '.js';
+  // Mac/Linux: cp -r
+  var mac = 'cp -r "' + from + '" "' + to + '" && cd "' + to + '" && node ' + n + '.js';
+  setText('deployWin', win);
+  setText('deployMac', mac);
+  out.style.display = 'block';
+}
+
+/* ── pull cmd ────────────────────────────────────────── */
+function showPullCmd() {
+  var name = document.getElementById('pullModelName').value.trim();
+  var out  = document.getElementById('pullCmdOut');
+  if (!name) { out.style.display = 'none'; return; }
+  setText('pullCmdText', 'ollama pull ' + name);
+  out.style.display = 'block';
+}
+
+/* ── fetch with timeout ──────────────────────────────── */
+function fetchWithTimeout(url, ms) {
+  var ctrl = new AbortController();
+  var t = setTimeout(function() { ctrl.abort(); }, ms);
+  return fetch(url, { signal: ctrl.signal }).then(function(r) {
+    clearTimeout(t);
+    return r;
+  }).catch(function(e) {
+    clearTimeout(t);
+    throw e;
+  });
+}
+
+/* ── status polling ──────────────────────────────────── */
+function setBadge(id, cls, text) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  el.className = 'badge ' + cls;
+  el.innerHTML = '<span class="dot"></span>' + text;
+}
+
+function pollOllama() {
+  setBadge('s-ollama', 'badge-chk', 'Checking…');
+  fetchWithTimeout('http://localhost:11434', 3000)
+    .then(function(r) {
+      setBadge('s-ollama', 'badge-up', 'UP');
+    })
+    .catch(function() {
+      setBadge('s-ollama', 'badge-down', 'DOWN');
+      setText('s-ollama-ver', '');
+    });
+}
+
+function pollModels() {
+  fetchWithTimeout('http://localhost:11434/api/tags', 3000)
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      var models = (d.models || []).map(function(m) { return m.name; });
+      var el = document.getElementById('s-models');
+      if (el) {
+        el.className = 'badge badge-up';
+        el.innerHTML = '<span class="dot"></span>' + models.length + ' model' + (models.length !== 1 ? 's' : '');
+      }
+      setText('s-models-list', models.slice(0,3).join(', ') + (models.length > 3 ? ' …' : ''));
+      // also update model table statuses
+      updateModelTableStatus(models);
+    })
+    .catch(function() {
+      setBadge('s-models', 'badge-down', 'No models');
+    });
+}
+
+function pollNode() {
+  var port = cfg.svrPort || '3101';
+  setBadge('s-node', 'badge-chk', 'Checking…');
+  fetchWithTimeout('http://localhost:' + port + '/ping', 3000)
+    .then(function(r) {
+      setBadge('s-node', 'badge-up', 'UP');
+    })
+    .catch(function() {
+      setBadge('s-node', 'badge-down', 'DOWN');
+    });
+}
+
+function pollAll() {
+  pollOllama();
+  pollModels();
+  pollNode();
+}
+
+function updateModelTableStatus(runningModels) {
+  var rows = document.querySelectorAll('#modelTableBody tr');
+  rows.forEach(function(row) {
+    var nameTd = row.querySelector('.model-name');
+    if (!nameTd) return;
+    var n = nameTd.textContent.trim();
+    var badge = row.querySelector('.badge');
+    if (!badge) return;
+    var isLocal = row.querySelector('.tag-local');
+    if (isLocal) {
+      var running = runningModels.some(function(m) { return m.indexOf(n) >= 0 || n.indexOf(m.split(':')[0]) >= 0; });
+      badge.className = 'badge ' + (running ? 'badge-up' : 'badge-gray');
+      badge.innerHTML = '<span class="dot"></span>' + (running ? 'Available' : 'Not loaded');
+    }
+  });
+}
+
+/* ── health checks ───────────────────────────────────── */
+function setResultBadge(id, cls, text) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  el.className = 'result-badge ' + cls;
+  el.textContent = text;
+}
+
+function setCheckResult(id, cls, text) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  el.className = 'check-result show ' + cls;
+  el.textContent = text;
+}
+
+function runCheck(type, resultId) {
+  var badgeMap = {
+    'ollama':      'hcOllamaBadge',
+    'ollama-tags': 'hcTagsBadge',
+    'node-ping':   'hcNodeBadge',
+    'node-tools':  'hcToolsBadge'
+  };
+  var badgeId = badgeMap[type] || resultId;
+  var port = cfg.svrPort || '3101';
+
+  var urlMap = {
+    'ollama':      'http://localhost:11434',
+    'ollama-tags': 'http://localhost:11434/api/tags',
+    'node-ping':   'http://localhost:' + port + '/ping',
+    'node-tools':  'http://localhost:' + port + '/tools'
+  };
+
+  var url = urlMap[type];
+  if (!url) return;
+
+  setResultBadge(badgeId, 'rb-chk', 'Checking…');
+
+  // Also update inline result if it exists
+  var inlineEl = document.getElementById(resultId);
+  if (inlineEl && inlineEl.classList.contains('check-result')) {
+    inlineEl.className = 'check-result show';
+    inlineEl.textContent = 'Checking ' + url + '…';
+  }
+
+  fetchWithTimeout(url, 4000)
+    .then(function(r) {
+      return r.text().then(function(body) {
+        return { status: r.status, body: body };
+      });
+    })
+    .then(function(res) {
+      if (res.status < 400) {
+        setResultBadge(badgeId, 'rb-ok', '✓ ' + res.status + ' OK');
+        if (inlineEl && inlineEl.classList.contains('check-result')) {
+          var preview = res.body.length > 200 ? res.body.slice(0,200) + '…' : res.body;
+          setCheckResult(resultId, 'ok', '✓ ' + res.status + ' OK — ' + preview);
+        }
+        var detail = document.getElementById('hcDetail');
+        if (detail) {
+          detail.style.display = 'block';
+          detail.textContent = type.toUpperCase() + ':\n' + res.status + ' ' + url + '\n' + res.body.slice(0,300);
+        }
+      } else {
+        setResultBadge(badgeId, 'rb-err', '✗ ' + res.status);
+        if (inlineEl && inlineEl.classList.contains('check-result')) {
+          setCheckResult(resultId, 'err', '✗ HTTP ' + res.status);
+        }
+      }
+    })
+    .catch(function(e) {
+      var msg = e.name === 'AbortError' ? 'Timeout' : 'Unreachable';
+      setResultBadge(badgeId, 'rb-err', '✗ ' + msg);
+      if (inlineEl && inlineEl.classList.contains('check-result')) {
+        setCheckResult(resultId, 'err', '✗ ' + msg + ' — ' + url + ' did not respond');
+      }
+    });
+}
+
+function runAllChecks() {
+  setText('allCheckStatus', 'Running all checks…');
+  runCheck('ollama',      'hcOllamaBadge');
+  runCheck('ollama-tags', 'hcTagsBadge');
+  runCheck('node-ping',   'hcNodeBadge');
+  runCheck('node-tools',  'hcToolsBadge');
+  setTimeout(function() {
+    setText('allCheckStatus', 'Checks complete — see results above');
+  }, 5000);
+}
+
+/* ── model table refresh ─────────────────────────────── */
+function refreshModelTable() {
+  var msg = document.getElementById('modelTableMsg');
+  if (msg) msg.textContent = 'Fetching from Ollama…';
+  fetchWithTimeout('http://localhost:11434/api/tags', 4000)
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      var models = d.models || [];
+      if (msg) msg.textContent = models.length + ' model(s) found';
+      // update table statuses
+      updateModelTableStatus(models.map(function(m) { return m.name; }));
+    })
+    .catch(function() {
+      if (msg) msg.textContent = 'Could not reach Ollama';
+    });
+}
+
+/* ── clipboard ───────────────────────────────────────── */
+function flashBtn(btn, label) {
+  var orig = btn.textContent;
+  btn.textContent = label;
+  btn.classList.add('ok');
+  setTimeout(function() {
+    btn.textContent = orig;
+    btn.classList.remove('ok');
+  }, 1800);
+}
+
+function copyRaw(text, btn) {
+  navigator.clipboard.writeText(text).then(function() {
+    flashBtn(btn, '✓ Copied');
+  }).catch(function() {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand('copy'); flashBtn(btn, '✓ Copied'); } catch(e) {}
+    document.body.removeChild(ta);
+  });
+}
+
+function copyEl(id, btn) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  copyRaw(el.textContent.trim(), btn);
+}
+
+function copyBlock(btn) {
+  var block = btn.closest('.cmd-block');
+  if (!block) return;
+  var txt = block.querySelector('.cmd-text');
+  if (!txt) return;
+  copyRaw(txt.textContent.trim(), btn);
+}
+
+/* ── init ────────────────────────────────────────────── */
+document.addEventListener('DOMContentLoaded', function() {
+  loadCfg();
+
+  // Populate inputs from config
+  var fields = {
+    svrName:  ['svrName','svrName2'],
+    svrPort:  ['svrPort','svrPort2'],
+    curPath:  ['curPath'],
+    newPath:  ['newPath']
+  };
+  Object.keys(fields).forEach(function(key) {
+    if (cfg[key]) {
+      fields[key].forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el) el.value = cfg[key];
+      });
+    }
+  });
+
+  // Apply initial commands
+  updateCmds(cfg.svrName || 'mcpserver', cfg.svrPort || '3101');
+
+  // Auto-poll status on load
+  setTimeout(pollAll, 800);
+
+  // Auto-poll every 10 seconds
+  setInterval(pollAll, 10000);
+});
+</script>
