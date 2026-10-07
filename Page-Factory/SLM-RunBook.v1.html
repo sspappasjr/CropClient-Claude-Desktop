@@ -762,6 +762,11 @@ details.code-fold pre {
           </div>
         </div>
 
+        <!-- HTTPS mixed-content warning (shown only when served over HTTPS) -->
+        <div id="httpsWarn" style="display:none; background:var(--amber-bg); border:1px solid var(--amber); border-radius:8px; padding:10px 16px; margin-bottom:16px; font-size:13px; color:var(--amber);">
+          ⚠ <strong>Live checks are blocked in the cloud artifact</strong> — browsers block HTTP requests from HTTPS pages (mixed content). <strong>Open the file locally</strong> in your browser to enable live pings, or use the curl commands in each chapter.
+        </div>
+
         <!-- Server Controls -->
         <div class="ctrl-panel">
           <h3>⚙ Server Controls</h3>
@@ -869,6 +874,11 @@ details.code-fold pre {
           <span id="nodeCheckBadge" class="result-badge rb-gray">—</span>
         </div>
         <div id="nodeCheckResult" class="check-result"></div>
+        <details class="code-fold" style="margin-top:8px;">
+          <summary>Terminal alternative (curl)</summary>
+          <pre id="nodeCurlBlock">curl -s http://localhost:3101/ping
+# Expected: {"ok":true,"ts":...}</pre>
+        </details>
 
         <details class="code-fold" style="margin-top:20px;">
           <summary>Code reference — starting a named Node server</summary>
@@ -987,6 +997,14 @@ curl localhost:11434       # should return "Ollama is running"</pre>
               <span id="ollamaCheckBadge" class="result-badge rb-gray">—</span>
             </div>
             <div id="ollamaCheckResult" class="check-result"></div>
+            <details class="code-fold" style="margin-top:8px;">
+              <summary>Terminal alternative (curl)</summary>
+              <pre>curl -s http://localhost:11434
+# Expected: "Ollama is running"
+
+curl -s http://localhost:11434/api/tags | python3 -m json.tool
+# Lists downloaded models as JSON</pre>
+            </details>
           </div>
 
         </div>
@@ -1216,6 +1234,10 @@ ollama pull phi3             # small, runs on CPU</pre>
         <div class="pg-title">♥ Health Checks</div>
         <div class="pg-sub">Verify all services are responding correctly</div>
 
+        <div id="httpsWarnHC" style="display:none; background:var(--amber-bg); border:1px solid var(--amber); border-radius:8px; padding:10px 16px; margin-bottom:16px; font-size:13px; color:var(--amber);">
+          ⚠ <strong>Live checks are blocked in the cloud artifact</strong> — HTTPS pages cannot fetch HTTP localhost. <strong>Open the file locally</strong> for live pings. Each check shows the equivalent curl command you can run in a terminal.
+        </div>
+
         <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:20px;">
           <button class="btn btn-purple" onclick="runAllChecks()">▶ Run All Checks</button>
           <span id="allCheckStatus" style="font-size:13px; color:var(--gray);">Press "Run All Checks" to verify all services</span>
@@ -1227,7 +1249,8 @@ ollama pull phi3             # small, runs on CPU</pre>
               <tr>
                 <th>Service</th>
                 <th>Endpoint</th>
-                <th>Action</th>
+                <th>Browser Check</th>
+                <th>Terminal (curl)</th>
                 <th>Result</th>
               </tr>
             </thead>
@@ -1236,30 +1259,55 @@ ollama pull phi3             # small, runs on CPU</pre>
                 <td><strong>Ollama Ping</strong></td>
                 <td><span class="hc-url">localhost:11434</span></td>
                 <td><button class="btn btn-outline btn-sm" onclick="runCheck('ollama','hcOllamaBadge')">Run</button></td>
+                <td>
+                  <div style="display:flex;align-items:center;gap:6px;">
+                    <span class="hc-url" style="font-size:11px;">curl -s http://localhost:11434</span>
+                    <button class="btn btn-outline btn-sm copy-btn" onclick="copyRaw('curl -s http://localhost:11434',this)">Copy</button>
+                  </div>
+                </td>
                 <td><span id="hcOllamaBadge" class="result-badge rb-gray">—</span></td>
               </tr>
               <tr>
                 <td><strong>Ollama Models</strong></td>
                 <td><span class="hc-url">localhost:11434/api/tags</span></td>
                 <td><button class="btn btn-outline btn-sm" onclick="runCheck('ollama-tags','hcTagsBadge')">Run</button></td>
+                <td>
+                  <div style="display:flex;align-items:center;gap:6px;">
+                    <span class="hc-url" style="font-size:11px;">curl -s http://localhost:11434/api/tags</span>
+                    <button class="btn btn-outline btn-sm copy-btn" onclick="copyRaw('curl -s http://localhost:11434/api/tags',this)">Copy</button>
+                  </div>
+                </td>
                 <td><span id="hcTagsBadge" class="result-badge rb-gray">—</span></td>
               </tr>
               <tr>
                 <td><strong>Node Server Ping</strong></td>
                 <td><span class="hc-url" id="hcNodeUrl">localhost:3101/ping</span></td>
                 <td><button class="btn btn-outline btn-sm" onclick="runCheck('node-ping','hcNodeBadge')">Run</button></td>
+                <td>
+                  <div style="display:flex;align-items:center;gap:6px;">
+                    <span class="hc-url" id="hcCurlNode" style="font-size:11px;">curl -s http://localhost:3101/ping</span>
+                    <button class="btn btn-outline btn-sm copy-btn" onclick="copyEl('hcCurlNode',this)">Copy</button>
+                  </div>
+                </td>
                 <td><span id="hcNodeBadge" class="result-badge rb-gray">—</span></td>
               </tr>
               <tr>
                 <td><strong>Node Tools List</strong></td>
                 <td><span class="hc-url" id="hcToolsUrl">localhost:3101/tools</span></td>
                 <td><button class="btn btn-outline btn-sm" onclick="runCheck('node-tools','hcToolsBadge')">Run</button></td>
+                <td>
+                  <div style="display:flex;align-items:center;gap:6px;">
+                    <span class="hc-url" id="hcCurlTools" style="font-size:11px;">curl -s http://localhost:3101/tools</span>
+                    <button class="btn btn-outline btn-sm copy-btn" onclick="copyEl('hcCurlTools',this)">Copy</button>
+                  </div>
+                </td>
                 <td><span id="hcToolsBadge" class="result-badge rb-gray">—</span></td>
               </tr>
               <tr>
                 <td><strong>OpenCode</strong></td>
                 <td><span class="hc-url">opencode.ai</span></td>
                 <td><a href="https://opencode.ai" target="_blank" class="btn btn-outline btn-sm" style="text-decoration:none;">Open ↗</a></td>
+                <td><span style="font-size:12px; color:var(--gray);">Desktop app — no curl</span></td>
                 <td><span class="result-badge rb-gray">Manual</span></td>
               </tr>
             </tbody>
@@ -1332,6 +1380,10 @@ function updateCmds(n, p) {
   setText('hcNodeUrl',   'localhost:' + p + '/ping');
   setText('hcToolsUrl',  'localhost:' + p + '/tools');
   setText('s-node-url',  'localhost:' + p + '/ping');
+  setText('hcCurlNode',  'curl -s http://localhost:' + p + '/ping');
+  setText('hcCurlTools', 'curl -s http://localhost:' + p + '/tools');
+  var nodeCurl = document.getElementById('nodeCurlBlock');
+  if (nodeCurl) nodeCurl.textContent = 'curl -s http://localhost:' + p + '/ping\n# Expected: {"ok":true,"ts":...}';
 }
 
 function goLive(btn) {
@@ -1558,10 +1610,16 @@ function runCheck(type, resultId) {
       }
     })
     .catch(function(e) {
-      var msg = e.name === 'AbortError' ? 'Timeout' : 'Unreachable';
+      var isHttps = window.location.protocol === 'https:';
+      var msg = e.name === 'AbortError' ? 'Timeout'
+              : isHttps ? 'Blocked (HTTPS→HTTP)'
+              : 'Unreachable';
       setResultBadge(badgeId, 'rb-err', '✗ ' + msg);
       if (inlineEl && inlineEl.classList.contains('check-result')) {
-        setCheckResult(resultId, 'err', '✗ ' + msg + ' — ' + url + ' did not respond');
+        var detail = isHttps
+          ? '✗ Blocked — HTTPS page cannot reach HTTP localhost.\nOpen the file locally in your browser, or use the curl command below.'
+          : '✗ ' + msg + ' — ' + url + ' did not respond';
+        setCheckResult(resultId, 'err', detail);
       }
     });
 }
@@ -1656,6 +1714,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // Apply initial commands
   updateCmds(cfg.svrName || 'mcpserver', cfg.svrPort || '3101');
+
+  // Show HTTPS mixed-content warning when in cloud artifact
+  if (window.location.protocol === 'https:') {
+    var w1 = document.getElementById('httpsWarn');
+    var w2 = document.getElementById('httpsWarnHC');
+    if (w1) w1.style.display = 'block';
+    if (w2) w2.style.display = 'block';
+  }
 
   // Auto-poll status on load
   setTimeout(pollAll, 800);
